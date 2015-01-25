@@ -17,6 +17,11 @@
 
 DW1000::DW1000(int ss) {
 	_ss = ss;
+	_deviceMode = IDLE_MODE;
+
+	_frameCheckSuppressed = false;
+	_extendedFrameLength = false;
+
 	pinMode(_ss, OUTPUT);
 	SPI.begin();
 }
@@ -71,6 +76,7 @@ void DW1000::setFrameFilter(boolean val) {
 
 void DW1000::suppressFrameCheck() {
 	bitSet(_sysctrl[0], SFCST_BIT);
+	_frameCheckSuppressed = true;
 }
 
 void DW1000::delayedTransmit(unsigned int delayNanos) {
@@ -79,11 +85,44 @@ void DW1000::delayedTransmit(unsigned int delayNanos) {
 	// TODO implement
 }
 
+void DW1000::setTransmitRate(byte rate) {
+	rate &= 0x03;
+	if(rate == 0x03) {
+		rate = TX_RATE_6800KBPS;
+	}
+	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
+}
+
+void DW1000::setTransmitPulseFrequency(byte freq) {
+	freq &= 0x03;
+	if(freq == 0x00 || freq == 0x03) {
+		freq = TX_PULSE_FREQ_64MHZ;
+	}
+	_txfctrl[2] |= (byte)(freq & 0xFF);
+}
+
+void DW1000::setTransmitPreambleLength(byte prealen) {
+	prealen &= 0x0F;
+	_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
+}
+
 // TODO implement data(), other TX states, ...
 
 void DW1000::beginTransmit() {
 	// clear out SYS_CTRL for a new transmit operation
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
+	memset(_txfctrl, 0, LEN_TX_FCTRL);
+	_deviceMode = TX_MODE;
+}
+
+void DW1000::setDefaults() {
+	if(_deviceMode == TX_MODE) {
+		setTransmitRate(TX_RATE_6800KBPS);
+		setTransmitPulseFrequency(TX_PULSE_FREQ_64MHZ);
+		setTransmitPreambleLength(TX_PREAMBLE_LEN_1024);
+	} else if(_deviceMode == RX_MODE) {
+		// TODO impl
+	}
 }
 
 void DW1000::cancelTransmit() {
@@ -94,10 +133,28 @@ void DW1000::cancelTransmit() {
 void DW1000::endTransmit() {
 	// set transmit flag
 	bitSet(_sysctrl[0], TXSTRT_BIT);
+	// TODO ... write to device (_sysctrl, _txfctrl)
+	
+	// reset to idel
+	_deviceMode = IDLE_MODE;
+}
+
+void DW1000::setData(byte data[], int n) {
+	if(n > LEN_TX_BUFFER) {
+		return; // TODO proper error handling: frame/buffer size
+	}
+	if(!_extendedFrameLength && n > LEN_UWB_FRAMES ||
+		_extendedFrameLength && n > LEN_EXT_UWB_FRAMES) {
+		return; // TODO proper error handling: frame/buffer size
+	}
+	// transmit data and length
+	writeBytes(TX_BUFFER, NO_SUB, data, n);
+	_txfctrl[0] = (byte)(n & 0xFF); // 1 byte regular length
+	_txfctrl[1] |= (byte)((n >> 8) & 0x07);	// 3 added bits if extended length
 }
 
 // system event register
-bool DW1000::readAndClearLDEDone() {
+boolean DW1000::readAndClearLDEDone() {
 	byte data[LEN_SYS_STATUS];
 	bool ldeDone;
 	
@@ -132,7 +189,7 @@ void DW1000::setBit(byte data[], int n, int bit, boolean val) {
 
 	idx = bit / 8;
 	if(idx >= n) {
-		return;
+		return; // TODO proper error handling: out of bounds
 	}
 	byte targetByte = data[idx];
 	if(val) {
@@ -158,7 +215,7 @@ boolean DW1000::getBit(byte data[], int n, int bit) {
 
 	idx = bit / 8;
 	if(idx >= n) {
-		return false;
+		return false; // TODO proper error handling: out of bounds
 	}
 	byte targetByte = data[idx];
 	shift = bit % 8;
@@ -203,6 +260,7 @@ void DW1000::writeBytes(byte cmd, word offset, byte data[], int n) {
 	byte header[3];
 	int headerLen = 1;
 	int i;
+	// TODO proper error handling: address out of bounds
 
 	if(offset == NO_SUB) {
 		header[0] = WRITE | cmd;

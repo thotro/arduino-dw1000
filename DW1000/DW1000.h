@@ -10,6 +10,11 @@
 #ifndef _DW1000_H_INCLUDED
 #define _DW1000_H_INCLUDED
 
+// enum to determine RX or TX mode of device
+#define IDLE_MODE 0x00
+#define RX_MODE 0x01
+#define TX_MODE 0x02
+
 // used for SPI ready w/o actual writes
 #define JUNK 0x00
 
@@ -47,6 +52,17 @@
 #define DX_TIME 0x0A
 #define LEN_DX_TIME 5
 
+// transmit data buffer
+#define TX_BUFFER 0x09
+#define LEN_TX_BUFFER 1024
+#define LEN_UWB_FRAMES 127
+#define LEN_EXT_UWB_FRAMES 1023
+
+// transmit control
+#define TX_FCTRL 0x08
+#define LEN_TX_FCTRL 5
+
+
 #include <stdio.h>
 #include <Arduino.h>
 #include "../SPI/SPI.h"
@@ -67,12 +83,25 @@ public:
 	void readSystemConfiguration(byte syscfg[]);
 	void setFrameFilter(boolean val);
 
-	// SYS_CTRL
+	// SYS_CTRL, TX_FCTRL, transmit and receive
 	void suppressFrameCheck();
 	void delayedTransmit(unsigned int delayNanos); // TODO impl
+	void setTransmitRate(byte rate);
+	void setTransmitPulseFrequency(byte freq);
+	void setTransmitPreambleLength(byte prealen);
+	void setData(byte data[], int n);
+	int getData(byte data[]);
+
+	/* TODO impl: later
+	 * - TXBOFFS in TX_FCTRL for offset buffer transmit
+ 	 * - TR in TX_FCTRL for flagging for ranging messages
+	 */
+
+	// RX, TX default settings
+	void setDefaults();
 
 	// SYS_STATUS
-	bool readAndClearLDEDone();
+	boolean readAndClearLDEDone();
 
 	// TODO data and other state set functions for TX
 
@@ -84,10 +113,39 @@ public:
 	void endTransmit();
 	void cancelTransmit();
 
+	// transmission bit rate
+	static const byte TX_RATE_110KBPS = 0x00;
+	static const byte TX_RATE_850KBPS = 0x01;
+	static const byte TX_RATE_6800KBPS = 0x10;
+
+	// transmission pulse frequencey
+	// 0x00 is 4MHZ, but receiver in DW1000 does not support it (!??)
+	static const byte TX_PULSE_FREQ_16MHZ = 0x01; 
+	static const byte TX_PULSE_FREQ_64MHZ = 0x02;
+
+	// preamble lengthes (PE + TXPSR bits)
+	static const byte TX_PREAMBLE_LEN_64 = 0x01;
+	static const byte TX_PREAMBLE_LEN_128 = 0x05;
+	static const byte TX_PREAMBLE_LEN_256 = 0x09;
+	static const byte TX_PREAMBLE_LEN_512 = 0x0D;
+	static const byte TX_PREAMBLE_LEN_1024 = 0x02;
+	static const byte TX_PREAMBLE_LEN_1536 = 0x06;
+	static const byte TX_PREAMBLE_LEN_2048 = 0x0A;
+	static const byte TX_PREAMBLE_LEN_4096 = 0x03;
+
 private:
 	unsigned int _ss;
+
 	byte _syscfg[LEN_SYS_CFG];
 	byte _sysctrl[LEN_SYS_CTRL];
+
+	boolean _frameCheckSuppressed;
+	boolean _extendedFrameLength;
+
+	byte _txfctrl[LEN_TX_FCTRL];
+
+	// whether RX or TX is active
+	int _deviceMode; 
 
 	void readBytes(byte cmd, byte data[], int n);
 	void writeBytes(byte cmd, word offset, byte data[], int n);
