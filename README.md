@@ -1,5 +1,6 @@
 # arduino-dw1000
-A library that offers functionality to use Decawave's DW1000 chips/modules with Arduino/AVR.
+A library that offers functionality to use Decawave's DW1000 chips/modules with Arduino/AVR
+(see http://www.decawave.com/products/dwm1000-module).
 
 Status: Just started
 
