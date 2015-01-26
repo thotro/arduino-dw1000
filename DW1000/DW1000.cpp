@@ -7,7 +7,6 @@
  * published by the Free Software Foundation.
  */
 
-#include <string.h>
 #ifndef DEBUG
 #include "pins_arduino.h"
 #endif
@@ -57,7 +56,7 @@ int DW1000::getChipSelect() {
  * ######################################################################### */
 
 char* DW1000::readDeviceIdentifier() {
-	char infoString[128];
+	char* infoString = (char*)malloc(128);
 	byte data[LEN_DEV_ID];
 
 	readBytes(DEV_ID, data, LEN_DEV_ID);
@@ -72,12 +71,29 @@ void DW1000::readSystemConfiguration(byte data[]) {
 }
 
 void DW1000::setFrameFilter(boolean val) {
-	if(val) {
-		bitSet(_syscfg[0], FFEN_BIT);
-	} else {
-		bitClear(_syscfg[0], FFEN_BIT);
-	}
+	setBit(_syscfg, LEN_SYS_CFG, FFEN_BIT, val);
 	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
+}
+
+void DW1000::setDoubleBuffering(boolean val) {
+	setBit(_syscfg, LEN_SYS_CFG, RXAUTR_BIT, !val);
+	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
+}
+
+void DW1000::setReceiverAutoReenable(boolean val) {
+	setBit(_syscfg, LEN_SYS_CFG, DIS_DRXB_BIT, val);
+	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
+}
+
+void DW1000::idle() {
+	memset(_sysctrl, 0, LEN_SYS_CTRL);
+	bitSet(_sysctrl[0], TRXOFF_BIT);
+	_deviceMode = IDLE_MODE;
+	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
+}
+
+void DW1000::waitForResponse(boolean val) {
+	setBit(_sysctrl, LEN_SYS_CTRL, WAIT4RESP_BIT, val);
 }
 
 void DW1000::suppressFrameCheck() {
@@ -85,67 +101,96 @@ void DW1000::suppressFrameCheck() {
 	_frameCheckSuppressed = true;
 }
 
-void DW1000::delayedTransmit(unsigned int delayNanos) {
-	bitSet(_sysctrl[0], TXDLYS_BIT);
-	// 40 bit in DX_TIME register, 9 lower sig. bits are ignored
-	// TODO implement
+void DW1000::delayedTransceive(unsigned int delayNanos) {
+	if(_deviceMode == TX_MODE) {
+		setBit(_sysctrl, LEN_SYS_CTRL, TXDLYS_BIT, true);
+	} else if(_deviceMode == RX_MODE) {
+		setBit(_sysctrl, LEN_SYS_CTRL, RXDLYS_BIT, true);
+	} else {
+		// in idle, ignore
+		return;
+	}
+	// TODO impl 40 bit in DX_TIME register, 9 lower sig. bits are ignored
 }
 
-void DW1000::setTransmitRate(byte rate) {
+void DW1000::transmitRate(byte rate) {
 	rate &= 0x03;
-	if(rate == 0x03) {
+	if(rate >= 0x03) {
 		rate = TX_RATE_6800KBPS;
 	}
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
 }
 
-void DW1000::setTransmitPulseFrequency(byte freq) {
+void DW1000::pulseFrequency(byte freq) {
 	freq &= 0x03;
-	if(freq == 0x00 || freq == 0x03) {
+	if(freq == 0x00 || freq >= 0x03) {
 		freq = TX_PULSE_FREQ_64MHZ;
 	}
 	_txfctrl[2] |= (byte)(freq & 0xFF);
 }
 
-void DW1000::setTransmitPreambleLength(byte prealen) {
+void DW1000::preambleLength(byte prealen) {
 	prealen &= 0x0F;
 	_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
+	// TODO set PAC size accordingly for RX (see table 6, page 31)
+}
+
+void DW1000::newReceive() {
+	memset(_sysctrl, 0, LEN_SYS_CTRL);
+	_deviceMode = RX_MODE;
+	_frameCheckSuppressed = false;
+}
+
+void DW1000::startReceive() {
+	setBit(_sysctrl, LEN_SYS_CTRL, RXENAB_BIT, true);
+	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
+}
+
+void DW1000::cancelReceive() {
+	newReceive();
+	idle();
 }
 
 // TODO implement data(), other TX states, ...
 
-void DW1000::beginTransmit() {
+void DW1000::newTransmit() {
 	// clear out SYS_CTRL for a new transmit operation
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
 	memset(_txfctrl, 0, LEN_TX_FCTRL);
 	_deviceMode = TX_MODE;
+	_frameCheckSuppressed = false;
 }
 
 void DW1000::setDefaults() {
 	if(_deviceMode == TX_MODE) {
-		setTransmitRate(TX_RATE_6800KBPS);
-		setTransmitPulseFrequency(TX_PULSE_FREQ_64MHZ);
-		setTransmitPreambleLength(TX_PREAMBLE_LEN_1024);
+		transmitRate(TX_RATE_6800KBPS);
+		pulseFrequency(TX_PULSE_FREQ_64MHZ);
+		preambleLength(TX_PREAMBLE_LEN_1024);
 	} else if(_deviceMode == RX_MODE) {
 		// TODO impl
 	}
 }
 
 void DW1000::cancelTransmit() {
-	// same as beginTransmit
-	beginTransmit();
+	newTransmit();
+	idle();
 }
 
-void DW1000::endTransmit() {
+void DW1000::startTransmit() {
 	// set transmit flag
 	bitSet(_sysctrl[0], TXSTRT_BIT);
 	// TODO ... write to device (_sysctrl, _txfctrl)
+	writeBytes(TX_FCTRL, NO_SUB, _txfctrl, LEN_TX_FCTRL);
+	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 	
 	// reset to idel
 	_deviceMode = IDLE_MODE;
 }
 
 void DW1000::setData(byte data[], int n) {
+	if(!_frameCheckSuppressed) {
+		n+=2; // two bytes CRC-16
+	}
 	if(n > LEN_TX_BUFFER) {
 		return; // TODO proper error handling: frame/buffer size
 	}
@@ -197,11 +242,11 @@ void DW1000::setBit(byte data[], int n, int bit, boolean val) {
 	if(idx >= n) {
 		return; // TODO proper error handling: out of bounds
 	}
-	byte targetByte = data[idx];
+	byte* targetByte = &data[idx];
 	if(val) {
-		bitSet(targetByte, shift);
+		bitSet(*targetByte, shift);
 	} else {
-		bitClear(targetByte, shift);
+		bitClear(*targetByte, shift);
 	}
 }
 
@@ -248,6 +293,8 @@ void DW1000::readBytes(byte cmd, byte data[], int n) {
 	for(i = 0; i < n; i++) {
 #ifndef DEBUG
 		data[i] = SPI.transfer(JUNK);
+#else
+		data[i] = debugBuffer[i];
 #endif
 	}
 #ifndef DEBUG
@@ -299,6 +346,8 @@ void DW1000::writeBytes(byte cmd, word offset, byte data[], int n) {
 	for(i = 0; i < n; i++) {
 #ifndef DEBUG
 		SPI.transfer(data[i]);
+#else
+		debugBuffer[i] = data[i];
 #endif
 	}
 #ifndef DEBUG

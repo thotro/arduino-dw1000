@@ -29,6 +29,8 @@
 #define SYS_CFG 0x04
 #define LEN_SYS_CFG 4
 #define FFEN_BIT 0
+#define DIS_DRXB_BIT 12
+#define RXAUTR_BIT 29
 
 // device control register
 #define SYS_CTRL 0x0D
@@ -36,6 +38,10 @@
 #define SFCST_BIT 0
 #define TXSTRT_BIT 1
 #define TXDLYS_BIT 2
+#define TRXOFF_BIT 6
+#define WAIT4RESP_BIT 7
+#define RXENAB_BIT 8
+#define RXDLYS_BIT 9
 
 // system event status register
 #define SYS_STATUS 0x0F
@@ -63,6 +69,8 @@
 #define LEN_TX_FCTRL 5
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifndef DEBUG
 #include <Arduino.h>
 #include "../SPI/SPI.h"
@@ -78,54 +86,65 @@
 
 class DW1000 {
 public:
-	DW1000(int ss);
-	~DW1000();
-
-	byte* getSystemConfiguration();
-	int getChipSelect();
-
-	// DEV_ID
-	char* readDeviceIdentifier();
-	
-	// SYS_CFG
-	void loadSystemConfiguration();
-	void readSystemConfiguration(byte syscfg[]);
-	void setFrameFilter(boolean val);
-
-	// SYS_CTRL, TX_FCTRL, transmit and receive
-	void suppressFrameCheck();
-	void delayedTransmit(unsigned int delayNanos); // TODO impl
-	void setTransmitRate(byte rate);
-	void setTransmitPulseFrequency(byte freq);
-	void setTransmitPreambleLength(byte prealen);
-	void setData(byte data[], int n);
-	int getData(byte data[]);
-
 	/* TODO impl: later
 	 * - TXBOFFS in TX_FCTRL for offset buffer transmit
  	 * - TR in TX_FCTRL for flagging for ranging messages
+	 * - CANSFCS in SYS_CTRL to cancel frame check suppression
+	 * - HSRBP in SYS_CTRL to determine in double buffered mode from which buffer to read
 	 */
 
-	// RX, TX default settings
+	DW1000(int ss);
+	~DW1000();
+
+	int getChipSelect();
+
+	// DEV_ID, device identifier
+	char* readDeviceIdentifier();
+	
+	// SYS_CFG, general device configuration
+	byte* getSystemConfiguration();
+	void loadSystemConfiguration();
+	void readSystemConfiguration(byte syscfg[]);
+	void setFrameFilter(boolean val);
+	void setDoubleBuffering(boolean val); // NOTE should be set to false
+	void setReceiverAutoReenable(boolean val);
+
+	// SYS_CTRL, TX_FCTRL, transmit and receive configuration
+	void suppressFrameCheck();
+	void delayedTransceive(unsigned int delayNanos); // TODO impl
+	void transmitRate(byte rate);
+	void pulseFrequency(byte freq);
+	void preambleLength(byte prealen);
+	void waitForResponse(boolean val);
+	void setData(byte data[], int n);
+	int getData(byte data[]);
+
+	// RX/TX default settings
 	void setDefaults();
 
-	// SYS_STATUS
+	// SYS_STATUS, device status flags
 	boolean readAndClearLDEDone();
 
-	// TODO data and other state set functions for TX
-
-	// RX_TIME
+	// RX_TIME, ..., timing, timestamps, etc.
 	// TODO void readReceiveTimestamp(byte[] timestamp);
 
+	// idle
+	void idle();
+
+	// reception
+	void newReceive();
+	void startReceive();
+	void cancelReceive();
+
 	// transmission
-	void beginTransmit();
-	void endTransmit();
+	void newTransmit();
+	void startTransmit();
 	void cancelTransmit();
 
 	// transmission bit rate
 	static const byte TX_RATE_110KBPS = 0x00;
 	static const byte TX_RATE_850KBPS = 0x01;
-	static const byte TX_RATE_6800KBPS = 0x10;
+	static const byte TX_RATE_6800KBPS = 0x02;
 
 	// transmission pulse frequencey
 	// 0x00 is 4MHZ, but receiver in DW1000 does not support it (!??)
@@ -141,6 +160,13 @@ public:
 	static const byte TX_PREAMBLE_LEN_1536 = 0x06;
 	static const byte TX_PREAMBLE_LEN_2048 = 0x0A;
 	static const byte TX_PREAMBLE_LEN_4096 = 0x03;
+
+#ifdef DEBUG
+	byte debugBuffer[1024];
+	inline void clearDebugBuffer() {
+		memset(debugBuffer, 0, 1024);
+	}
+#endif
 
 private:
 	unsigned int _ss;

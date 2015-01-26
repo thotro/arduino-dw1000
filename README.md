@@ -7,13 +7,14 @@ Project structure:
  * DW1000-arduino-test ... contains Arduino test code using the DW1000 library
  * DW1000-unit-test ... contains plain C++ unit test code for the library
 
-Project status: Just started
+Project status: 15%
 
 What works so far:
  * Basic SPI read/write with the chip
  * Fetching of chip configuration and device id
  * Writing of chip configuration
  * Writing of transmit data and transmit controls
+ * Transmission and reception sessions (structure)
 
 Next on the agenda:
  * Configuration of full transmission sessions
