@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 by Thomas Trojer <thomas@trojer.net>
+ * Copyright (c) 2015 by Thomas Trojer <thomas@trojer.net>
  * Decawave DW1000 library for Arduino.
  *
  * This file is free software; you can redistribute it and/or modify
@@ -8,7 +8,9 @@
  */
 
 #include <string.h>
+#ifndef DEBUG
 #include "pins_arduino.h"
+#endif
 #include "DW1000.h"
 
 /* ###########################################################################
@@ -22,12 +24,16 @@ DW1000::DW1000(int ss) {
 	_frameCheckSuppressed = false;
 	_extendedFrameLength = false;
 
+#ifndef DEBUG
 	pinMode(_ss, OUTPUT);
 	SPI.begin();
+#endif
 }
 
 DW1000::~DW1000() {
+#ifndef DEBUG
 	SPI.end();
+#endif
 }
 
 void DW1000::loadSystemConfiguration() {
@@ -235,12 +241,18 @@ boolean DW1000::getBit(byte data[], int n, int bit) {
 void DW1000::readBytes(byte cmd, byte data[], int n) {
 	int i;
 
+#ifndef DEBUG
 	digitalWrite(_ss, LOW);
 	SPI.transfer(READ | cmd);
+#endif
 	for(i = 0; i < n; i++) {
+#ifndef DEBUG
 		data[i] = SPI.transfer(JUNK);
+#endif
 	}
+#ifndef DEBUG
 	digitalWrite(_ss,HIGH);
+#endif
 }
 
 /*
@@ -276,12 +288,20 @@ void DW1000::writeBytes(byte cmd, word offset, byte data[], int n) {
 		}
 	}
 	
+#ifndef DEBUG
 	digitalWrite(_ss, LOW);
+#endif
 	for(i = 0; i < headerLen; i++) {
+#ifndef DEBUG		
 		SPI.transfer(header[i]);
+#endif
 	}
 	for(i = 0; i < n; i++) {
+#ifndef DEBUG
 		SPI.transfer(data[i]);
+#endif
 	}
+#ifndef DEBUG
 	digitalWrite(_ss,HIGH);
+#endif
 }

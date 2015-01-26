@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 by Thomas Trojer <thomas@trojer.net>
+ * Copyright (c) 2015 by Thomas Trojer <thomas@trojer.net>
  * Decawave DW1000 library for arduino.
  *
  * This file is free software; you can redistribute it and/or modify
@@ -62,10 +62,19 @@
 #define TX_FCTRL 0x08
 #define LEN_TX_FCTRL 5
 
-
 #include <stdio.h>
+#ifndef DEBUG
 #include <Arduino.h>
 #include "../SPI/SPI.h"
+#else
+#include <stdint.h>
+#define boolean uint8_t
+#define byte uint8_t
+#define word uint16_t
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#endif
 
 class DW1000 {
 public:
