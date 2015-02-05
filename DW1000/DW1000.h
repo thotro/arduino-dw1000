@@ -46,7 +46,13 @@
 // system event status register
 #define SYS_STATUS 0x0F
 #define LEN_SYS_STATUS 5
+#define TXFRS_BIT 7
 #define LDEDONE_BIT 10
+#define RXDFR_BIT 13
+#define RXFCG_BIT 14
+#define RXFCE_BIT 15
+#define RXRFSL_BIT 16
+#define LDEERR_BIT 18
 
 // RX timestamp register
 #define RX_TIME 0x15
@@ -93,6 +99,7 @@ public:
 	 * - HSRBP in SYS_CTRL to determine in double buffered mode from which buffer to read
 	 */
 
+	// construction with chip select pin number
 	DW1000(int ss);
 	~DW1000();
 
@@ -123,7 +130,13 @@ public:
 	void setDefaults();
 
 	// SYS_STATUS, device status flags
-	boolean readAndClearLDEDone();
+	boolean isLDEDone();
+	boolean isTransmitDone();
+	boolean isReceiveDone();
+	boolean isReceiveSuccess();
+
+	void clearReceiveStatus();
+	void clearTransmitStatus(); // TODO impl
 
 	// RX_TIME, ..., timing, timestamps, etc.
 	// TODO void readReceiveTimestamp(byte[] timestamp);

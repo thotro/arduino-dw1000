@@ -205,16 +205,68 @@ void DW1000::setData(byte data[], int n) {
 }
 
 // system event register
-boolean DW1000::readAndClearLDEDone() {
+boolean DW1000::isTransmitDone() {
 	byte data[LEN_SYS_STATUS];
-	bool ldeDone;
-	
 	// read whole register and check bit
 	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
+	return getBit(data, LEN_SYS_STATUS, TXFRS_BIT);
+}
+
+boolean DW1000::isLDEDone() {
+	byte data[LEN_SYS_STATUS];
+	// read whole register and check bit
+	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
+	return getBit(data, LEN_SYS_STATUS, LDEDONE_BIT);
+}
+
+boolean DW1000::isReceiveDone() {
+	byte data[LEN_SYS_STATUS];
+	// read whole register and check bit
+	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
+	return getBit(data, LEN_SYS_STATUS, RXDFR_BIT);
+}
+
+boolean DW1000::isReceiveSuccess() {
+	byte data[LEN_SYS_STATUS];
+	boolean ldeDone, ldeErr, rxGood, rxErr, rxDecodeErr;
+	
+	// read whole register and check bits
+	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
+	// first check for errors
+	ldeErr = getBit(data, LEN_SYS_STATUS, LDEERR_BIT);
+	rxErr = getBit(data, LEN_SYS_STATUS, RXFCE_BIT);
+	rxDecodeErr = getBit(data, LEN_SYS_STATUS, RXRFSL_BIT);
+	if(ldeErr || rxErr || rxDecodeErr) {
+		return false; 
+	}
+	// no errors, check for success indications
+	rxGood = getBit(data, LEN_SYS_STATUS, RXFCG_BIT);
 	ldeDone = getBit(data, LEN_SYS_STATUS, LDEDONE_BIT);
-	// clear latched (i.e. write 1 to clear)
+	if(rxGood && ldeDone) {
+		return true;
+	}
+	// TODO proper 'undecided' handling
+	return false;
+}
+
+void DW1000::clearReceiveStatus() {
+	byte data[LEN_SYS_STATUS];
+	
+	// read whole register
+	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
+	// clear latched RX bits (i.e. write 1 to clear)
+	setBit(data, LEN_SYS_STATUS, RXDFR_BIT, true);
 	setBit(data, LEN_SYS_STATUS, LDEDONE_BIT, true);
+	setBit(data, LEN_SYS_STATUS, LDEERR_BIT, true);
+	setBit(data, LEN_SYS_STATUS, RXFCE_BIT, true);
+	setBit(data, LEN_SYS_STATUS, RXFCG_BIT, true);
+	setBit(data, LEN_SYS_STATUS, RXRFSL_BIT, true);
 	writeBytes(SYS_STATUS, NO_SUB, data, LEN_SYS_STATUS);
+}
+
+void DW1000::clearTransmitStatus() {
+	// FIXME impl
+	// setBit(data, LEN_SYS_STATUS, TXFRS_BIT, true);
 }
 
 /* ###########################################################################

@@ -8,6 +8,7 @@ Project structure:
  * DW1000-unit-test ... contains plain C++ unit test code for the library
 
 Project status: 15%
+Current milestone: RX/TX test with two chips, planned till latest March 1
 
 What works so far:
  * Basic SPI read/write with the chip
