@@ -22,19 +22,34 @@ boolean toggle = true;
 void setup() {
   // for debugging
   Serial.begin(9600);
+  // initialize the driver
+  delay(100);
+  Serial.print("Device ID: "); Serial.println(dw.getDeviceIdentifier());
+  // general configuration
+  dw.newConfiguration(); 
+  dw.setDeviceAddress(0x0001);
+  dw.setNetworkId(0x0000);
+  //dw.setFrameFilter(false);
+  dw.commitConfiguration();
   // print chip info
-  Serial.print("Device ID: "); Serial.println(dw.readDeviceIdentifier());
-  Serial.print("Chip Select: "); Serial.println(dw.getChipSelect());
-  // load the current chip config
-  dw.loadSystemConfiguration();
+  Serial.print("Unique ID: "); Serial.println(dw.getExtendedUniqueIdentifier());
+  Serial.print("Network ID & Device Address: "); Serial.println(dw.getNetworkIdAndShortAddress());
 }
 
-void loop() {  
-    byte* cursyscfg = dw.getSystemConfiguration();
-    Serial.print(cursyscfg[0]); Serial.print(" "); Serial.print(cursyscfg[1]); Serial.print(" "); Serial.print(cursyscfg[2]); Serial.print(" "); Serial.println(cursyscfg[3]);
-    
-    dw.setFrameFilter(toggle);
-    toggle = !toggle;
+void loop() {
+    // transmit some data
+    /*dw.newTransmit();
+    {
+      dw.setDefaults();
+      byte data[6] = {'l', 'a', 'l', 'e', 'l', 'u'};
+      dw.setData(data, 6);
+      dw.startTransmit();
+    }
+    while(!dw.isTransmitDone()) {
+      //Serial.println("No ...");
+      delay(250); 
+    }
+    Serial.println("YES ...");*/
     
     // wait a bit
     delay(2000);

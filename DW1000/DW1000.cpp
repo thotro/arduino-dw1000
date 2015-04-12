@@ -20,7 +20,7 @@ DW1000::DW1000(int ss) {
 	_ss = ss;
 	_deviceMode = IDLE_MODE;
 
-	_frameCheckSuppressed = false;
+	suppressFrameCheck(false);
 	_extendedFrameLength = false;
 
 #ifndef DEBUG
@@ -35,8 +35,10 @@ DW1000::~DW1000() {
 #endif
 }
 
-void DW1000::loadSystemConfiguration() {
-	readSystemConfiguration(_syscfg);
+void DW1000::initialize() {
+	//readNetworkIdAndDeviceAddress();
+	//readSystemConfigurationRegister();
+	//idle();
 }
 
 /* ###########################################################################
@@ -55,29 +57,69 @@ int DW1000::getChipSelect() {
  * #### DW1000 operation functions ###########################################
  * ######################################################################### */
 
-char* DW1000::readDeviceIdentifier() {
-	char* infoString = (char*)malloc(128);
+char* DW1000::getDeviceIdentifier() {
+	char* infoString = (char*)malloc(196);
 	byte data[LEN_DEV_ID];
-
 	readBytes(DEV_ID, data, LEN_DEV_ID);
-
 	sprintf(infoString, "DECA - model: %d, version: %d, revision: %d", 
 		data[1], data[0] >> 4, data[0] & 0x0F);
 	return infoString;
 }
 
-void DW1000::readSystemConfiguration(byte data[]) {
-	readBytes(SYS_CFG, data, LEN_SYS_CFG);
+char* DW1000::getExtendedUniqueIdentifier() {
+	char* euiString = (char*)malloc(196);
+	byte data[LEN_EUI];
+	readBytes(EUI, data, LEN_EUI);
+	sprintf(euiString, "EUI: %d:%d:%d:%d:%d, OUI: %d:%d:%d",
+		data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+	return euiString;
+}
+
+char* DW1000::getNetworkIdAndShortAddress() {
+	char* panString = (char*)malloc(196);
+	byte data[LEN_PANADR];
+	readBytes(PANADR, data, LEN_PANADR);
+	sprintf(panString, "PAN: %d:%d, Short Address: %d:%d",
+		data[3], data[2], data[1], data[0]);
+	return panString;
+}
+
+void DW1000::readSystemConfigurationRegister() {
+	readBytes(SYS_CFG, _syscfg, LEN_SYS_CFG);
+}
+
+void DW1000::writeSystemConfigurationRegister() {
+	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
+}
+
+void DW1000::readSystemEventStatusRegister() {
+	readBytes(SYS_STATUS, _sysstatus, LEN_SYS_STATUS);
+}
+
+void DW1000::readNetworkIdAndDeviceAddress() {
+	readBytes(PANADR, _networkAndAddress, LEN_PANADR);
+}
+
+void DW1000::writeNetworkIdAndDeviceAddress() {
+	writeBytes(PANADR, NO_SUB, _networkAndAddress, LEN_PANADR);
+}
+
+void DW1000::setNetworkId(unsigned int val) {
+	_networkAndAddress[2] = (byte)(val & 0xFF);
+	_networkAndAddress[3] = (byte)((val >> 8) & 0xFF);
+}
+
+void DW1000::setDeviceAddress(unsigned int val) {
+	_networkAndAddress[0] = (byte)(val & 0xFF);
+	_networkAndAddress[1] = (byte)((val >> 8) & 0xFF);
 }
 
 void DW1000::setFrameFilter(boolean val) {
 	setBit(_syscfg, LEN_SYS_CFG, FFEN_BIT, val);
-	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
 }
 
 void DW1000::setDoubleBuffering(boolean val) {
 	setBit(_syscfg, LEN_SYS_CFG, RXAUTR_BIT, !val);
-	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
 }
 
 void DW1000::setReceiverAutoReenable(boolean val) {
@@ -87,18 +129,35 @@ void DW1000::setReceiverAutoReenable(boolean val) {
 
 void DW1000::idle() {
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
-	bitSet(_sysctrl[0], TRXOFF_BIT);
+	setBit(_sysctrl, LEN_SYS_CTRL, TRXOFF_BIT, true);
 	_deviceMode = IDLE_MODE;
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
+}
+
+void DW1000::newConfiguration() {
+	readNetworkIdAndDeviceAddress();
+	delay(20);
+	readSystemConfigurationRegister();
+	delay(20);
+}
+
+void DW1000::commitConfiguration() {
+	writeNetworkIdAndDeviceAddress();
+	delay(20);
+	writeSystemConfigurationRegister();
+	delay(20);
 }
 
 void DW1000::waitForResponse(boolean val) {
 	setBit(_sysctrl, LEN_SYS_CTRL, WAIT4RESP_BIT, val);
 }
 
-void DW1000::suppressFrameCheck() {
-	bitSet(_sysctrl[0], SFCST_BIT);
-	_frameCheckSuppressed = true;
+void DW1000::suppressFrameCheck(boolean val) {
+	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, val);
+}
+
+boolean DW1000::isSuppressFrameCheck() {
+	return getBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT);
 }
 
 void DW1000::delayedTransceive(unsigned int delayNanos) {
@@ -138,7 +197,7 @@ void DW1000::preambleLength(byte prealen) {
 void DW1000::newReceive() {
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
 	_deviceMode = RX_MODE;
-	_frameCheckSuppressed = false;
+	suppressFrameCheck(false);
 }
 
 void DW1000::startReceive() {
@@ -158,15 +217,17 @@ void DW1000::newTransmit() {
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
 	memset(_txfctrl, 0, LEN_TX_FCTRL);
 	_deviceMode = TX_MODE;
-	_frameCheckSuppressed = false;
 }
 
 void DW1000::setDefaults() {
 	if(_deviceMode == TX_MODE) {
+		suppressFrameCheck(false);
 		transmitRate(TX_RATE_6800KBPS);
 		pulseFrequency(TX_PULSE_FREQ_64MHZ);
 		preambleLength(TX_PREAMBLE_LEN_1024);
 	} else if(_deviceMode == RX_MODE) {
+		// TODO impl
+	} else if(_deviceMode == IDLE_MODE) {
 		// TODO impl
 	}
 }
@@ -178,25 +239,27 @@ void DW1000::cancelTransmit() {
 
 void DW1000::startTransmit() {
 	// set transmit flag
-	bitSet(_sysctrl[0], TXSTRT_BIT);
-	// TODO ... write to device (_sysctrl, _txfctrl)
+	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(TX_FCTRL, NO_SUB, _txfctrl, LEN_TX_FCTRL);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
-	
 	// reset to idel
 	_deviceMode = IDLE_MODE;
 }
 
-void DW1000::setData(byte data[], int n) {
-	if(!_frameCheckSuppressed) {
+void DW1000::setData(byte data[], unsigned int n) {
+	if(!isSuppressFrameCheck()) {
 		n+=2; // two bytes CRC-16
 	}
 	if(n > LEN_TX_BUFFER) {
 		return; // TODO proper error handling: frame/buffer size
 	}
-	if(!_extendedFrameLength && n > LEN_UWB_FRAMES ||
-		_extendedFrameLength && n > LEN_EXT_UWB_FRAMES) {
+	if(n > LEN_EXT_UWB_FRAMES) {
 		return; // TODO proper error handling: frame/buffer size
+	}
+	if(n > LEN_UWB_FRAMES) {
+		_extendedFrameLength = true;
+	} else {
+		_extendedFrameLength = false;
 	}
 	// transmit data and length
 	writeBytes(TX_BUFFER, NO_SUB, data, n);
@@ -206,42 +269,38 @@ void DW1000::setData(byte data[], int n) {
 
 // system event register
 boolean DW1000::isTransmitDone() {
-	byte data[LEN_SYS_STATUS];
 	// read whole register and check bit
-	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
-	return getBit(data, LEN_SYS_STATUS, TXFRS_BIT);
+	readBytes(SYS_STATUS, _sysstatus, LEN_SYS_STATUS);
+	return getBit(_sysstatus, LEN_SYS_STATUS, TXFRS_BIT);
 }
 
 boolean DW1000::isLDEDone() {
-	byte data[LEN_SYS_STATUS];
 	// read whole register and check bit
-	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
-	return getBit(data, LEN_SYS_STATUS, LDEDONE_BIT);
+	readBytes(SYS_STATUS, _sysstatus, LEN_SYS_STATUS);
+	return getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
 }
 
 boolean DW1000::isReceiveDone() {
-	byte data[LEN_SYS_STATUS];
 	// read whole register and check bit
-	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
-	return getBit(data, LEN_SYS_STATUS, RXDFR_BIT);
+	readBytes(SYS_STATUS, _sysstatus, LEN_SYS_STATUS);
+	return getBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT);
 }
 
 boolean DW1000::isReceiveSuccess() {
-	byte data[LEN_SYS_STATUS];
 	boolean ldeDone, ldeErr, rxGood, rxErr, rxDecodeErr;
 	
 	// read whole register and check bits
-	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
+	readBytes(SYS_STATUS, _sysstatus, LEN_SYS_STATUS);
 	// first check for errors
-	ldeErr = getBit(data, LEN_SYS_STATUS, LDEERR_BIT);
-	rxErr = getBit(data, LEN_SYS_STATUS, RXFCE_BIT);
-	rxDecodeErr = getBit(data, LEN_SYS_STATUS, RXRFSL_BIT);
+	ldeErr = getBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT);
+	rxErr = getBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT);
+	rxDecodeErr = getBit(_sysstatus, LEN_SYS_STATUS, RXRFSL_BIT);
 	if(ldeErr || rxErr || rxDecodeErr) {
 		return false; 
 	}
 	// no errors, check for success indications
-	rxGood = getBit(data, LEN_SYS_STATUS, RXFCG_BIT);
-	ldeDone = getBit(data, LEN_SYS_STATUS, LDEDONE_BIT);
+	rxGood = getBit(_sysstatus, LEN_SYS_STATUS, RXFCG_BIT);
+	ldeDone = getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
 	if(rxGood && ldeDone) {
 		return true;
 	}
@@ -250,23 +309,23 @@ boolean DW1000::isReceiveSuccess() {
 }
 
 void DW1000::clearReceiveStatus() {
-	byte data[LEN_SYS_STATUS];
-	
-	// read whole register
-	readBytes(SYS_STATUS, data, LEN_SYS_STATUS);
 	// clear latched RX bits (i.e. write 1 to clear)
-	setBit(data, LEN_SYS_STATUS, RXDFR_BIT, true);
-	setBit(data, LEN_SYS_STATUS, LDEDONE_BIT, true);
-	setBit(data, LEN_SYS_STATUS, LDEERR_BIT, true);
-	setBit(data, LEN_SYS_STATUS, RXFCE_BIT, true);
-	setBit(data, LEN_SYS_STATUS, RXFCG_BIT, true);
-	setBit(data, LEN_SYS_STATUS, RXRFSL_BIT, true);
-	writeBytes(SYS_STATUS, NO_SUB, data, LEN_SYS_STATUS);
+	setBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, RXFCG_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, RXRFSL_BIT, true);
+	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
 void DW1000::clearTransmitStatus() {
-	// FIXME impl
-	// setBit(data, LEN_SYS_STATUS, TXFRS_BIT, true);
+	// clear latched TX bits
+	setBit(_sysstatus, LEN_SYS_STATUS, TXFRB_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, TXPRS_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, TXPHS_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, TXFRS_BIT, true);
+	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
 /* ###########################################################################
@@ -288,7 +347,6 @@ void DW1000::clearTransmitStatus() {
 void DW1000::setBit(byte data[], int n, int bit, boolean val) {
 	int idx;
 	int shift;
-	byte mask;
 
 	idx = bit / 8;
 	if(idx >= n) {

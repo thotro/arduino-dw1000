@@ -25,6 +25,14 @@
 #define DEV_ID 0x00
 #define LEN_DEV_ID 4
 
+// extended unique identifier register
+#define EUI 0x01
+#define LEN_EUI 8
+
+// PAN identifier, short address register
+#define PANADR 0x03
+#define LEN_PANADR 4
+
 // device configuration register
 #define SYS_CFG 0x04
 #define LEN_SYS_CFG 4
@@ -46,6 +54,9 @@
 // system event status register
 #define SYS_STATUS 0x0F
 #define LEN_SYS_STATUS 5
+#define TXFRB_BIT 4
+#define TXPRS_BIT 5
+#define TXPHS_BIT 6
 #define TXFRS_BIT 7
 #define LDEDONE_BIT 10
 #define RXDFR_BIT 13
@@ -57,7 +68,7 @@
 // RX timestamp register
 #define RX_TIME 0x15
 #define LEN_RX_TIME 14
-#define RX_STAMP_SUB 0x00
+#define RX_STAMP_SUB 0
 #define LEN_RX_STAMP_SUB 5
 
 // timing register (for delayed RX/TX)
@@ -102,28 +113,35 @@ public:
 	// construction with chip select pin number
 	DW1000(int ss);
 	~DW1000();
+	void initialize();
 
+	// chip select
 	int getChipSelect();
 
-	// DEV_ID, device identifier
-	char* readDeviceIdentifier();
+	// device id, address, etc.
+	char* getDeviceIdentifier();
+	char* getExtendedUniqueIdentifier();
+	char* getNetworkIdAndShortAddress();
+
+	// PAN_ID, SHORT_ADDR, device address management
+	void setNetworkId(unsigned int val);
+	void setDeviceAddress(unsigned int val);
 	
 	// SYS_CFG, general device configuration
 	byte* getSystemConfiguration();
-	void loadSystemConfiguration();
-	void readSystemConfiguration(byte syscfg[]);
 	void setFrameFilter(boolean val);
 	void setDoubleBuffering(boolean val); // NOTE should be set to false
 	void setReceiverAutoReenable(boolean val);
 
 	// SYS_CTRL, TX_FCTRL, transmit and receive configuration
-	void suppressFrameCheck();
+	void suppressFrameCheck(boolean val);
+	boolean isSuppressFrameCheck();
 	void delayedTransceive(unsigned int delayNanos); // TODO impl
 	void transmitRate(byte rate);
 	void pulseFrequency(byte freq);
 	void preambleLength(byte prealen);
 	void waitForResponse(boolean val);
-	void setData(byte data[], int n);
+	void setData(byte data[], unsigned int n);
 	int getData(byte data[]);
 
 	// RX/TX default settings
@@ -143,6 +161,10 @@ public:
 
 	// idle
 	void idle();
+
+	// general configuration
+	void newConfiguration();
+	void commitConfiguration();
 
 	// reception
 	void newReceive();
@@ -182,28 +204,41 @@ public:
 #endif
 
 private:
+	/* configured chip select pin. */
 	unsigned int _ss;
 
+	/* register caches. */
 	byte _syscfg[LEN_SYS_CFG];
 	byte _sysctrl[LEN_SYS_CTRL];
-
-	boolean _frameCheckSuppressed;
-	boolean _extendedFrameLength;
-
+	byte _sysstatus[LEN_SYS_STATUS];
 	byte _txfctrl[LEN_TX_FCTRL];
 
-	// whether RX or TX is active
-	int _deviceMode; 
+	/* PAN and short address. */
+	byte _networkAndAddress[LEN_PANADR];
 
+	/* internal helper to determine send mode for set data. */
+	boolean _extendedFrameLength;
+
+	// whether RX or TX is active
+	int _deviceMode;
+
+	/* internal helper to read/write system registers. */
+	void readSystemEventStatusRegister();
+	void readSystemConfigurationRegister();
+	void writeSystemConfigurationRegister();
+	void readNetworkIdAndDeviceAddress();
+	void writeNetworkIdAndDeviceAddress();
+
+	/* reading and writing bytes from and to DW1000 module. */
 	void readBytes(byte cmd, byte data[], int n);
 	void writeBytes(byte cmd, word offset, byte data[], int n);
 
+	/* internal helper for bit operations on multi-bytes. */
 	boolean getBit(byte data[], int n, int bit);
 	void setBit(byte data[], int n, int bit, boolean val);
 	
 	/* Register is 6 bit, 7 = write, 6 = sub-adressing, 5-0 = register value
-	 * Total header with sub-adressing can be 15 bit
-	 */
+	 * Total header with sub-adressing can be 15 bit. */
 	static const byte WRITE = 0x80; // regular write
 	static const byte WRITE_SUB = 0xC0; // write with sub address
 	static const byte READ = 0x00; // regular read
