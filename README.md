@@ -21,7 +21,27 @@ What works so far:
 
 Next on the agenda:
  * Configuration of full transmission sessions
+ * Simple IRQ handing and ISR definition
  * Basic transmission and receiving
  * Different setups and performance benchmarks
  * Ranging and simple communication examples
  * ...
+
+Usage will be something like:
+```
+DW1000 dw = DW1000(cs_pin);
+dw.initialize();
+...
+dw.newConfiguration();
+// configure specific aspects or choose defaults
+dw.setDefaults();
+dw.commitConfiguration();
+...
+dw.newTransmit();
+// configure specific aspects or choose defaults
+dw.setDefaults();
+dw.setData(some_data);
+dw.startTransmit();
+...
+// similar for receiving plus IRQ handling
+```

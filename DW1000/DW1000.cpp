@@ -36,9 +36,12 @@ DW1000::~DW1000() {
 }
 
 void DW1000::initialize() {
-	//readNetworkIdAndDeviceAddress();
-	//readSystemConfigurationRegister();
-	//idle();
+	memset(_networkAndAddress, 0xFF, LEN_PANADR);
+	memset(_syscfg, 0, LEN_SYS_CFG);
+	writeSystemConfigurationRegister();
+	delay(20);
+	writeNetworkIdAndDeviceAddress();
+	delay(20);
 }
 
 /* ###########################################################################
@@ -49,6 +52,10 @@ byte* DW1000::getSystemConfiguration() {
 	return _syscfg;
 }
 
+byte* DW1000::getNetworkIdAndShortAddress() {
+	return _networkAndAddress;
+}
+
 int DW1000::getChipSelect() {
 	return _ss;
 }
@@ -57,7 +64,7 @@ int DW1000::getChipSelect() {
  * #### DW1000 operation functions ###########################################
  * ######################################################################### */
 
-char* DW1000::getDeviceIdentifier() {
+char* DW1000::getPrintableDeviceIdentifier() {
 	char* infoString = (char*)malloc(196);
 	byte data[LEN_DEV_ID];
 	readBytes(DEV_ID, data, LEN_DEV_ID);
@@ -66,7 +73,7 @@ char* DW1000::getDeviceIdentifier() {
 	return infoString;
 }
 
-char* DW1000::getExtendedUniqueIdentifier() {
+char* DW1000::getPrintableExtendedUniqueIdentifier() {
 	char* euiString = (char*)malloc(196);
 	byte data[LEN_EUI];
 	readBytes(EUI, data, LEN_EUI);
@@ -75,12 +82,12 @@ char* DW1000::getExtendedUniqueIdentifier() {
 	return euiString;
 }
 
-char* DW1000::getNetworkIdAndShortAddress() {
+char* DW1000::getPrintableNetworkIdAndShortAddress() {
 	char* panString = (char*)malloc(196);
 	byte data[LEN_PANADR];
 	readBytes(PANADR, data, LEN_PANADR);
-	sprintf(panString, "PAN: %d:%d, Short Address: %d:%d",
-		data[3], data[2], data[1], data[0]);
+	sprintf(panString, "PAN: %u, Short Address: %u",
+		(unsigned int)((data[3] << 8) | data[2]), (unsigned int)((data[1] << 8) | data[0]));
 	return panString;
 }
 
@@ -124,7 +131,6 @@ void DW1000::setDoubleBuffering(boolean val) {
 
 void DW1000::setReceiverAutoReenable(boolean val) {
 	setBit(_syscfg, LEN_SYS_CFG, DIS_DRXB_BIT, val);
-	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
 }
 
 void DW1000::idle() {
@@ -136,9 +142,7 @@ void DW1000::idle() {
 
 void DW1000::newConfiguration() {
 	readNetworkIdAndDeviceAddress();
-	delay(20);
 	readSystemConfigurationRegister();
-	delay(20);
 }
 
 void DW1000::commitConfiguration() {
@@ -353,6 +357,7 @@ void DW1000::setBit(byte data[], int n, int bit, boolean val) {
 		return; // TODO proper error handling: out of bounds
 	}
 	byte* targetByte = &data[idx];
+	shift = bit % 8;
 	if(val) {
 		bitSet(*targetByte, shift);
 	} else {
@@ -463,4 +468,29 @@ void DW1000::writeBytes(byte cmd, word offset, byte data[], int n) {
 #ifndef DEBUG
 	digitalWrite(_ss,HIGH);
 #endif
+}
+
+char* DW1000::getPrettyBytes(byte val[], unsigned int n) {
+	unsigned int i, j, b;
+	char* prettyString = (char*)malloc((n + 1) * 8 * 4);
+	b = 19;
+	strncpy(prettyString, "B: 7 6 5 4 3 2 1 0\n", b);
+	for(i = 0; i < n; i++) {
+		byte curByte = val[i];
+		snprintf(&prettyString[b++], 2, "%d", (i + 1));
+		prettyString[b++] = (char)((i + 1) & 0xFF); prettyString[b++] = ':'; prettyString[b++] = ' ';
+		for(j = 0; j < 8; j++) {
+			prettyString[b++] = ((curByte >> (7 - j)) & 0x01) ? '1' : '0';
+			if(j < 7) {
+				prettyString[b++] = ' '; 
+			} else if(i < n-1) {
+				prettyString[b++] = '\n';
+			} else {
+				prettyString[b++] = '\0';
+			}
+		}
+		
+	}
+	prettyString[b++] = '\0';
+	return prettyString;
 }

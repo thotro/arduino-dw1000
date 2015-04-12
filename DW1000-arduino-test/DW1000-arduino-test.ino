@@ -24,33 +24,37 @@ void setup() {
   Serial.begin(9600);
   // initialize the driver
   delay(100);
-  Serial.print("Device ID: "); Serial.println(dw.getDeviceIdentifier());
+  dw.initialize();
   // general configuration
   dw.newConfiguration(); 
-  dw.setDeviceAddress(0x0001);
-  dw.setNetworkId(0x0000);
-  //dw.setFrameFilter(false);
+  dw.setDeviceAddress(5);
+  dw.setNetworkId(10);
+  dw.setFrameFilter(true);
   dw.commitConfiguration();
   // print chip info
-  Serial.print("Unique ID: "); Serial.println(dw.getExtendedUniqueIdentifier());
-  Serial.print("Network ID & Device Address: "); Serial.println(dw.getNetworkIdAndShortAddress());
+  Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
+  Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
+  Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
+  // DEBUG 
+  Serial.println(DW1000::getPrettyBytes(dw.getSystemConfiguration(), 4));
+  Serial.println(DW1000::getPrettyBytes(dw.getNetworkIdAndShortAddress(), 4));
 }
 
 void loop() {
+    // TODO proper sender config and receiver test
     // transmit some data
-    /*dw.newTransmit();
+    dw.newTransmit();
     {
       dw.setDefaults();
-      byte data[6] = {'l', 'a', 'l', 'e', 'l', 'u'};
-      dw.setData(data, 6);
+      byte data[4] = {'t', 'e', 's', 't'};
+      dw.setData(data, 4);
       dw.startTransmit();
     }
     while(!dw.isTransmitDone()) {
-      //Serial.println("No ...");
-      delay(250); 
+      Serial.println("No ...");
+      delay(1000); 
     }
-    Serial.println("YES ...");*/
-    
+    Serial.println("YES ...");
     // wait a bit
     delay(2000);
 }

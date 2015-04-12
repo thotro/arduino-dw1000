@@ -38,6 +38,7 @@
 #define LEN_SYS_CFG 4
 #define FFEN_BIT 0
 #define DIS_DRXB_BIT 12
+#define HIRQ_POL 9
 #define RXAUTR_BIT 29
 
 // device control register
@@ -119,11 +120,12 @@ public:
 	int getChipSelect();
 
 	// device id, address, etc.
-	char* getDeviceIdentifier();
-	char* getExtendedUniqueIdentifier();
-	char* getNetworkIdAndShortAddress();
+	char* getPrintableDeviceIdentifier();
+	char* getPrintableExtendedUniqueIdentifier();
+	char* getPrintableNetworkIdAndShortAddress();
 
 	// PAN_ID, SHORT_ADDR, device address management
+	byte* getNetworkIdAndShortAddress();
 	void setNetworkId(unsigned int val);
 	void setDeviceAddress(unsigned int val);
 	
@@ -175,6 +177,9 @@ public:
 	void newTransmit();
 	void startTransmit();
 	void cancelTransmit();
+
+	// debug pretty print registers
+	static char* getPrettyBytes(byte val[], unsigned int n);
 
 	// transmission bit rate
 	static const byte TX_RATE_110KBPS = 0x00;
