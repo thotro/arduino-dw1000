@@ -16,16 +16,22 @@
  * #### Construction and init ################################################
  * ######################################################################### */
 
-DW1000::DW1000(int ss) {
+DW1000::DW1000(int ss, int rst) {
 	_ss = ss;
+	_rst = rst;
 	_deviceMode = IDLE_MODE;
 
-	suppressFrameCheck(false);
 	_extendedFrameLength = false;
 
 #ifndef DEBUG
 	pinMode(_ss, OUTPUT);
+	digitalWrite(_ss, HIGH);
+	pinMode(_rst, OUTPUT);
+	digitalWrite(_rst, HIGH);
 	SPI.begin();
+	SPI.setBitOrder(MSBFIRST);
+	SPI.setDataMode(SPI_MODE0);
+	SPI.setClockDivider(SPI_CLOCK_DIV8);
 #endif
 }
 
@@ -36,12 +42,22 @@ DW1000::~DW1000() {
 }
 
 void DW1000::initialize() {
+	// reset chip
+	digitalWrite(_rst, LOW);
+	delay(1);
+	digitalWrite(_rst, HIGH);
+	delay(1);
+	// default network and node id
 	memset(_networkAndAddress, 0xFF, LEN_PANADR);
-	memset(_syscfg, 0, LEN_SYS_CFG);
-	writeSystemConfigurationRegister();
-	delay(20);
 	writeNetworkIdAndDeviceAddress();
-	delay(20);
+	// default system configuration
+	memset(_syscfg, 0, LEN_SYS_CFG);
+	setDoubleBuffering(false);
+	setInterruptPolarity(true);
+	writeSystemConfigurationRegister();
+	// default interrupt mask, i.e. no interrupts
+	clearInterrupts();
+	writeSystemEventMaskRegister();
 }
 
 /* ###########################################################################
@@ -56,8 +72,8 @@ byte* DW1000::getNetworkIdAndShortAddress() {
 	return _networkAndAddress;
 }
 
-int DW1000::getChipSelect() {
-	return _ss;
+byte* DW1000::getSystemEventMask() {
+	return _sysmask;
 }
 
 /* ###########################################################################
@@ -111,6 +127,14 @@ void DW1000::writeNetworkIdAndDeviceAddress() {
 	writeBytes(PANADR, NO_SUB, _networkAndAddress, LEN_PANADR);
 }
 
+void DW1000::readSystemEventMaskRegister() {
+	readBytes(SYS_MASK, _sysmask, LEN_SYS_MASK);
+}
+
+void DW1000::writeSystemEventMaskRegister() {
+	writeBytes(SYS_MASK, NO_SUB, _sysmask, LEN_SYS_MASK);
+}
+
 void DW1000::setNetworkId(unsigned int val) {
 	_networkAndAddress[2] = (byte)(val & 0xFF);
 	_networkAndAddress[3] = (byte)((val >> 8) & 0xFF);
@@ -126,11 +150,27 @@ void DW1000::setFrameFilter(boolean val) {
 }
 
 void DW1000::setDoubleBuffering(boolean val) {
-	setBit(_syscfg, LEN_SYS_CFG, RXAUTR_BIT, !val);
+	setBit(_syscfg, LEN_SYS_CFG, DIS_DRXB_BIT, !val);
+}
+
+void DW1000::setInterruptPolarity(boolean val) {
+	setBit(_syscfg, LEN_SYS_CFG, HIRQ_POL, val);
 }
 
 void DW1000::setReceiverAutoReenable(boolean val) {
-	setBit(_syscfg, LEN_SYS_CFG, DIS_DRXB_BIT, val);
+	setBit(_syscfg, LEN_SYS_CFG, RXAUTR_BIT, val);
+}
+
+void DW1000::interruptOnSent(boolean val) {
+	setBit(_sysmask, LEN_SYS_MASK, TXFRS_BIT, true);
+}
+
+void DW1000::interruptOnReceived(boolean val) {
+	// TODO impl
+}
+
+void DW1000::clearInterrupts() {
+	memset(_sysmask, 0, LEN_SYS_MASK);
 }
 
 void DW1000::idle() {
@@ -143,13 +183,13 @@ void DW1000::idle() {
 void DW1000::newConfiguration() {
 	readNetworkIdAndDeviceAddress();
 	readSystemConfigurationRegister();
+	readSystemEventMaskRegister();
 }
 
 void DW1000::commitConfiguration() {
 	writeNetworkIdAndDeviceAddress();
-	delay(20);
 	writeSystemConfigurationRegister();
-	delay(20);
+	writeSystemEventMaskRegister();
 }
 
 void DW1000::waitForResponse(boolean val) {
@@ -466,7 +506,9 @@ void DW1000::writeBytes(byte cmd, word offset, byte data[], int n) {
 #endif
 	}
 #ifndef DEBUG
+	delay(1);
 	digitalWrite(_ss,HIGH);
+	delay(1);
 #endif
 }
 

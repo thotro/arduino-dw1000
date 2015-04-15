@@ -8,12 +8,13 @@ Project structure:
  * DW1000-unit-test ... contains plain C++ unit test code for the library
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
-Project status: 20%
+Project status: 25%
 Current milestone: RX/TX test with two chips, planned till end of April
 
 What works so far:
  * Basic SPI read/write with the chip
  * Fetching of chip configuration and device id
+ * Simple IRQ handing
  * Writing of chip configuration
  * Writing of node id
  * Writing of transmit data and transmit controls
@@ -21,7 +22,6 @@ What works so far:
 
 Next on the agenda:
  * Configuration of full transmission sessions
- * Simple IRQ handing and ISR definition
  * Basic transmission and receiving
  * Different setups and performance benchmarks
  * Ranging and simple communication examples
@@ -29,12 +29,15 @@ Next on the agenda:
 
 Usage will be something like:
 ```
-DW1000 dw = DW1000(cs_pin);
+DW1000 dw = DW1000(cs_pin, rst_pin);
 dw.initialize();
+attachInterrupt(...);
 ...
 dw.newConfiguration();
 // configure specific aspects or choose defaults
 dw.setDefaults();
+dw.interruptOnSent(true);
+// .. and other stuff.
 dw.commitConfiguration();
 ...
 dw.newTransmit();
@@ -45,3 +48,5 @@ dw.startTransmit();
 ...
 // similar for receiving plus IRQ handling
 ```
+
+A configuration API doc will follow shortly.

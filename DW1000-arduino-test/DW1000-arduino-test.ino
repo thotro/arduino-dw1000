@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 by Thomas Trojer <thomas@trojer.net>
+ * Copyright (c) 2015 by Thomas Trojer <thomas@trojer.net>
  * Decawave DW1000 library for arduino.
  *
  * This file is free software; you can redistribute it and/or modify
@@ -16,33 +16,51 @@
 #include <SPI.h>
 #include <DW1000.h>
 
-DW1000 dw = DW1000(SS);
-boolean toggle = true;
+// DEBUG packet sent status and count
+volatile boolean sent = false;
+volatile int numSent = 0;
+// reset line to the chip
+int RST = 9;
+// chip driver instances with chip select and reset
+DW1000 dw = DW1000(SS, RST);
 
 void setup() {
-  // for debugging
+  // DEBUG monitoring
   Serial.begin(9600);
   // initialize the driver
-  delay(100);
   dw.initialize();
+  Serial.println("DW1000 initialized ...");
   // general configuration
   dw.newConfiguration(); 
   dw.setDeviceAddress(5);
   dw.setNetworkId(10);
-  dw.setFrameFilter(true);
+  dw.setFrameFilter(false);
+  dw.interruptOnSent(true);
   dw.commitConfiguration();
-  // print chip info
+  Serial.println("Committed configuration ...");
+  // attach interrupt and ISR
+  attachInterrupt(0, serviceIRQ, FALLING);
+  Serial.println("Interrupt attached ...");
+  // DEBUG chip info and registers pretty printed
   Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
   Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
   Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-  // DEBUG 
   Serial.println(DW1000::getPrettyBytes(dw.getSystemConfiguration(), 4));
   Serial.println(DW1000::getPrettyBytes(dw.getNetworkIdAndShortAddress(), 4));
+  Serial.println(DW1000::getPrettyBytes(dw.getSystemEventMask(), 4));
+}
+
+void serviceIRQ() {
+  // "NOP" ISR
+  sent = true;
+  numSent++;
+  Serial.print("Handeling packet ... #"); Serial.println(numSent);
 }
 
 void loop() {
     // TODO proper sender config and receiver test
     // transmit some data
+    Serial.print("Transmitting packet ... #"); Serial.println(numSent+1);
     dw.newTransmit();
     {
       dw.setDefaults();
@@ -50,11 +68,19 @@ void loop() {
       dw.setData(data, 4);
       dw.startTransmit();
     }
-    while(!dw.isTransmitDone()) {
-      Serial.println("No ...");
-      delay(1000); 
+    // Interrupt version of transmit: Confirmation of ISR status change
+    if(sent) {
+      Serial.print("Processed packet ... #"); Serial.println(numSent);
+      sent = false;
     }
-    Serial.println("YES ...");
+    // Polling version of transmit (probably not really useful anymore)
+    /* while(!dw.isTransmitDone()) {
+      delay(10); 
+    } 
+    numSent++;
+    Serial.print("Handeling packet ... #"); Serial.println(numSent);
+    Serial.print("Processed packet ... #"); Serial.println(numSent);
+    */
     // wait a bit
-    delay(2000);
+    delay(1000);
 }

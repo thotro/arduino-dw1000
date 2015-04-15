@@ -66,6 +66,11 @@
 #define RXRFSL_BIT 16
 #define LDEERR_BIT 18
 
+// system event mask register
+// NOTE: uses the bit definitions of SYS_STATUS (below 32)
+#define SYS_MASK 0x0E
+#define LEN_SYS_MASK 4
+
 // RX timestamp register
 #define RX_TIME 0x15
 #define LEN_RX_TIME 14
@@ -112,12 +117,9 @@ public:
 	 */
 
 	// construction with chip select pin number
-	DW1000(int ss);
+	DW1000(int ss, int rst);
 	~DW1000();
 	void initialize();
-
-	// chip select
-	int getChipSelect();
 
 	// device id, address, etc.
 	char* getPrintableDeviceIdentifier();
@@ -134,6 +136,7 @@ public:
 	void setFrameFilter(boolean val);
 	void setDoubleBuffering(boolean val); // NOTE should be set to false
 	void setReceiverAutoReenable(boolean val);
+	void setInterruptPolarity(boolean val);
 
 	// SYS_CTRL, TX_FCTRL, transmit and receive configuration
 	void suppressFrameCheck(boolean val);
@@ -154,6 +157,12 @@ public:
 	boolean isTransmitDone();
 	boolean isReceiveDone();
 	boolean isReceiveSuccess();
+
+	// SYS_MASK, interrupt handling
+	byte* getSystemEventMask();
+	void interruptOnSent(boolean val);
+	void interruptOnReceived(boolean val); // TODO impl
+	void clearInterrupts();
 
 	void clearReceiveStatus();
 	void clearTransmitStatus(); // TODO impl
@@ -209,14 +218,16 @@ public:
 #endif
 
 private:
-	/* configured chip select pin. */
+	/* chip select and reset pins. */
 	unsigned int _ss;
+	unsigned int _rst;
 
 	/* register caches. */
 	byte _syscfg[LEN_SYS_CFG];
 	byte _sysctrl[LEN_SYS_CTRL];
 	byte _sysstatus[LEN_SYS_STATUS];
 	byte _txfctrl[LEN_TX_FCTRL];
+	byte _sysmask[LEN_SYS_MASK];
 
 	/* PAN and short address. */
 	byte _networkAndAddress[LEN_PANADR];
@@ -233,6 +244,8 @@ private:
 	void writeSystemConfigurationRegister();
 	void readNetworkIdAndDeviceAddress();
 	void writeNetworkIdAndDeviceAddress();
+	void readSystemEventMaskRegister();
+	void writeSystemEventMaskRegister();
 
 	/* reading and writing bytes from and to DW1000 module. */
 	void readBytes(byte cmd, byte data[], int n);
