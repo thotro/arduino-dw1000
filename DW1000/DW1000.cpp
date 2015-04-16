@@ -162,7 +162,7 @@ void DW1000::setReceiverAutoReenable(boolean val) {
 }
 
 void DW1000::interruptOnSent(boolean val) {
-	setBit(_sysmask, LEN_SYS_MASK, TXFRS_BIT, true);
+	setBit(_sysmask, LEN_SYS_MASK, TXFRS_BIT, val);
 }
 
 void DW1000::interruptOnReceived(boolean val) {

@@ -50,3 +50,26 @@ dw.startTransmit();
 ```
 
 A configuration API doc will follow shortly.
+
+The adapter board has the following pin mapping:
+
+Pin | Function
+----| ---------
+1 (EXTON) | see DW1000 manual
+2 (WAKEUP) | see DW1000 manual
+3 (RSTn) | Resetting the chip (by pulling low)
+4 (SYNC) | see DW1000 manual
+5 (VDD) | 3.3V power supply
+6 (GPIO6) | see DW1000 manual
+7 (GPIO5) | see DW1000 manual
+8 (GPIO4) | see DW1000 manual
+9 (GPIO3) | see DW1000 manual
+10 (GPIO2) | see DW1000 manual
+11 (GPIO1) | see DW1000 manual
+12 (GPIO0) | see DW1000 manual
+13 (SPICSn) | SPI chip select line (pulling low to activate chip)
+14 (SPIMOSI) | SPI communication towards chip
+15 (SPIMISO) | SPI communication towards controller
+16 (SPICLK) | SPI clock (at most 3MHz in init phase, afterwards up to 20MHz)
+17 (GPIO8) | interrupt asserted line, see DW1000 manual
+18 (GND) | Ground
