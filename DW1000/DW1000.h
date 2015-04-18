@@ -140,7 +140,6 @@ public:
 
 	// SYS_CTRL, TX_FCTRL, transmit and receive configuration
 	void suppressFrameCheck(boolean val);
-	boolean isSuppressFrameCheck();
 	void delayedTransceive(unsigned int delayNanos); // TODO impl
 	void transmitRate(byte rate);
 	void pulseFrequency(byte freq);
@@ -148,6 +147,7 @@ public:
 	void waitForResponse(boolean val);
 	void setData(byte data[], unsigned int n);
 	int getData(byte data[]);
+	boolean isSuppressFrameCheck();
 
 	// RX/TX default settings
 	void setDefaults();
@@ -180,12 +180,10 @@ public:
 	// reception
 	void newReceive();
 	void startReceive();
-	void cancelReceive();
 
 	// transmission
 	void newTransmit();
 	void startTransmit();
-	void cancelTransmit();
 
 	// debug pretty print registers
 	static char* getPrettyBytes(byte val[], unsigned int n);
@@ -221,6 +219,9 @@ private:
 	/* chip select and reset pins. */
 	unsigned int _ss;
 	unsigned int _rst;
+
+	/* fixed buffer for printed messages. */
+	char _msgBuf[196];
 
 	/* register caches. */
 	byte _syscfg[LEN_SYS_CFG];

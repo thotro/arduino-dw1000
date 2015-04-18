@@ -5,10 +5,13 @@ A library that offers functionality to use Decawave's DW1000 chips/modules with 
 Project structure:
  * DW1000 ... contains the Arduino library (which is to be copied to the corresponding libraries folder of your Arduino install or imported via the GUI)
  * DW1000-arduino-test ... contains Arduino test code using the DW1000 library
+   * DW1000-arduino-basic-test ... connectivity test
+   * DW1000-arduino-sender-test ... sender part of the basic sender/receiver test
+   * DW1000-arduino-receiver-test ... receiver part of the basic sender/receiver test
  * DW1000-unit-test ... contains plain C++ unit test code for the library
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
-Project status: 25%
+Project status: 30%
 Current milestone: RX/TX test with two chips, planned till end of April
 
 What works so far:
@@ -16,7 +19,7 @@ What works so far:
  * Fetching of chip configuration and device id
  * Simple IRQ handing
  * Writing of chip configuration
- * Writing of node id
+ * Writing of network/node id
  * Writing of transmit data and transmit controls
  * Transmission and reception sessions (structure)
 
@@ -58,7 +61,7 @@ Pin | Function
 1 (EXTON) | see DW1000 manual
 2 (WAKEUP) | see DW1000 manual
 3 (RSTn) | Resetting the chip (by pulling low)
-4 (SYNC) | see DW1000 manual
+4 (GPIO7) | see DW1000 manual
 5 (VDD) | 3.3V power supply
 6 (GPIO6) | see DW1000 manual
 7 (GPIO5) | see DW1000 manual

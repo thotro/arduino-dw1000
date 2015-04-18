@@ -20,9 +20,7 @@ DW1000::DW1000(int ss, int rst) {
 	_ss = ss;
 	_rst = rst;
 	_deviceMode = IDLE_MODE;
-
 	_extendedFrameLength = false;
-
 #ifndef DEBUG
 	pinMode(_ss, OUTPUT);
 	digitalWrite(_ss, HIGH);
@@ -44,9 +42,9 @@ DW1000::~DW1000() {
 void DW1000::initialize() {
 	// reset chip
 	digitalWrite(_rst, LOW);
-	delay(1);
+	delay(5);
 	digitalWrite(_rst, HIGH);
-	delay(1);
+	delay(5);
 	// default network and node id
 	memset(_networkAndAddress, 0xFF, LEN_PANADR);
 	writeNetworkIdAndDeviceAddress();
@@ -81,30 +79,27 @@ byte* DW1000::getSystemEventMask() {
  * ######################################################################### */
 
 char* DW1000::getPrintableDeviceIdentifier() {
-	char* infoString = (char*)malloc(196);
 	byte data[LEN_DEV_ID];
 	readBytes(DEV_ID, data, LEN_DEV_ID);
-	sprintf(infoString, "DECA - model: %d, version: %d, revision: %d", 
-		data[1], data[0] >> 4, data[0] & 0x0F);
-	return infoString;
+	sprintf(_msgBuf, "DECA - model: %d, version: %d, revision: %d", 
+		data[1], (data[0] >> 4) & 0x0F, data[0] & 0x0F);
+	return _msgBuf;
 }
 
 char* DW1000::getPrintableExtendedUniqueIdentifier() {
-	char* euiString = (char*)malloc(196);
 	byte data[LEN_EUI];
 	readBytes(EUI, data, LEN_EUI);
-	sprintf(euiString, "EUI: %d:%d:%d:%d:%d, OUI: %d:%d:%d",
+	sprintf(_msgBuf, "EUI: %d:%d:%d:%d:%d, OUI: %d:%d:%d",
 		data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-	return euiString;
+	return _msgBuf;
 }
 
 char* DW1000::getPrintableNetworkIdAndShortAddress() {
-	char* panString = (char*)malloc(196);
 	byte data[LEN_PANADR];
 	readBytes(PANADR, data, LEN_PANADR);
-	sprintf(panString, "PAN: %u, Short Address: %u",
+	sprintf(_msgBuf, "PAN: %u, Short Address: %u",
 		(unsigned int)((data[3] << 8) | data[2]), (unsigned int)((data[1] << 8) | data[0]));
-	return panString;
+	return _msgBuf;
 }
 
 void DW1000::readSystemConfigurationRegister() {
@@ -166,7 +161,7 @@ void DW1000::interruptOnSent(boolean val) {
 }
 
 void DW1000::interruptOnReceived(boolean val) {
-	// TODO impl
+	setBit(_sysmask, LEN_SYS_MASK, RXDFR_BIT, val);
 }
 
 void DW1000::clearInterrupts() {
@@ -249,11 +244,6 @@ void DW1000::startReceive() {
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 }
 
-void DW1000::cancelReceive() {
-	newReceive();
-	idle();
-}
-
 // TODO implement data(), other TX states, ...
 
 void DW1000::newTransmit() {
@@ -274,11 +264,6 @@ void DW1000::setDefaults() {
 	} else if(_deviceMode == IDLE_MODE) {
 		// TODO impl
 	}
-}
-
-void DW1000::cancelTransmit() {
-	newTransmit();
-	idle();
 }
 
 void DW1000::startTransmit() {

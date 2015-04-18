@@ -7,10 +7,8 @@
  * published by the Free Software Foundation.
  *
  *
- * Use this to test connectivity with your DW1000 from Arduino.
- *
- * At the moment it performs a really stupid test of toggling a
- * configuration bit on the chip.
+ * Use this to test simple sender/receiver functionality with two
+ * DW1000. Complements the "DW1000-arduino-receiver-test" sketch. 
  */
 
 #include <SPI.h>
@@ -38,9 +36,6 @@ void setup() {
   dw.interruptOnSent(true);
   dw.commitConfiguration();
   Serial.println("Committed configuration ...");
-  // attach interrupt and ISR
-  attachInterrupt(0, serviceIRQ, FALLING);
-  Serial.println("Interrupt attached ...");
   // DEBUG chip info and registers pretty printed
   Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
   Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
@@ -48,13 +43,19 @@ void setup() {
   Serial.println(DW1000::getPrettyBytes(dw.getSystemConfiguration(), 4));
   Serial.println(DW1000::getPrettyBytes(dw.getNetworkIdAndShortAddress(), 4));
   Serial.println(DW1000::getPrettyBytes(dw.getSystemEventMask(), 4));
+  // attach interrupt and ISR
+  pinMode(INT0, INPUT);
+  attachInterrupt(0, serviceIRQ, FALLING);
+  Serial.println("Interrupt attached ...");
 }
 
 void serviceIRQ() {
+  if(sent) {
+    return;
+  }
   // "NOP" ISR
   sent = true;
   numSent++;
-  Serial.print("Handeling packet ... #"); Serial.println(numSent);
 }
 
 void loop() {
