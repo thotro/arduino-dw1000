@@ -62,17 +62,7 @@ void DW1000::initialize() {
  * #### Member access ########################################################
  * ######################################################################### */
 
-byte* DW1000::getSystemConfiguration() {
-	return _syscfg;
-}
-
-byte* DW1000::getNetworkIdAndShortAddress() {
-	return _networkAndAddress;
-}
-
-byte* DW1000::getSystemEventMask() {
-	return _sysmask;
-}
+// ...
 
 /* ###########################################################################
  * #### DW1000 operation functions ###########################################
@@ -292,8 +282,32 @@ void DW1000::setData(byte data[], unsigned int n) {
 	}
 	// transmit data and length
 	writeBytes(TX_BUFFER, NO_SUB, data, n);
-	_txfctrl[0] = (byte)(n & 0xFF); // 1 byte regular length
-	_txfctrl[1] |= (byte)((n >> 8) & 0x07);	// 3 added bits if extended length
+	_txfctrl[0] = (byte)(n & 0xFF); // 1 byte (regular length + 1 bit)
+	_txfctrl[1] |= (byte)((n >> 8) & 0x03);	// 2 added bits if extended length
+}
+
+int DW1000::getDataLength() {
+	if(_deviceMode == TX_MODE) {
+		// 10 bits of TX frame control register
+		return (((_txfctrl[1] << 8) | _txfctrl[0]) & 0x03FF);
+	} else if(_deviceMode == RX_MODE) {
+		// 10 bits of RX frame control register
+		byte rxFrameInfo[LEN_RX_FINFO];
+		readBytes(RX_FINFO, rxFrameInfo, LEN_RX_FINFO);
+		// TODO if other frame info bits are used somewhere else, store/cache bytes
+		return ((((rxFrameInfo[1] << 8) | rxFrameInfo[0]) & 0x03FF) - 2); // w/o FCS 
+	} else {
+		return -1; // ignore in idle state
+	}
+}
+
+int DW1000::getData(byte data[]) {
+	int n = getDataLength(); // number of bytes w/o the two FCS ones
+	if(n < 0) {
+		return n;
+	}
+	readBytes(RX_BUFFER, data, n);
+	return n;
 }
 
 // system event register
@@ -497,27 +511,28 @@ void DW1000::writeBytes(byte cmd, word offset, byte data[], int n) {
 #endif
 }
 
-char* DW1000::getPrettyBytes(byte val[], unsigned int n) {
+char* DW1000::getPrettyBytes(unsigned int reg, unsigned int n) {
 	unsigned int i, j, b;
-	char* prettyString = (char*)malloc((n + 1) * 8 * 4);
-	b = 19;
-	strncpy(prettyString, "B: 7 6 5 4 3 2 1 0\n", b);
+	byte* readBuf = (byte*)malloc(n);
+	readBytes(reg, readBuf, n);
+	b = sprintf(_msgBuf, "Reg: 0x%02x, bytes: %d\nB: 7 6 5 4 3 2 1 0\n", reg, n);
 	for(i = 0; i < n; i++) {
-		byte curByte = val[i];
-		snprintf(&prettyString[b++], 2, "%d", (i + 1));
-		prettyString[b++] = (char)((i + 1) & 0xFF); prettyString[b++] = ':'; prettyString[b++] = ' ';
+		byte curByte = readBuf[i];
+		snprintf(&_msgBuf[b++], 2, "%d", (i + 1));
+		_msgBuf[b++] = (char)((i + 1) & 0xFF); _msgBuf[b++] = ':'; _msgBuf[b++] = ' ';
 		for(j = 0; j < 8; j++) {
-			prettyString[b++] = ((curByte >> (7 - j)) & 0x01) ? '1' : '0';
+			_msgBuf[b++] = ((curByte >> (7 - j)) & 0x01) ? '1' : '0';
 			if(j < 7) {
-				prettyString[b++] = ' '; 
+				_msgBuf[b++] = ' '; 
 			} else if(i < n-1) {
-				prettyString[b++] = '\n';
+				_msgBuf[b++] = '\n';
 			} else {
-				prettyString[b++] = '\0';
+				_msgBuf[b++] = '\0';
 			}
 		}
 		
 	}
-	prettyString[b++] = '\0';
-	return prettyString;
+	_msgBuf[b++] = '\0';
+	delete[] readBuf;
+	return _msgBuf;
 }

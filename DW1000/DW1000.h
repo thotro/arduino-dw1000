@@ -87,6 +87,14 @@
 #define LEN_UWB_FRAMES 127
 #define LEN_EXT_UWB_FRAMES 1023
 
+// RX frame info
+#define RX_FINFO 0x10
+#define LEN_RX_FINFO 4
+
+// receive data buffer
+#define RX_BUFFER 0x11
+#define LEN_RX_BUFFER 1024
+
 // transmit control
 #define TX_FCTRL 0x08
 #define LEN_TX_FCTRL 5
@@ -127,18 +135,16 @@ public:
 	char* getPrintableNetworkIdAndShortAddress();
 
 	// PAN_ID, SHORT_ADDR, device address management
-	byte* getNetworkIdAndShortAddress();
 	void setNetworkId(unsigned int val);
 	void setDeviceAddress(unsigned int val);
 	
 	// SYS_CFG, general device configuration
-	byte* getSystemConfiguration();
 	void setFrameFilter(boolean val);
 	void setDoubleBuffering(boolean val); // NOTE should be set to false
 	void setReceiverAutoReenable(boolean val);
 	void setInterruptPolarity(boolean val);
 
-	// SYS_CTRL, TX_FCTRL, transmit and receive configuration
+	// SYS_CTRL, TX/RX_FCTRL, transmit and receive configuration
 	void suppressFrameCheck(boolean val);
 	void delayedTransceive(unsigned int delayNanos); // TODO impl
 	void transmitRate(byte rate);
@@ -147,6 +153,7 @@ public:
 	void waitForResponse(boolean val);
 	void setData(byte data[], unsigned int n);
 	int getData(byte data[]);
+	int getDataLength();
 	boolean isSuppressFrameCheck();
 
 	// RX/TX default settings
@@ -159,9 +166,8 @@ public:
 	boolean isReceiveSuccess();
 
 	// SYS_MASK, interrupt handling
-	byte* getSystemEventMask();
 	void interruptOnSent(boolean val);
-	void interruptOnReceived(boolean val); // TODO impl
+	void interruptOnReceived(boolean val);
 	void clearInterrupts();
 
 	void clearReceiveStatus();
@@ -186,7 +192,7 @@ public:
 	void startTransmit();
 
 	// debug pretty print registers
-	static char* getPrettyBytes(byte val[], unsigned int n);
+	char* getPrettyBytes(unsigned int reg, unsigned int n);
 
 	// transmission bit rate
 	static const byte TX_RATE_110KBPS = 0x00;
@@ -221,7 +227,7 @@ private:
 	unsigned int _rst;
 
 	/* fixed buffer for printed messages. */
-	char _msgBuf[196];
+	char _msgBuf[1024];
 
 	/* register caches. */
 	byte _syscfg[LEN_SYS_CFG];

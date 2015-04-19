@@ -33,16 +33,16 @@ void setup() {
   dw.setDeviceAddress(6);
   dw.setNetworkId(10);
   dw.setFrameFilter(false);
-  dw.interruptOnSent(true);
+  dw.interruptOnReceived(true);
   dw.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
   Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
   Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
   Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-  Serial.println(DW1000::getPrettyBytes(dw.getSystemConfiguration(), 4));
-  Serial.println(DW1000::getPrettyBytes(dw.getNetworkIdAndShortAddress(), 4));
-  Serial.println(DW1000::getPrettyBytes(dw.getSystemEventMask(), 4));
+  Serial.println(dw.getPrettyBytes(SYS_CFG, LEN_SYS_CFG));
+  Serial.println(dw.getPrettyBytes(PANADR, LEN_PANADR));
+  Serial.println(dw.getPrettyBytes(SYS_MASK, LEN_SYS_MASK));
   // attach interrupt and ISR
   pinMode(INT0, INPUT);
   attachInterrupt(0, serviceIRQ, FALLING);
@@ -70,6 +70,7 @@ void loop() {
     // Interrupt version of transmit: Confirmation of ISR status change
     if(received) {
       Serial.print("Received packet ... #"); Serial.println(numReceived);
+      Serial.println(dw.getDataLength());
       received = false;
     }
     // wait a bit

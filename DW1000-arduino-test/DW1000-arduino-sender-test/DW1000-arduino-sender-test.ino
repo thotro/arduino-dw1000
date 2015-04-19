@@ -33,18 +33,19 @@ void setup() {
   dw.setDeviceAddress(5);
   dw.setNetworkId(10);
   dw.setFrameFilter(false);
-  dw.interruptOnSent(true);
+  //dw.interruptOnSent(true);
   dw.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
   Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
   Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
   Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-  Serial.println(DW1000::getPrettyBytes(dw.getSystemConfiguration(), 4));
-  Serial.println(DW1000::getPrettyBytes(dw.getNetworkIdAndShortAddress(), 4));
-  Serial.println(DW1000::getPrettyBytes(dw.getSystemEventMask(), 4));
+  Serial.println(dw.getPrettyBytes(SYS_CFG, LEN_SYS_CFG));
+  Serial.println(dw.getPrettyBytes(PANADR, LEN_PANADR));
+  Serial.println(dw.getPrettyBytes(SYS_MASK, LEN_SYS_MASK));
   // attach interrupt and ISR
   pinMode(INT0, INPUT);
+  digitalWrite(INT0, HIGH);
   attachInterrupt(0, serviceIRQ, FALLING);
   Serial.println("Interrupt attached ...");
 }
@@ -59,29 +60,29 @@ void serviceIRQ() {
 }
 
 void loop() {
-    // TODO proper sender config and receiver test
-    // transmit some data
-    Serial.print("Transmitting packet ... #"); Serial.println(numSent+1);
-    dw.newTransmit();
-    {
-      dw.setDefaults();
-      byte data[4] = {'t', 'e', 's', 't'};
-      dw.setData(data, 4);
-      dw.startTransmit();
-    }
-    // Interrupt version of transmit: Confirmation of ISR status change
-    if(sent) {
-      Serial.print("Processed packet ... #"); Serial.println(numSent);
-      sent = false;
-    }
-    // Polling version of transmit (probably not really useful anymore)
-    /* while(!dw.isTransmitDone()) {
-      delay(10); 
-    } 
-    numSent++;
-    Serial.print("Handeling packet ... #"); Serial.println(numSent);
+  // TODO proper sender config and receiver test
+  // transmit some data
+  Serial.print("Transmitting packet ... #"); Serial.println(numSent+1);
+  dw.newTransmit();
+  {
+    dw.setDefaults();
+    byte data[4] = {'t', 'e', 's', 't'};
+    dw.setData(data, 4);
+    dw.startTransmit();
+  }
+  // Interrupt version of transmit: Confirmation of ISR status change
+  if(sent) {
     Serial.print("Processed packet ... #"); Serial.println(numSent);
-    */
-    // wait a bit
-    delay(1000);
+    sent = false;
+  }
+  // Polling version of transmit (probably not really useful anymore)
+  /* while(!dw.isTransmitDone()) {
+    delay(10); 
+  } 
+  numSent++;
+  Serial.print("Handeling packet ... #"); Serial.println(numSent);
+  Serial.print("Processed packet ... #"); Serial.println(numSent);
+  */
+  // wait a bit
+  delay(1000);
 }
