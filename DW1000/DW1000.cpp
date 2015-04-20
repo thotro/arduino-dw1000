@@ -139,7 +139,7 @@ void DW1000::setDoubleBuffering(boolean val) {
 }
 
 void DW1000::setInterruptPolarity(boolean val) {
-	setBit(_syscfg, LEN_SYS_CFG, HIRQ_POL, val);
+	setBit(_syscfg, LEN_SYS_CFG, HIRQ_POL_BIT, val);
 }
 
 void DW1000::setReceiverAutoReenable(boolean val) {
@@ -201,18 +201,26 @@ void DW1000::delayedTransceive(unsigned int delayNanos) {
 	// TODO impl 40 bit in DX_TIME register, 9 lower sig. bits are ignored
 }
 
-void DW1000::transmitRate(byte rate) {
+void DW1000::dataRate(byte rate) {
 	rate &= 0x03;
 	if(rate >= 0x03) {
-		rate = TX_RATE_6800KBPS;
+		rate = TRX_RATE_110KBPS;
 	}
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
+	if(_deviceMode == RX_MODE) {
+		if(rate = TRX_RATE_110KBPS) {
+			setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, true);
+		} else {
+			setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, false);
+		}
+		writeSystemConfigurationRegister();
+	}
 }
 
 void DW1000::pulseFrequency(byte freq) {
 	freq &= 0x03;
 	if(freq == 0x00 || freq >= 0x03) {
-		freq = TX_PULSE_FREQ_64MHZ;
+		freq = TX_PULSE_FREQ_16MHZ;
 	}
 	_txfctrl[2] |= (byte)(freq & 0xFF);
 }
@@ -221,6 +229,14 @@ void DW1000::preambleLength(byte prealen) {
 	prealen &= 0x0F;
 	_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
 	// TODO set PAC size accordingly for RX (see table 6, page 31)
+}
+
+void DW1000::extendedFrameLength(boolean val) {
+	byte extLen = 0x00;
+	if(val) {
+		extLen = 0x03;
+	}
+	_sysctrl[3] |= extLen;
 }
 
 void DW1000::newReceive() {
@@ -246,11 +262,14 @@ void DW1000::newTransmit() {
 void DW1000::setDefaults() {
 	if(_deviceMode == TX_MODE) {
 		suppressFrameCheck(false);
-		transmitRate(TX_RATE_6800KBPS);
-		pulseFrequency(TX_PULSE_FREQ_64MHZ);
-		preambleLength(TX_PREAMBLE_LEN_1024);
+		dataRate(TRX_RATE_850KBPS);
+		pulseFrequency(TX_PULSE_FREQ_16MHZ);
+		preambleLength(TX_PREAMBLE_LEN_128);
+		extendedFrameLength(false);
 	} else if(_deviceMode == RX_MODE) {
 		// TODO impl
+		extendedFrameLength(false);
+		dataRate(TRX_RATE_850KBPS);
 	} else if(_deviceMode == IDLE_MODE) {
 		// TODO impl
 	}

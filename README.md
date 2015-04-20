@@ -12,6 +12,7 @@ Project structure:
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
 Project status: 30%
+
 Current milestone: RX/TX test with two chips, planned till end of April
 
 What works so far:

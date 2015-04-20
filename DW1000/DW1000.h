@@ -38,8 +38,11 @@
 #define LEN_SYS_CFG 4
 #define FFEN_BIT 0
 #define DIS_DRXB_BIT 12
-#define HIRQ_POL 9
+#define HIRQ_POL_BIT 9
 #define RXAUTR_BIT 29
+#define PHR_MODE_SUB 16
+#define LEN_PHR_MODE_SUB 2
+#define RXM110K_BIT 22
 
 // device control register
 #define SYS_CTRL 0x0D
@@ -147,9 +150,10 @@ public:
 	// SYS_CTRL, TX/RX_FCTRL, transmit and receive configuration
 	void suppressFrameCheck(boolean val);
 	void delayedTransceive(unsigned int delayNanos); // TODO impl
-	void transmitRate(byte rate);
+	void dataRate(byte rate);
 	void pulseFrequency(byte freq);
 	void preambleLength(byte prealen);
+	void extendedFrameLength(boolean val);
 	void waitForResponse(boolean val);
 	void setData(byte data[], unsigned int n);
 	int getData(byte data[]);
@@ -194,10 +198,10 @@ public:
 	// debug pretty print registers
 	char* getPrettyBytes(unsigned int reg, unsigned int n);
 
-	// transmission bit rate
-	static const byte TX_RATE_110KBPS = 0x00;
-	static const byte TX_RATE_850KBPS = 0x01;
-	static const byte TX_RATE_6800KBPS = 0x02;
+	// transmission/reception bit rate
+	static const byte TRX_RATE_110KBPS = 0x00;
+	static const byte TRX_RATE_850KBPS = 0x01;
+	static const byte TRX_RATE_6800KBPS = 0x02;
 
 	// transmission pulse frequencey
 	// 0x00 is 4MHZ, but receiver in DW1000 does not support it (!??)

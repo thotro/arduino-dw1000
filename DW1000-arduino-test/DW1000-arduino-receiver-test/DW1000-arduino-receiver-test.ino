@@ -51,7 +51,6 @@ void setup() {
   dw.newReceive();
   {
     dw.setDefaults();
-    dw.setReceiverAutoReenable(true);
     dw.startReceive();
   }
 }
@@ -72,7 +71,14 @@ void loop() {
       Serial.print("Received packet ... #"); Serial.println(numReceived);
       Serial.println(dw.getDataLength());
       received = false;
+      
+      dw.newReceive();
+      {
+        dw.setDefaults();
+        dw.startReceive();
+      }
     }
     // wait a bit
-    delay(100);
+    //delay(10);
+    Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
 }

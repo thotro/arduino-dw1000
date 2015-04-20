@@ -33,7 +33,7 @@ void setup() {
   dw.setDeviceAddress(5);
   dw.setNetworkId(10);
   dw.setFrameFilter(false);
-  //dw.interruptOnSent(true);
+  dw.interruptOnSent(true);
   dw.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
@@ -45,7 +45,6 @@ void setup() {
   Serial.println(dw.getPrettyBytes(SYS_MASK, LEN_SYS_MASK));
   // attach interrupt and ISR
   pinMode(INT0, INPUT);
-  digitalWrite(INT0, HIGH);
   attachInterrupt(0, serviceIRQ, FALLING);
   Serial.println("Interrupt attached ...");
 }
@@ -67,7 +66,7 @@ void loop() {
   {
     dw.setDefaults();
     byte data[4] = {'t', 'e', 's', 't'};
-    dw.setData(data, 4);
+    dw.setData(data, 1);
     dw.startTransmit();
   }
   // Interrupt version of transmit: Confirmation of ISR status change
@@ -84,5 +83,5 @@ void loop() {
   Serial.print("Processed packet ... #"); Serial.println(numSent);
   */
   // wait a bit
-  delay(1000);
+  delay(2000);
 }
