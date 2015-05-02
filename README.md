@@ -11,9 +11,9 @@ Project structure:
  * DW1000-unit-test ... contains plain C++ unit test code for the library
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
-Project status: 30%
+Project status: 35%
 
-Current milestone: RX/TX test with two chips, planned till end of April
+Current milestone: RX/TX test with two chips; bug fixing and stabilizing, planned till mid of April
 
 What works so far:
  * Basic SPI read/write with the chip
@@ -23,10 +23,11 @@ What works so far:
  * Writing of network/node id
  * Writing of transmit data and transmit controls
  * Transmission and reception sessions (structure)
+ * Transmission of packets with two chips (although unstable at the moment)
 
 Next on the agenda:
  * Configuration of full transmission sessions
- * Basic transmission and receiving
+ * Stable basic transmission and receiving
  * Different setups and performance benchmarks
  * Ranging and simple communication examples
  * ...
