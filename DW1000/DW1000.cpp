@@ -240,9 +240,9 @@ void DW1000::extendedFrameLength(boolean val) {
 }
 
 void DW1000::newReceive() {
+	clearReceiveStatus();
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
 	_deviceMode = RX_MODE;
-	suppressFrameCheck(false);
 }
 
 void DW1000::startReceive() {
@@ -250,10 +250,8 @@ void DW1000::startReceive() {
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 }
 
-// TODO implement data(), other TX states, ...
-
 void DW1000::newTransmit() {
-	// clear out SYS_CTRL for a new transmit operation
+	clearTransmitStatus();
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
 	memset(_txfctrl, 0, LEN_TX_FCTRL);
 	_deviceMode = TX_MODE;
@@ -270,6 +268,7 @@ void DW1000::setDefaults() {
 		// TODO impl
 		extendedFrameLength(false);
 		dataRate(TRX_RATE_850KBPS);
+		suppressFrameCheck(false);
 	} else if(_deviceMode == IDLE_MODE) {
 		// TODO impl
 	}

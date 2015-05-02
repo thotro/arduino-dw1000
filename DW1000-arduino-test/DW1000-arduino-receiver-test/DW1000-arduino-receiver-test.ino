@@ -79,6 +79,6 @@ void loop() {
       }
     }
     // wait a bit
-    //delay(10);
-    Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
+    delay(100);
+    //Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
 }
