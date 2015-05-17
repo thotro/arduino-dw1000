@@ -102,6 +102,21 @@
 #define TX_FCTRL 0x08
 #define LEN_TX_FCTRL 5
 
+// channel control
+#define CHAN_CTRL 0x1F
+#define LEN_CHAN_CTRL 4
+
+// OTP control
+#define OTP_CTRL 0x2D
+#define OTP_CTRL_SUB 0x06
+#define LEN_OTP_CTRL 2
+#define LDELOAD_BIT 15
+
+// AGC_TUNE2 (for re-tuning only)
+#define AGC_TUNE2 0x23
+#define AGC_TUNE2_SUB 0x0C
+#define LEN_AGC_TUNE2 4
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -125,6 +140,8 @@ public:
  	 * - TR in TX_FCTRL for flagging for ranging messages
 	 * - CANSFCS in SYS_CTRL to cancel frame check suppression
 	 * - HSRBP in SYS_CTRL to determine in double buffered mode from which buffer to read
+	 *
+	 * - replace all |= with bitChange (bitClear + bitSet)
 	 */
 
 	// construction with chip select pin number
@@ -203,12 +220,12 @@ public:
 	static const byte TRX_RATE_850KBPS = 0x01;
 	static const byte TRX_RATE_6800KBPS = 0x02;
 
-	// transmission pulse frequencey
+	// transmission pulse frequency
 	// 0x00 is 4MHZ, but receiver in DW1000 does not support it (!??)
 	static const byte TX_PULSE_FREQ_16MHZ = 0x01; 
 	static const byte TX_PULSE_FREQ_64MHZ = 0x02;
 
-	// preamble lengthes (PE + TXPSR bits)
+	// preamble length (PE + TXPSR bits)
 	static const byte TX_PREAMBLE_LEN_64 = 0x01;
 	static const byte TX_PREAMBLE_LEN_128 = 0x05;
 	static const byte TX_PREAMBLE_LEN_256 = 0x09;
@@ -239,6 +256,7 @@ private:
 	byte _sysstatus[LEN_SYS_STATUS];
 	byte _txfctrl[LEN_TX_FCTRL];
 	byte _sysmask[LEN_SYS_MASK];
+	byte _chanctrl[LEN_CHAN_CTRL];
 
 	/* PAN and short address. */
 	byte _networkAndAddress[LEN_PANADR];
@@ -257,9 +275,13 @@ private:
 	void writeNetworkIdAndDeviceAddress();
 	void readSystemEventMaskRegister();
 	void writeSystemEventMaskRegister();
+	void readChannelControlRegister();
+	void writeChannelControlRegister();
+	void readTransmitFrameControlRegister();
+	void writeTransmitFrameControlRegister();
 
 	/* reading and writing bytes from and to DW1000 module. */
-	void readBytes(byte cmd, byte data[], int n);
+	void readBytes(byte cmd, word offset, byte data[], int n);
 	void writeBytes(byte cmd, word offset, byte data[], int n);
 
 	/* internal helper for bit operations on multi-bytes. */
@@ -271,6 +293,7 @@ private:
 	static const byte WRITE = 0x80; // regular write
 	static const byte WRITE_SUB = 0xC0; // write with sub address
 	static const byte READ = 0x00; // regular read
+	static const byte READ_SUB = 0x40; // read with sub address
 };
 
 #endif

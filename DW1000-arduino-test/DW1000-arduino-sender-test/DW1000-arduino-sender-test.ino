@@ -29,7 +29,8 @@ void setup() {
   dw.initialize();
   Serial.println("DW1000 initialized ...");
   // general configuration
-  dw.newConfiguration(); 
+  dw.newConfiguration();
+  dw.setDefaults();
   dw.setDeviceAddress(5);
   dw.setNetworkId(10);
   dw.setFrameFilter(false);
@@ -66,7 +67,7 @@ void loop() {
   {
     dw.setDefaults();
     byte data[4] = {'t', 'e', 's', 't'};
-    dw.setData(data, 1);
+    dw.setData(data, 3);
     dw.startTransmit();
   }
   // Interrupt version of transmit: Confirmation of ISR status change
@@ -74,14 +75,7 @@ void loop() {
     Serial.print("Processed packet ... #"); Serial.println(numSent);
     sent = false;
   }
-  // Polling version of transmit (probably not really useful anymore)
-  /* while(!dw.isTransmitDone()) {
-    delay(10); 
-  } 
-  numSent++;
-  Serial.print("Handeling packet ... #"); Serial.println(numSent);
-  Serial.print("Processed packet ... #"); Serial.println(numSent);
-  */
   // wait a bit
   delay(2000);
+  //Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
 }

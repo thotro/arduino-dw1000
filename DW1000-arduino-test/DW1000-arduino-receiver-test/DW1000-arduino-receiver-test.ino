@@ -29,7 +29,8 @@ void setup() {
   dw.initialize();
   Serial.println("DW1000 initialized ...");
   // general configuration
-  dw.newConfiguration(); 
+  dw.newConfiguration();
+  dw.setDefaults();
   dw.setDeviceAddress(6);
   dw.setNetworkId(10);
   dw.setFrameFilter(false);
@@ -49,10 +50,8 @@ void setup() {
   Serial.println("Interrupt attached ...");
   // configure as permanent receiver
   dw.newReceive();
-  {
-    dw.setDefaults();
-    dw.startReceive();
-  }
+  dw.setDefaults();
+  dw.startReceive();
 }
 
 void serviceIRQ() {
@@ -64,7 +63,7 @@ void serviceIRQ() {
   numReceived++;
 }
 
-void loop() {
+void loop() {    
     // TODO proper sender config and receiver test
     // Interrupt version of transmit: Confirmation of ISR status change
     if(received) {
@@ -73,12 +72,11 @@ void loop() {
       received = false;
       
       dw.newReceive();
-      {
-        dw.setDefaults();
-        dw.startReceive();
-      }
+      dw.setDefaults();
+      dw.startReceive();
     }
     // wait a bit
     delay(100);
     //Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
+    //Serial.println(dw.getPrettyBytes(CHAN_CTRL, LEN_CHAN_CTRL));
 }
