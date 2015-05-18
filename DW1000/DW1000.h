@@ -58,6 +58,7 @@
 // system event status register
 #define SYS_STATUS 0x0F
 #define LEN_SYS_STATUS 5
+#define AAT_BIT 3
 #define TXFRB_BIT 4
 #define TXPRS_BIT 5
 #define TXPHS_BIT 6
@@ -106,16 +107,58 @@
 #define CHAN_CTRL 0x1F
 #define LEN_CHAN_CTRL 4
 
-// OTP control
+// OTP control (for LDE micro code loading only)
 #define OTP_CTRL 0x2D
 #define OTP_CTRL_SUB 0x06
 #define LEN_OTP_CTRL 2
-#define LDELOAD_BIT 15
 
-// AGC_TUNE2 (for re-tuning only)
-#define AGC_TUNE2 0x23
+// PMSC_CTRL0 (for LDE micro code loading only)
+#define PMSC_CTRL0 0x36
+#define LEN_PMSC_CTRL0 2
+
+// AGC_TUNE1/2 (for re-tuning only)
+// TODO AGC_TUNE1 needs to be adjusted with PRF (see Table 22)
+#define AGC_TUNE 0x23
+#define AGC_TUNE1_SUB 0x04
 #define AGC_TUNE2_SUB 0x0C
+#define LEN_AGC_TUNE1 2
 #define LEN_AGC_TUNE2 4
+
+// DRX_TUNE2 (for re-tuning only)
+// TODO needs to be adjusted with preamble len and PRF (see Table 31)
+#define DRX_TUNE 0x27
+#define DRX_TUNE2_SUB 0x08
+#define LEN_DRX_TUNE2 4
+
+// LDE_CFG1 (for re-tuning only)
+// TODO LDE_CFG2 needs to be adjusted with PRF (see Table 47)
+#define LDE_CFG 0x2E
+#define LDE_CFG1_SUB 0x0806
+#define LDE_CFG2_SUB 0x1806
+#define LEN_LDE_CFG1 1
+#define LEN_LDE_CFG2 2
+
+// TX_POWER (for re-tuning only)
+#define TX_POWER 0x1E
+#define LEN_TX_POWER 4
+
+// RF_CONF (for re-tuning only)
+// TODO RX_TXCTRL needs to be adjusted with channel (see Table 35)
+#define RF_CONF 0x28
+#define RF_TXCTRL_SUB 0x0C
+#define LEN_RF_TXCTRL 4
+
+// TX_CAL (for re-tuning only)
+// TODO TC_PGDELAY needs to be adjusted with channel (see Table 37)
+#define TX_CAL 0x2A
+#define TC_PGDELAY_SUB 0x0B
+#define LEN_TC_PGDELAY 1
+
+// FS_CTRL (for re-tuning only)
+// TODO FS_PLLTUNE needs to be adjusted with channel (see Table 40)
+#define FS_CTRL 0x2B
+#define FS_PLLTUNE_SUB 0x0B
+#define LEN_FS_PLLTUNE 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -148,6 +191,7 @@ public:
 	DW1000(int ss, int rst);
 	~DW1000();
 	void initialize();
+	void tune();
 
 	// device id, address, etc.
 	char* getPrintableDeviceIdentifier();
@@ -189,6 +233,7 @@ public:
 	// SYS_MASK, interrupt handling
 	void interruptOnSent(boolean val);
 	void interruptOnReceived(boolean val);
+	void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 	void clearInterrupts();
 
 	void clearReceiveStatus();

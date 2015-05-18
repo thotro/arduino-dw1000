@@ -63,7 +63,7 @@ void serviceIRQ() {
   numReceived++;
 }
 
-void loop() {    
+void loop() {
     // TODO proper sender config and receiver test
     // Interrupt version of transmit: Confirmation of ISR status change
     if(received) {
@@ -76,7 +76,12 @@ void loop() {
       dw.startReceive();
     }
     // wait a bit
-    delay(100);
+    delay(1000);
     //Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
     //Serial.println(dw.getPrettyBytes(CHAN_CTRL, LEN_CHAN_CTRL));
+    
+    // TODO re-issue receive after error
+    dw.newReceive();
+    dw.setDefaults();
+    dw.startReceive();
 }

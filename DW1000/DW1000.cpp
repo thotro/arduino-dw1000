@@ -58,15 +58,51 @@ void DW1000::initialize() {
 	clearInterrupts();
 	writeSystemEventMaskRegister();
 	// tell the chip to load the LDE microcode
+	byte pmscctrl0[LEN_PMSC_CTRL0];
 	byte otpctrl[LEN_OTP_CTRL];
-	readBytes(OTP_CTRL, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
-	setBit(otpctrl, LEN_OTP_CTRL, LDELOAD_BIT, true);
+	memset(otpctrl, 0x8000, LEN_OTP_CTRL);
+	memset(pmscctrl0, 0x0301, LEN_PMSC_CTRL0);
+	writeBytes(PMSC_CTRL0, NO_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 	writeBytes(OTP_CTRL, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
+	delay(10);
+	memset(pmscctrl0, 0x0200, LEN_PMSC_CTRL0);
+	writeBytes(PMSC_CTRL0, NO_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	tune();
+	delay(10);
+}
+
+void DW1000::tune() {
 	// re-tune chip for channel 5 (default)
+	byte agctune1[LEN_AGC_TUNE1];
 	byte agctune2[LEN_AGC_TUNE2];
+	byte drxtune2[LEN_DRX_TUNE2];
+	byte ldecfg1[LEN_LDE_CFG1];
+	byte ldecfg2[LEN_LDE_CFG2];
+	byte txpower[LEN_TX_POWER];
+	byte rftxctrl[LEN_RF_TXCTRL];
+	byte tcpgdelay[LEN_TC_PGDELAY];
+	byte fsplltune[LEN_FS_PLLTUNE];
+	memset(agctune1, 0x8870, LEN_AGC_TUNE1);
 	memset(agctune2, 0x2502A907, LEN_AGC_TUNE2);
-	writeBytes(AGC_TUNE2, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
-	// TODO others as well, see 2.5.5, p. 21
+	memset(drxtune2, 0x311A002D, LEN_DRX_TUNE2);
+	memset(ldecfg1, 0x6D, LEN_LDE_CFG1);
+	memset(ldecfg2, 0x1607, LEN_LDE_CFG2);
+	memset(txpower, 0x0E082848, LEN_TX_POWER);
+	memset(rftxctrl, 0x001E3FE0, LEN_RF_TXCTRL);
+	memset(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
+	memset(fsplltune, 0xA6, LEN_FS_PLLTUNE);
+	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
+	writeBytes(AGC_TUNE, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
+	writeBytes(DRX_TUNE, DRX_TUNE2_SUB, drxtune2, LEN_DRX_TUNE2);
+	writeBytes(LDE_CFG, LDE_CFG1_SUB, ldecfg1, LEN_LDE_CFG1);
+	writeBytes(LDE_CFG, LDE_CFG2_SUB, ldecfg2, LEN_LDE_CFG2);
+	writeBytes(TX_POWER, NO_SUB, txpower, LEN_TX_POWER);
+	writeBytes(RF_CONF, RF_TXCTRL_SUB, rftxctrl, LEN_RF_TXCTRL);
+	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
+	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
+	
+	// TODO others as well, RF_TXCTRL, TX_PGDELAY, FS_PLLTUNE, LDOTUNE
+	// TODO see 2.5.5, p. 21
 }
 
 /* ###########################################################################
@@ -181,6 +217,10 @@ void DW1000::interruptOnReceived(boolean val) {
 	setBit(_sysmask, LEN_SYS_MASK, RXDFR_BIT, val);
 }
 
+void DW1000::interruptOnAutomaticAcknowledgeTrigger(boolean val) {
+	setBit(_sysmask, LEN_SYS_MASK, AAT_BIT, val);
+}
+
 void DW1000::clearInterrupts() {
 	memset(_sysmask, 0, LEN_SYS_MASK);
 }
@@ -253,6 +293,16 @@ void DW1000::pulseFrequency(byte freq) {
 	}
 	_txfctrl[2] |= (byte)(freq & 0xFF);
 	_chanctrl[2] |= (byte)((freq << 2) & 0xFF);
+	// tuning
+	byte agctune1[LEN_AGC_TUNE1];
+	if(freq == TX_PULSE_FREQ_16MHZ) {
+		memset(agctune1, 0x8870, LEN_AGC_TUNE1);
+	} else if(freq == TX_PULSE_FREQ_64MHZ) {
+		memset(agctune1, 0x889B, LEN_AGC_TUNE1);
+	} else {
+		return;
+	}
+	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
 }
 
 void DW1000::preambleLength(byte prealen) {
@@ -270,8 +320,8 @@ void DW1000::extendedFrameLength(boolean val) {
 }
 
 void DW1000::newReceive() {
-	clearReceiveStatus();
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
+	clearReceiveStatus();
 	_deviceMode = RX_MODE;
 }
 
@@ -281,8 +331,8 @@ void DW1000::startReceive() {
 }
 
 void DW1000::newTransmit() {
-	clearTransmitStatus();
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
+	clearTransmitStatus();
 	_deviceMode = TX_MODE;
 }
 
@@ -294,10 +344,11 @@ void DW1000::setDefaults() {
 		suppressFrameCheck(false);
 		extendedFrameLength(false);
 	} else if(_deviceMode == IDLE_MODE) {
-		dataRate(TRX_RATE_6800KBPS);
+		/*dataRate(TRX_RATE_6800KBPS);
 		pulseFrequency(TX_PULSE_FREQ_16MHZ);
 		preambleLength(TX_PREAMBLE_LEN_1024);
-		setReceiverAutoReenable(true);
+		setReceiverAutoReenable(true);*/
+		interruptOnAutomaticAcknowledgeTrigger(true);
 	}
 }
 
@@ -305,7 +356,7 @@ void DW1000::startTransmit() {
 	// set transmit flag
 	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
-	// reset to idel
+	// reset to idle
 	_deviceMode = IDLE_MODE;
 }
 
