@@ -34,10 +34,15 @@ void setup() {
 }
 
 void loop() {
+    // wait a bit
+    delay(1000);
     // DEBUG chip info and registers pretty printed
     Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
     Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
     Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
+    // DEBUG print device tuning results
+    Serial.println(dw.getPrettyBytes(AGC_TUNE, AGC_TUNE1_SUB, LEN_AGC_TUNE1));
+    Serial.println(dw.getPrettyBytes(AGC_TUNE, AGC_TUNE2_SUB, LEN_AGC_TUNE2));
     // wait a bit
-    delay(1000);
+    delay(10000);
 }

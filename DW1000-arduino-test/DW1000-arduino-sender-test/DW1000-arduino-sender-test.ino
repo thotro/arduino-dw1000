@@ -41,9 +41,9 @@ void setup() {
   Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
   Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
   Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-  Serial.println(dw.getPrettyBytes(SYS_CFG, LEN_SYS_CFG));
-  Serial.println(dw.getPrettyBytes(PANADR, LEN_PANADR));
-  Serial.println(dw.getPrettyBytes(SYS_MASK, LEN_SYS_MASK));
+  Serial.println(dw.getPrettyBytes(SYS_CFG, NO_SUB, LEN_SYS_CFG));
+  Serial.println(dw.getPrettyBytes(PANADR, NO_SUB, LEN_PANADR));
+  Serial.println(dw.getPrettyBytes(SYS_MASK, NO_SUB, LEN_SYS_MASK));
   // attach interrupt and ISR
   pinMode(INT0, INPUT);
   attachInterrupt(0, serviceIRQ, FALLING);
@@ -66,8 +66,8 @@ void loop() {
   dw.newTransmit();
   {
     dw.setDefaults();
-    byte data[4] = {'t', 'e', 's', 't'};
-    dw.setData(data, 3);
+    String msg = "Hello DW1000";
+    dw.setData(msg);
     dw.startTransmit();
   }
   // Interrupt version of transmit: Confirmation of ISR status change
@@ -77,5 +77,5 @@ void loop() {
   }
   // wait a bit
   delay(2000);
-  //Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
+  //Serial.println(dw.getPrettyBytes(SYS_STATUS, NO_SUB, LEN_SYS_STATUS));
 }

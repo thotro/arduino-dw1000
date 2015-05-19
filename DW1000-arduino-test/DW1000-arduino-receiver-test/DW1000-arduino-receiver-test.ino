@@ -14,6 +14,8 @@
 #include <SPI.h>
 #include <DW1000.h>
 
+// packet data
+byte recvBytes[256];
 // DEBUG packet sent status and count
 volatile boolean received = false;
 volatile int numReceived = 0;
@@ -41,9 +43,9 @@ void setup() {
   Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
   Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
   Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-  Serial.println(dw.getPrettyBytes(SYS_CFG, LEN_SYS_CFG));
-  Serial.println(dw.getPrettyBytes(PANADR, LEN_PANADR));
-  Serial.println(dw.getPrettyBytes(SYS_MASK, LEN_SYS_MASK));
+  Serial.println(dw.getPrettyBytes(SYS_CFG, NO_SUB, LEN_SYS_CFG));
+  Serial.println(dw.getPrettyBytes(PANADR, NO_SUB, LEN_PANADR));
+  Serial.println(dw.getPrettyBytes(SYS_MASK, NO_SUB, LEN_SYS_MASK));
   // attach interrupt and ISR
   pinMode(INT0, INPUT);
   attachInterrupt(0, serviceIRQ, FALLING);
@@ -68,20 +70,21 @@ void loop() {
     // Interrupt version of transmit: Confirmation of ISR status change
     if(received) {
       Serial.print("Received packet ... #"); Serial.println(numReceived);
-      Serial.println(dw.getDataLength());
-      received = false;
+      int n = dw.getDataLength();
+      Serial.print("Bytes available ... "); Serial.println(n);
+      dw.getData(recvBytes, n);
+      Serial.print("Data is ... ");
+      for(int i = 0; i < n; i++) {
+        Serial.print((char)recvBytes[i]);
+      }
+      Serial.println();
       
+      received = false;
+      // restart the receiver
       dw.newReceive();
       dw.setDefaults();
       dw.startReceive();
     }
-    // wait a bit
-    delay(1000);
-    //Serial.println(dw.getPrettyBytes(SYS_STATUS, LEN_SYS_STATUS));
-    //Serial.println(dw.getPrettyBytes(CHAN_CTRL, LEN_CHAN_CTRL));
-    
-    // TODO re-issue receive after error
-    dw.newReceive();
-    dw.setDefaults();
-    dw.startReceive();
+    //Serial.println(dw.getPrettyBytes(SYS_STATUS, NO_SUB, LEN_SYS_STATUS));
+    //Serial.println(dw.getPrettyBytes(CHAN_CTRL, NO_SUB, LEN_CHAN_CTRL));
 }

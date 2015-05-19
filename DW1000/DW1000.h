@@ -216,8 +216,10 @@ public:
 	void preambleLength(byte prealen);
 	void extendedFrameLength(boolean val);
 	void waitForResponse(boolean val);
-	void setData(byte data[], unsigned int n);
-	int getData(byte data[]);
+	void setData(byte data[], int n);
+	void setData(String data);
+	void getData(byte data[], int n);
+	void getData(String data);
 	int getDataLength();
 	boolean isSuppressFrameCheck();
 
@@ -236,6 +238,7 @@ public:
 	void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 	void clearInterrupts();
 
+	void clearAllStatus();
 	void clearReceiveStatus();
 	void clearTransmitStatus(); // TODO impl
 
@@ -258,7 +261,7 @@ public:
 	void startTransmit();
 
 	// debug pretty print registers
-	char* getPrettyBytes(unsigned int reg, unsigned int n);
+	char* getPrettyBytes(byte cmd, word offset, int n);
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
@@ -328,6 +331,9 @@ private:
 	/* reading and writing bytes from and to DW1000 module. */
 	void readBytes(byte cmd, word offset, byte data[], int n);
 	void writeBytes(byte cmd, word offset, byte data[], int n);
+
+	/* writing numeric values to bytes. */
+	void writeValueToBytes(byte data[], int val, int n); 
 
 	/* internal helper for bit operations on multi-bytes. */
 	boolean getBit(byte data[], int n, int bit);

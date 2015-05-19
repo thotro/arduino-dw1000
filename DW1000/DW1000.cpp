@@ -47,7 +47,7 @@ void DW1000::initialize() {
 	digitalWrite(_rst, HIGH);
 	delay(10);
 	// default network and node id
-	memset(_networkAndAddress, 0xFF, LEN_PANADR);
+	writeValueToBytes(_networkAndAddress, 0xFF, LEN_PANADR);
 	writeNetworkIdAndDeviceAddress();
 	// default system configuration
 	memset(_syscfg, 0, LEN_SYS_CFG);
@@ -60,12 +60,12 @@ void DW1000::initialize() {
 	// tell the chip to load the LDE microcode
 	byte pmscctrl0[LEN_PMSC_CTRL0];
 	byte otpctrl[LEN_OTP_CTRL];
-	memset(otpctrl, 0x8000, LEN_OTP_CTRL);
-	memset(pmscctrl0, 0x0301, LEN_PMSC_CTRL0);
+	writeValueToBytes(otpctrl, 0x8000, LEN_OTP_CTRL);
+	writeValueToBytes(pmscctrl0, 0x0301, LEN_PMSC_CTRL0);
 	writeBytes(PMSC_CTRL0, NO_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 	writeBytes(OTP_CTRL, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
 	delay(10);
-	memset(pmscctrl0, 0x0200, LEN_PMSC_CTRL0);
+	writeValueToBytes(pmscctrl0, 0x0200, LEN_PMSC_CTRL0);
 	writeBytes(PMSC_CTRL0, NO_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 	tune();
 	delay(10);
@@ -82,15 +82,15 @@ void DW1000::tune() {
 	byte rftxctrl[LEN_RF_TXCTRL];
 	byte tcpgdelay[LEN_TC_PGDELAY];
 	byte fsplltune[LEN_FS_PLLTUNE];
-	memset(agctune1, 0x8870, LEN_AGC_TUNE1);
-	memset(agctune2, 0x2502A907, LEN_AGC_TUNE2);
-	memset(drxtune2, 0x311A002D, LEN_DRX_TUNE2);
-	memset(ldecfg1, 0x6D, LEN_LDE_CFG1);
-	memset(ldecfg2, 0x1607, LEN_LDE_CFG2);
-	memset(txpower, 0x0E082848, LEN_TX_POWER);
-	memset(rftxctrl, 0x001E3FE0, LEN_RF_TXCTRL);
-	memset(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
-	memset(fsplltune, 0xA6, LEN_FS_PLLTUNE);
+	writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
+	writeValueToBytes(agctune2, 0x2502A907, LEN_AGC_TUNE2);
+	writeValueToBytes(drxtune2, 0x311A002D, LEN_DRX_TUNE2);
+	writeValueToBytes(ldecfg1, 0x6D, LEN_LDE_CFG1);
+	writeValueToBytes(ldecfg2, 0x1607, LEN_LDE_CFG2);
+	writeValueToBytes(txpower, 0x0E082848, LEN_TX_POWER);
+	writeValueToBytes(rftxctrl, 0x001E3FE0, LEN_RF_TXCTRL);
+	writeValueToBytes(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
+	writeValueToBytes(fsplltune, 0xA6, LEN_FS_PLLTUNE);
 	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
 	writeBytes(AGC_TUNE, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
 	writeBytes(DRX_TUNE, DRX_TUNE2_SUB, drxtune2, LEN_DRX_TUNE2);
@@ -296,9 +296,9 @@ void DW1000::pulseFrequency(byte freq) {
 	// tuning
 	byte agctune1[LEN_AGC_TUNE1];
 	if(freq == TX_PULSE_FREQ_16MHZ) {
-		memset(agctune1, 0x8870, LEN_AGC_TUNE1);
+		writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
 	} else if(freq == TX_PULSE_FREQ_64MHZ) {
-		memset(agctune1, 0x889B, LEN_AGC_TUNE1);
+		writeValueToBytes(agctune1, 0x889B, LEN_AGC_TUNE1);
 	} else {
 		return;
 	}
@@ -360,7 +360,7 @@ void DW1000::startTransmit() {
 	_deviceMode = IDLE_MODE;
 }
 
-void DW1000::setData(byte data[], unsigned int n) {
+void DW1000::setData(byte data[], int n) {
 	if(!isSuppressFrameCheck()) {
 		n+=2; // two bytes CRC-16
 	}
@@ -382,6 +382,15 @@ void DW1000::setData(byte data[], unsigned int n) {
 	writeTransmitFrameControlRegister();
 }
 
+void DW1000::setData(String data) {
+	int n = data.length()+1;
+	byte* dataBytes = (byte*)malloc(n);
+	data.getBytes(dataBytes, n);
+	setData(dataBytes, n);
+	free(dataBytes);
+	
+}
+
 int DW1000::getDataLength() {
 	if(_deviceMode == TX_MODE) {
 		// 10 bits of TX frame control register
@@ -397,13 +406,24 @@ int DW1000::getDataLength() {
 	}
 }
 
-int DW1000::getData(byte data[]) {
-	int n = getDataLength(); // number of bytes w/o the two FCS ones
+void DW1000::getData(byte data[], int n) {
 	if(n < 0) {
-		return n;
+		return;
 	}
 	readBytes(RX_BUFFER, NO_SUB, data, n);
-	return n;
+}
+
+void DW1000::getData(String data) {
+	int i;
+	int n = getDataLength(); // number of bytes w/o the two FCS ones
+	byte* dataBytes = (byte*)malloc(n);
+	getData(dataBytes, n);
+	// clear string
+	data.remove(0);
+	// append to string
+	for(i = 0; i < n; i++) {
+		data += (char)dataBytes[i];
+	}
 }
 
 // system event register
@@ -445,6 +465,11 @@ boolean DW1000::isReceiveSuccess() {
 	}
 	// TODO proper 'undecided' handling
 	return false;
+}
+
+void DW1000::clearAllStatus() {
+	memset(_sysstatus, 0, LEN_SYS_STATUS);
+	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
 void DW1000::clearReceiveStatus() {
@@ -522,6 +547,13 @@ boolean DW1000::getBit(byte data[], int n, int bit) {
 	shift = bit % 8;
 	
 	return bitRead(targetByte, shift);
+}
+
+void DW1000::writeValueToBytes(byte data[], int val, int n) {
+	int i;	
+	for(i = 0; i < n; i++) {
+		data[i] = ((val >> (i * 8)) & 0xFF);
+	}
 }
 
 /*
@@ -623,11 +655,11 @@ void DW1000::writeBytes(byte cmd, word offset, byte data[], int n) {
 #endif
 }
 
-char* DW1000::getPrettyBytes(unsigned int reg, unsigned int n) {
+char* DW1000::getPrettyBytes(byte cmd, word offset, int n) {
 	unsigned int i, j, b;
 	byte* readBuf = (byte*)malloc(n);
-	readBytes(reg, NO_SUB, readBuf, n);
-	b = sprintf(_msgBuf, "Reg: 0x%02x, bytes: %d\nB: 7 6 5 4 3 2 1 0\n", reg, n);
+	readBytes(cmd, offset, readBuf, n);
+	b = sprintf(_msgBuf, "Reg: 0x%02x, bytes: %d\nB: 7 6 5 4 3 2 1 0\n", cmd, n);
 	for(i = 0; i < n; i++) {
 		byte curByte = readBuf[i];
 		snprintf(&_msgBuf[b++], 2, "%d", (i + 1));
