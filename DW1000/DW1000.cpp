@@ -382,7 +382,7 @@ void DW1000::setData(byte data[], int n) {
 	writeTransmitFrameControlRegister();
 }
 
-void DW1000::setData(String data) {
+void DW1000::setData(const String& data) {
 	int n = data.length()+1;
 	byte* dataBytes = (byte*)malloc(n);
 	data.getBytes(dataBytes, n);
@@ -413,13 +413,17 @@ void DW1000::getData(byte data[], int n) {
 	readBytes(RX_BUFFER, NO_SUB, data, n);
 }
 
-void DW1000::getData(String data) {
+void DW1000::getData(String& data) {
 	int i;
 	int n = getDataLength(); // number of bytes w/o the two FCS ones
+	if(n < 0) {
+		return;
+	}
 	byte* dataBytes = (byte*)malloc(n);
 	getData(dataBytes, n);
 	// clear string
 	data.remove(0);
+	data = "";
 	// append to string
 	for(i = 0; i < n; i++) {
 		data += (char)dataBytes[i];

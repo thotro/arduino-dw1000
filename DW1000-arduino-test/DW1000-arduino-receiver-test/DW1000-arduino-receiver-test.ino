@@ -14,8 +14,6 @@
 #include <SPI.h>
 #include <DW1000.h>
 
-// packet data
-byte recvBytes[256];
 // DEBUG packet sent status and count
 volatile boolean received = false;
 volatile int numReceived = 0;
@@ -66,25 +64,20 @@ void serviceIRQ() {
 }
 
 void loop() {
-    // TODO proper sender config and receiver test
-    // Interrupt version of transmit: Confirmation of ISR status change
+    // enter on confirmation of ISR status change (successfully received)
     if(received) {
       Serial.print("Received packet ... #"); Serial.println(numReceived);
-      int n = dw.getDataLength();
-      Serial.print("Bytes available ... "); Serial.println(n);
-      dw.getData(recvBytes, n);
-      Serial.print("Data is ... ");
-      for(int i = 0; i < n; i++) {
-        Serial.print((char)recvBytes[i]);
-      }
-      Serial.println();
+      Serial.print("Bytes available ... "); Serial.println(dw.getDataLength());
+      // get data as String
+      String recv;
+      dw.getData(recv);
+      Serial.print("Data is ... "); Serial.println(recv);
       
-      received = false;
       // restart the receiver
+      received = false;
       dw.newReceive();
       dw.setDefaults();
       dw.startReceive();
     }
     //Serial.println(dw.getPrettyBytes(SYS_STATUS, NO_SUB, LEN_SYS_STATUS));
-    //Serial.println(dw.getPrettyBytes(CHAN_CTRL, NO_SUB, LEN_CHAN_CTRL));
 }

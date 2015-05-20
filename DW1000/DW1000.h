@@ -217,9 +217,9 @@ public:
 	void extendedFrameLength(boolean val);
 	void waitForResponse(boolean val);
 	void setData(byte data[], int n);
-	void setData(String data);
+	void setData(const String& data);
 	void getData(byte data[], int n);
-	void getData(String data);
+	void getData(String& data);
 	int getDataLength();
 	boolean isSuppressFrameCheck();
 

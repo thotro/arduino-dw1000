@@ -60,22 +60,19 @@ void serviceIRQ() {
 }
 
 void loop() {
-  // TODO proper sender config and receiver test
   // transmit some data
   Serial.print("Transmitting packet ... #"); Serial.println(numSent+1);
   dw.newTransmit();
-  {
-    dw.setDefaults();
-    String msg = "Hello DW1000";
-    dw.setData(msg);
-    dw.startTransmit();
-  }
-  // Interrupt version of transmit: Confirmation of ISR status change
+  dw.setDefaults();
+  String msg = "Hello DW1000";
+  dw.setData(msg);
+  dw.startTransmit();
+  // enter on confirmation of ISR status change (successfully sent)
   if(sent) {
     Serial.print("Processed packet ... #"); Serial.println(numSent);
     sent = false;
   }
   // wait a bit
-  delay(2000);
+  delay(500);
   //Serial.println(dw.getPrettyBytes(SYS_STATUS, NO_SUB, LEN_SYS_STATUS));
 }
