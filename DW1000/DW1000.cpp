@@ -428,6 +428,7 @@ void DW1000::getData(String& data) {
 	for(i = 0; i < n; i++) {
 		data += (char)dataBytes[i];
 	}
+	free(dataBytes);
 }
 
 // system event register

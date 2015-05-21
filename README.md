@@ -11,28 +11,35 @@ Project structure:
  * DW1000-unit-test ... contains plain C++ unit test code for the library
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
-Project status: 40%
+Project status: 45%
 
-Current milestone: Stable RX/TX between two chips; planned till beginning of June
+Current milestone: Extensive RX/TX config testing with two chips; planned till beginning of June
+
+Features and design intentions:
+ * Fully encapsulated SPI communication with the chip
+ * Simple device status querying
+ * Simple and readable RX/TX/config API (docs will follow shortly)
 
 What works so far:
- * Basic SPI read/write with the chip
- * Fetching of chip configuration and device id
- * Simple IRQ handing
- * Writing of chip configuration
- * Writing of network/node id
- * Writing of transmit data and transmit controls
- * Reading received data
- * Transmission and reception sessions
- * Transmission of packets between two chips (nearly stable)
+ * SPI communication with the chip
+ * Handling of the most important chip configurations
+ * Management of IRQs
+ * byte[] and (Arduino-)String based data RX/TX
+ * RX/TX/config sessions
+ * Stable transmission of packets between two chips
 
 Next on the agenda:
- * Stable and fast basic transmit and receive
- * Different setups and performance benchmarks
- * Ranging and simple communication examples
+ * Extensive testing of certain configurations, code cleanup (and bug fixing)
+ * Performance benchmarks of different configurations
+ * Real-time location sensing specific code
+ * Ranging and other simple communication examples (as Arduino code files)
  * ...
 
-Usage will be something like:
+Misc todos:
+ * API docs to follow shortly
+ * Wiring instruction and some pictures of the testbed (an Arduino Pro Mini, a )
+
+Usage is something like:
 ```
 DW1000 dw = DW1000(cs_pin, rst_pin);
 dw.initialize();
@@ -51,7 +58,7 @@ dw.setDefaults();
 dw.setData(some_data);
 dw.startTransmit();
 ...
-// similar for receiving plus IRQ handling
+// similar for receiving
 ```
 
 A configuration API doc will follow shortly.
