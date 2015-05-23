@@ -68,7 +68,7 @@ The testbed in use employs
 
 and looks as follows:
 
-![testbed](https://github.com/thotro/arduino-dw1000/blob/master/AdapterBoardTestBed.png
+![testbed](https://github.com/thotro/arduino-dw1000/blob/master/AdapterBoard/AdapterBoardTestBed.png)
 
 The adapter board has the following pin mapping:
 
