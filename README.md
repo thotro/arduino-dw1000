@@ -61,7 +61,14 @@ dw.startTransmit();
 // similar for receiving
 ```
 
-A configuration API doc will follow shortly.
+The testbed in use employs
+ * the DWM1000 adapter board
+ * an Arduino (in this case a "Pro Mini")
+ * (a resistor and some wires)
+
+and looks as follows:
+
+![testbed](https://github.com/thotro/arduino-dw1000/blob/master/AdapterBoardTestBed.png
 
 The adapter board has the following pin mapping:
 
