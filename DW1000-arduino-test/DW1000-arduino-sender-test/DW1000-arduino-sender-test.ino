@@ -16,7 +16,8 @@
 
 // DEBUG packet sent status and count
 volatile boolean sent = false;
-volatile int numSent = 0;
+int sentNum = 0;
+unsigned long sentTime = 0;
 // reset line to the chip
 int RST = 9;
 // chip driver instances with chip select and reset
@@ -56,23 +57,32 @@ void serviceIRQ() {
   }
   // "NOP" ISR
   sent = true;
-  numSent++;
 }
 
 void loop() {
-  // transmit some data
-  Serial.print("Transmitting packet ... #"); Serial.println(numSent+1);
-  dw.newTransmit();
-  dw.setDefaults();
-  String msg = "Hello DW1000";
-  dw.setData(msg);
-  dw.startTransmit();
-  // enter on confirmation of ISR status change (successfully sent)
   if(sent) {
-    Serial.print("Processed packet ... #"); Serial.println(numSent);
+    // process confirmation of ISR status change (successfully sent)
     sent = false;
+    if(!dw.isTransmitDone()) {
+      return;    
+    }
+    // update and print some information about the sent message
+    unsigned long newSentTime = dw.getTransmitTimestamp();
+    Serial.print("Processed packet ... #"); Serial.println(sentNum);
+    Serial.print("Sent timestamp ... "); Serial.println(newSentTime);
+    // NOTE: delta is just for simple demo as not correct on system time counter wrap-around
+    Serial.print("Delta send time [s] ... "); Serial.println((newSentTime - sentTime) * 1e-9 * 8.01282);
+    sentTime = newSentTime;
+    sentNum++;
+  } else {
+    // transmit some data
+    Serial.print("Transmitting packet ... #"); Serial.println(sentNum);
+    dw.newTransmit();
+    dw.setDefaults();
+    String msg = "Hello DW1000";
+    dw.setData(msg);
+    dw.startTransmit();
+    // wait a bit
+    delay(500);
   }
-  // wait a bit
-  delay(500);
-  //Serial.println(dw.getPrettyBytes(SYS_STATUS, NO_SUB, LEN_SYS_STATUS));
 }

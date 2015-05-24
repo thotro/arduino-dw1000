@@ -42,10 +42,7 @@ DW1000::~DW1000() {
 
 void DW1000::initialize() {
 	// reset chip
-	digitalWrite(_rst, LOW);
-	delay(10);
-	digitalWrite(_rst, HIGH);
-	delay(10);
+	reset();
 	// default network and node id
 	writeValueToBytes(_networkAndAddress, 0xFF, LEN_PANADR);
 	writeNetworkIdAndDeviceAddress();
@@ -68,6 +65,13 @@ void DW1000::initialize() {
 	writeValueToBytes(pmscctrl0, 0x0200, LEN_PMSC_CTRL0);
 	writeBytes(PMSC_CTRL0, NO_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 	tune();
+	delay(10);
+}
+
+void DW1000::reset() {
+	digitalWrite(_rst, LOW);
+	delay(10);
+	digitalWrite(_rst, HIGH);
 	delay(10);
 }
 
@@ -261,7 +265,7 @@ boolean DW1000::isSuppressFrameCheck() {
 	return getBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT);
 }
 
-void DW1000::delayedTransceive(unsigned int delayNanos) {
+void DW1000::delayedTransceive(unsigned long delayNanos) {
 	if(_deviceMode == TX_MODE) {
 		setBit(_sysctrl, LEN_SYS_CTRL, TXDLYS_BIT, true);
 	} else if(_deviceMode == RX_MODE) {
@@ -270,6 +274,7 @@ void DW1000::delayedTransceive(unsigned int delayNanos) {
 		// in idle, ignore
 		return;
 	}
+	byte delayBytes[5];
 	// TODO impl 40 bit in DX_TIME register, 9 lower sig. bits are ignored
 }
 
@@ -429,6 +434,32 @@ void DW1000::getData(String& data) {
 		data += (char)dataBytes[i];
 	}
 	free(dataBytes);
+}
+
+unsigned long DW1000::getTransmitTimestamp() {
+	byte txTimeBytes[LEN_TX_STAMP];
+	readBytes(TX_TIME, TX_STAMP_SUB, txTimeBytes, LEN_TX_STAMP);
+	return getTimestampAsLong(txTimeBytes+1);
+}
+
+unsigned long DW1000::getReceiveTimestamp() {
+	byte rxTimeBytes[LEN_RX_STAMP];
+	readBytes(RX_TIME, RX_STAMP_SUB, rxTimeBytes, LEN_RX_STAMP);
+	return getTimestampAsLong(rxTimeBytes+1);
+}
+
+unsigned long DW1000::getSystemTimestamp() {
+	byte sysTimeBytes[LEN_SYS_TIME];
+	readBytes(SYS_TIME, NO_SUB, sysTimeBytes, LEN_SYS_TIME);
+	return getTimestampAsLong(sysTimeBytes+1);
+}
+
+unsigned long DW1000::getTimestampAsLong(byte ts[]) {
+	unsigned long tsValue = ((unsigned long)ts[0] >> 1);
+	tsValue |= ((unsigned long)ts[1] << 7);
+	tsValue |= ((unsigned long)ts[2] << 15);
+	tsValue |= ((unsigned long)ts[3] << 23);
+	return tsValue;
 }
 
 // system event register

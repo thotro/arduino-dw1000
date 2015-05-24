@@ -75,11 +75,21 @@
 #define SYS_MASK 0x0E
 #define LEN_SYS_MASK 4
 
+// system time counter
+#define SYS_TIME 0x06
+#define LEN_SYS_TIME 5
+
 // RX timestamp register
 #define RX_TIME 0x15
 #define LEN_RX_TIME 14
 #define RX_STAMP_SUB 0
-#define LEN_RX_STAMP_SUB 5
+#define LEN_RX_STAMP 5
+
+// TX timestamp register
+#define TX_TIME 0x17
+#define LEN_TX_TIME 10
+#define TX_STAMP_SUB 0
+#define LEN_TX_STAMP 5
 
 // timing register (for delayed RX/TX)
 #define DX_TIME 0x0A
@@ -191,6 +201,7 @@ public:
 	DW1000(int ss, int rst);
 	~DW1000();
 	void initialize();
+	void reset();
 	void tune();
 
 	// device id, address, etc.
@@ -210,7 +221,7 @@ public:
 
 	// SYS_CTRL, TX/RX_FCTRL, transmit and receive configuration
 	void suppressFrameCheck(boolean val);
-	void delayedTransceive(unsigned int delayNanos); // TODO impl
+	void delayedTransceive(unsigned long delayNanos); // TODO impl
 	void dataRate(byte rate);
 	void pulseFrequency(byte freq);
 	void preambleLength(byte prealen);
@@ -221,6 +232,9 @@ public:
 	void getData(byte data[], int n);
 	void getData(String& data);
 	int getDataLength();
+	unsigned long getTransmitTimestamp();
+	unsigned long getReceiveTimestamp();
+	unsigned long getSystemTimestamp();
 	boolean isSuppressFrameCheck();
 
 	// RX/TX default settings
@@ -335,6 +349,9 @@ private:
 	/* writing numeric values to bytes. */
 	void writeValueToBytes(byte data[], int val, int n); 
 
+	/* writing DW1000 timestamp values to unsigned long. */
+	unsigned long getTimestampAsLong(byte ts[]);
+
 	/* internal helper for bit operations on multi-bytes. */
 	boolean getBit(byte data[], int n, int bit);
 	void setBit(byte data[], int n, int bit, boolean val);
@@ -345,6 +362,9 @@ private:
 	static const byte WRITE_SUB = 0xC0; // write with sub address
 	static const byte READ = 0x00; // regular read
 	static const byte READ_SUB = 0x40; // read with sub address
+
+	/* Time resolution [ns] of time based registers/values. */
+	static const float TIME_RES = 8.012820513;
 };
 
 #endif
