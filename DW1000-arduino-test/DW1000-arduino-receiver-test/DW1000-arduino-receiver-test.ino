@@ -17,67 +17,57 @@
 // DEBUG packet sent status and count
 volatile boolean received = false;
 volatile int numReceived = 0;
+String message;
 // reset line to the chip
 int RST = 9;
-// chip driver instances with chip select and reset
-DW1000 dw = DW1000(SS, RST);
 
 void setup() {
   // DEBUG monitoring
   Serial.begin(9600);
+  Serial.println("### DW1000-arduino-receiver-test ###");
   // initialize the driver
-  dw.initialize();
+  DW1000.begin();
+  DW1000.init(SS, RST, 0);
   Serial.println("DW1000 initialized ...");
   // general configuration
-  dw.newConfiguration();
-  dw.setDefaults();
-  dw.setDeviceAddress(6);
-  dw.setNetworkId(10);
-  dw.setFrameFilter(false);
-  dw.interruptOnReceived(true);
-  dw.commitConfiguration();
+  DW1000.newConfiguration();
+  DW1000.setDefaults();
+  DW1000.setDeviceAddress(6);
+  DW1000.setNetworkId(10);
+  DW1000.setFrameFilter(false);
+  DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
-  Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
-  Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
-  Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-  Serial.println(dw.getPrettyBytes(SYS_CFG, NO_SUB, LEN_SYS_CFG));
-  Serial.println(dw.getPrettyBytes(PANADR, NO_SUB, LEN_PANADR));
-  Serial.println(dw.getPrettyBytes(SYS_MASK, NO_SUB, LEN_SYS_MASK));
-  // attach interrupt and ISR
-  pinMode(INT0, INPUT);
-  attachInterrupt(0, serviceIRQ, FALLING);
-  Serial.println("Interrupt attached ...");
-  // configure as permanent receiver
-  dw.newReceive();
-  dw.setDefaults();
-  dw.startReceive();
+  Serial.print("Device ID: "); Serial.println(DW1000.getPrintableDeviceIdentifier());
+  Serial.print("Unique ID: "); Serial.println(DW1000.getPrintableExtendedUniqueIdentifier());
+  Serial.print("Network ID & Device Address: "); Serial.println(DW1000.getPrintableNetworkIdAndShortAddress());
+  // attach callback for (successfully) received messages
+  DW1000.attachReceivedHandler(handleReceived);
+  // start reception
+  receiver();
 }
 
-void serviceIRQ() {
-  if(received) {
-    return;
-  }
-  // "NOP" ISR
+void handleReceived() {
+  // status change on reception success
   received = true;
-  numReceived++;
+  // get data as string
+  DW1000.getData(message);
+}
+
+void receiver() {
+  DW1000.newReceive();
+  DW1000.setDefaults();
+  DW1000.startReceive();
 }
 
 void loop() {
     // enter on confirmation of ISR status change (successfully received)
     if(received) {
+      numReceived++;
       Serial.print("Received packet ... #"); Serial.println(numReceived);
-      Serial.print("Bytes available ... "); Serial.println(dw.getDataLength());
-      // get data as String
-      String recv;
-      dw.getData(recv);
-      Serial.print("Data is ... "); Serial.println(recv);
-      
+      Serial.print("Data is ... "); Serial.println(message);
       // restart the receiver
       received = false;
-      dw.newReceive();
-      dw.setDefaults();
-      dw.startReceive();
+      receiver();
     }
-    //Serial.println(dw.getPrettyBytes(SYS_STATUS, NO_SUB, LEN_SYS_STATUS));
 }

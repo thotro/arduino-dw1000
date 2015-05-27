@@ -15,74 +15,73 @@
 #include <DW1000.h>
 
 // DEBUG packet sent status and count
-volatile boolean sent = false;
+boolean sent = false;
+volatile boolean sentAck = false;
+volatile unsigned long delaySent = 0;
 int sentNum = 0;
 unsigned long sentTime = 0;
 // reset line to the chip
 int RST = 9;
-// chip driver instances with chip select and reset
-DW1000 dw = DW1000(SS, RST);
 
 void setup() {
   // DEBUG monitoring
   Serial.begin(9600);
+  Serial.println("### DW1000-arduino-sender-test ###");
   // initialize the driver
-  dw.initialize();
+  DW1000.begin();
+  DW1000.init(SS, RST, 0);
   Serial.println("DW1000 initialized ...");
   // general configuration
-  dw.newConfiguration();
-  dw.setDefaults();
-  dw.setDeviceAddress(5);
-  dw.setNetworkId(10);
-  dw.setFrameFilter(false);
-  dw.interruptOnSent(true);
-  dw.commitConfiguration();
+  DW1000.newConfiguration();
+  DW1000.setDefaults();
+  DW1000.setDeviceAddress(5);
+  DW1000.setNetworkId(10);
+  DW1000.setFrameFilter(false);
+  DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
-  Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
-  Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
-  Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-  Serial.println(dw.getPrettyBytes(SYS_CFG, NO_SUB, LEN_SYS_CFG));
-  Serial.println(dw.getPrettyBytes(PANADR, NO_SUB, LEN_PANADR));
-  Serial.println(dw.getPrettyBytes(SYS_MASK, NO_SUB, LEN_SYS_MASK));
-  // attach interrupt and ISR
-  pinMode(INT0, INPUT);
-  attachInterrupt(0, serviceIRQ, FALLING);
-  Serial.println("Interrupt attached ...");
+  Serial.print("Device ID: "); Serial.println(DW1000.getPrintableDeviceIdentifier());
+  Serial.print("Unique ID: "); Serial.println(DW1000.getPrintableExtendedUniqueIdentifier());
+  Serial.print("Network ID & Device Address: "); Serial.println(DW1000.getPrintableNetworkIdAndShortAddress());
+  // attach callback for (successfully) sent messages
+  DW1000.attachSentHandler(handleSent);
+  // start a transmission
+  transmitter();
 }
 
-void serviceIRQ() {
-  if(sent) {
-    return;
-  }
-  // "NOP" ISR
-  sent = true;
+void handleSent() {
+  // status change on sent success
+  sentAck = true;
+}
+
+void transmitter() {
+  // transmit some data
+  Serial.print("Transmitting packet ... #"); Serial.println(sentNum);
+  DW1000.newTransmit();
+  DW1000.setDefaults();
+  String msg = "Hello DW1000, it's #"; msg += sentNum;
+  DW1000.setData(msg);
+  //DW1000.delayedTransceive(500, DW1000::MILLISECONDS);
+  DW1000.startTransmit();
+  delaySent = millis();
 }
 
 void loop() {
-  if(sent) {
-    // process confirmation of ISR status change (successfully sent)
-    sent = false;
-    if(!dw.isTransmitDone()) {
-      return;    
-    }
-    // update and print some information about the sent message
-    unsigned long newSentTime = dw.getTransmitTimestamp();
-    Serial.print("Processed packet ... #"); Serial.println(sentNum);
-    Serial.print("Sent timestamp ... "); Serial.println(newSentTime);
-    // NOTE: delta is just for simple demo as not correct on system time counter wrap-around
-    Serial.print("Delta send time [s] ... "); Serial.println((newSentTime - sentTime) * 1e-9 * 8.01282);
-    sentTime = newSentTime;
-    sentNum++;
-  } else {
-    // transmit some data
-    Serial.print("Transmitting packet ... #"); Serial.println(sentNum);
-    dw.newTransmit();
-    dw.setDefaults();
-    String msg = "Hello DW1000";
-    dw.setData(msg);
-    dw.startTransmit();
-    // wait a bit
-    delay(500);
+  if(!sentAck) {
+    return;
   }
+  // continue on success confirmation
+  sentAck = false;
+  // update and print some information about the sent message
+  Serial.print("Delay sent [ms] ... "); Serial.println(millis() - delaySent);
+  unsigned long newSentTime = DW1000.getTransmitTimestamp();
+  Serial.print("Processed packet ... #"); Serial.println(sentNum);
+  Serial.print("Sent timestamp ... "); Serial.println(newSentTime);
+  // NOTE: delta is just for simple demo as not correct on system time counter wrap-around
+  Serial.print("Delta send time [s] ... "); Serial.println((newSentTime - sentTime) * 1.0e-9 * 8.01282);
+  sentTime = newSentTime;
+  sentNum++;
+  // again, transmit some data
+  transmitter();
+  delay(10);
 }

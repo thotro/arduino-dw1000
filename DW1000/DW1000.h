@@ -173,20 +173,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef DEBUG
 #include <Arduino.h>
 #include "../SPI/SPI.h"
-#else
-#include <stdint.h>
-#define boolean uint8_t
-#define byte uint8_t
-#define word uint16_t
-#define bitSet(value, bit) ((value) |= (1UL << (bit)))
-#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
-#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
-#endif
 
-class DW1000 {
+class DW1000Class {
 public:
 	/* TODO impl: later
 	 * - TXBOFFS in TX_FCTRL for offset buffer transmit
@@ -197,85 +187,94 @@ public:
 	 * - replace all |= with bitChange (bitClear + bitSet)
 	 */
 
-	// construction with chip select pin number
-	DW1000(int ss, int rst);
-	~DW1000();
-	void initialize();
-	void reset();
-	void tune();
+	// construction with chip select, reset and irq pin number
+	static void begin();
+	static void end();
+	static void init(int ss, int rst, int irq);
+	static void reset();
+	static void tune();
 
 	// device id, address, etc.
-	char* getPrintableDeviceIdentifier();
-	char* getPrintableExtendedUniqueIdentifier();
-	char* getPrintableNetworkIdAndShortAddress();
+	static char* getPrintableDeviceIdentifier();
+	static char* getPrintableExtendedUniqueIdentifier();
+	static char* getPrintableNetworkIdAndShortAddress();
 
 	// PAN_ID, SHORT_ADDR, device address management
-	void setNetworkId(unsigned int val);
-	void setDeviceAddress(unsigned int val);
+	static void setNetworkId(unsigned int val);
+	static void setDeviceAddress(unsigned int val);
 	
 	// SYS_CFG, general device configuration
-	void setFrameFilter(boolean val);
-	void setDoubleBuffering(boolean val); // NOTE should be set to false
-	void setReceiverAutoReenable(boolean val);
-	void setInterruptPolarity(boolean val);
+	static void setFrameFilter(boolean val);
+	static void setDoubleBuffering(boolean val); // NOTE should be set to false
+	static void setReceiverAutoReenable(boolean val);
+	static void setInterruptPolarity(boolean val);
 
 	// SYS_CTRL, TX/RX_FCTRL, transmit and receive configuration
-	void suppressFrameCheck(boolean val);
-	void delayedTransceive(unsigned long delayNanos); // TODO impl
-	void dataRate(byte rate);
-	void pulseFrequency(byte freq);
-	void preambleLength(byte prealen);
-	void extendedFrameLength(boolean val);
-	void waitForResponse(boolean val);
-	void setData(byte data[], int n);
-	void setData(const String& data);
-	void getData(byte data[], int n);
-	void getData(String& data);
-	int getDataLength();
-	unsigned long getTransmitTimestamp();
-	unsigned long getReceiveTimestamp();
-	unsigned long getSystemTimestamp();
-	boolean isSuppressFrameCheck();
+	static void suppressFrameCheck(boolean val);
+	static unsigned long delayedTransceive(unsigned int value, unsigned long factorNs);
+	static void dataRate(byte rate);
+	static void pulseFrequency(byte freq);
+	static void preambleLength(byte prealen);
+	static void extendedFrameLength(boolean val);
+	static void waitForResponse(boolean val);
+	static void setData(byte data[], int n);
+	static void setData(const String& data);
+	static void getData(byte data[], int n);
+	static void getData(String& data);
+	static int getDataLength();
+	static unsigned long getTransmitTimestamp();
+	static unsigned long getReceiveTimestamp();
+	static unsigned long getSystemTimestamp();
+	static boolean isSuppressFrameCheck();
 
 	// RX/TX default settings
 	void setDefaults();
 
 	// SYS_STATUS, device status flags
-	boolean isLDEDone();
-	boolean isTransmitDone();
-	boolean isReceiveDone();
-	boolean isReceiveSuccess();
+	static boolean isLDEDone();
+	static boolean isTransmitDone();
+	static boolean isReceiveDone();
+	static boolean isReceiveSuccess();
 
 	// SYS_MASK, interrupt handling
-	void interruptOnSent(boolean val);
-	void interruptOnReceived(boolean val);
-	void interruptOnAutomaticAcknowledgeTrigger(boolean val);
-	void clearInterrupts();
+	static void interruptOnSent(boolean val);
+	static void interruptOnReceived(boolean val);
+	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
+	static void clearInterrupts();
 
-	void clearAllStatus();
-	void clearReceiveStatus();
-	void clearTransmitStatus(); // TODO impl
+	static void clearAllStatus();
+	static void clearReceiveStatus();
+	static void clearTransmitStatus(); // TODO impl
+
+	inline static void attachSentHandler(void (*handleSent)(void)) {
+		_handleSent = handleSent;
+	}
+
+	inline static void attachReceivedHandler(void (*handleReceived)(void)) {
+		_handleReceived = handleReceived;
+	}
 
 	// RX_TIME, ..., timing, timestamps, etc.
 	// TODO void readReceiveTimestamp(byte[] timestamp);
 
 	// idle
-	void idle();
+	static void idle();
 
 	// general configuration
-	void newConfiguration();
-	void commitConfiguration();
+	static void newConfiguration();
+	static void commitConfiguration();
 
 	// reception
-	void newReceive();
-	void startReceive();
+	static void newReceive();
+	static void startReceive();
 
 	// transmission
-	void newTransmit();
-	void startTransmit();
+	static void newTransmit();
+	static void startTransmit();
 
 	// debug pretty print registers
-	char* getPrettyBytes(byte cmd, word offset, int n);
+	static char* getPrettyBytes(byte cmd, word offset, int n);
+	static char* getPrettyBytes(byte data[], int n);
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
@@ -297,64 +296,78 @@ public:
 	static const byte TX_PREAMBLE_LEN_2048 = 0x0A;
 	static const byte TX_PREAMBLE_LEN_4096 = 0x03;
 
-#ifdef DEBUG
-	byte debugBuffer[1024];
-	inline void clearDebugBuffer() {
-		memset(debugBuffer, 0, 1024);
-	}
-#endif
+	/* Time resolution [ns] of time based registers/values. */
+	static const float TIME_RES = 8.012820513;
+
+	/* Time factors (relative to [ns]) for setting delayed transceive. */
+	static const unsigned long SECONDS = 1e9;
+	static const unsigned long MILLISECONDS = 1e6;
+	static const unsigned long MICROSECONDS = 1e3;
+	static const unsigned long NANOSECONDS = 1;
 
 private:
-	/* chip select and reset pins. */
-	unsigned int _ss;
-	unsigned int _rst;
+	/* chip select, reset and interrupt pins. */
+	static unsigned int _ss;
+	static unsigned int _rst;
+	static unsigned int _irq;
+
+	/* flag for debouncing interrupts. */
+	static boolean _handledInterrupt;
+
+	/* callbacks. */
+	static void (*_handleSent)(void);
+	static void (*_handleReceived)(void);
 
 	/* fixed buffer for printed messages. */
-	char _msgBuf[1024];
+	static char _msgBuf[1024];
 
 	/* register caches. */
-	byte _syscfg[LEN_SYS_CFG];
-	byte _sysctrl[LEN_SYS_CTRL];
-	byte _sysstatus[LEN_SYS_STATUS];
-	byte _txfctrl[LEN_TX_FCTRL];
-	byte _sysmask[LEN_SYS_MASK];
-	byte _chanctrl[LEN_CHAN_CTRL];
+	static byte _syscfg[LEN_SYS_CFG];
+	static byte _sysctrl[LEN_SYS_CTRL];
+	static byte _sysstatus[LEN_SYS_STATUS];
+	static byte _txfctrl[LEN_TX_FCTRL];
+	static byte _sysmask[LEN_SYS_MASK];
+	static byte _chanctrl[LEN_CHAN_CTRL];
 
 	/* PAN and short address. */
-	byte _networkAndAddress[LEN_PANADR];
+	static byte _networkAndAddress[LEN_PANADR];
 
 	/* internal helper to determine send mode for set data. */
-	boolean _extendedFrameLength;
+	static boolean _extendedFrameLength;
 
 	// whether RX or TX is active
-	int _deviceMode;
+	static int _deviceMode;
+
+	/* ISR. */
+	static void handleInterrupt();
 
 	/* internal helper to read/write system registers. */
-	void readSystemEventStatusRegister();
-	void readSystemConfigurationRegister();
-	void writeSystemConfigurationRegister();
-	void readNetworkIdAndDeviceAddress();
-	void writeNetworkIdAndDeviceAddress();
-	void readSystemEventMaskRegister();
-	void writeSystemEventMaskRegister();
-	void readChannelControlRegister();
-	void writeChannelControlRegister();
-	void readTransmitFrameControlRegister();
-	void writeTransmitFrameControlRegister();
+	static void readSystemEventStatusRegister();
+	static void readSystemConfigurationRegister();
+	static void writeSystemConfigurationRegister();
+	static void readNetworkIdAndDeviceAddress();
+	static void writeNetworkIdAndDeviceAddress();
+	static void readSystemEventMaskRegister();
+	static void writeSystemEventMaskRegister();
+	static void readChannelControlRegister();
+	static void writeChannelControlRegister();
+	static void readTransmitFrameControlRegister();
+	static void writeTransmitFrameControlRegister();
 
 	/* reading and writing bytes from and to DW1000 module. */
-	void readBytes(byte cmd, word offset, byte data[], int n);
-	void writeBytes(byte cmd, word offset, byte data[], int n);
+	static void readBytes(byte cmd, word offset, byte data[], int n);
+	static void writeBytes(byte cmd, word offset, byte data[], int n);
 
 	/* writing numeric values to bytes. */
-	void writeValueToBytes(byte data[], int val, int n); 
+	static void writeValueToBytes(byte data[], int val, int n); 
 
 	/* writing DW1000 timestamp values to unsigned long. */
-	unsigned long getTimestampAsLong(byte ts[]);
+	static unsigned long getTimestampAsLong(byte ts[]);
+	static void writeLongToTimestamp(unsigned long tsValue, byte ts[]);
 
 	/* internal helper for bit operations on multi-bytes. */
-	boolean getBit(byte data[], int n, int bit);
-	void setBit(byte data[], int n, int bit, boolean val);
+	static boolean getBit(byte data[], int n, int bit);
+	static void setBit(byte data[], int n, int bit, boolean val);
 	
 	/* Register is 6 bit, 7 = write, 6 = sub-adressing, 5-0 = register value
 	 * Total header with sub-adressing can be 15 bit. */
@@ -362,9 +375,8 @@ private:
 	static const byte WRITE_SUB = 0xC0; // write with sub address
 	static const byte READ = 0x00; // regular read
 	static const byte READ_SUB = 0x40; // read with sub address
-
-	/* Time resolution [ns] of time based registers/values. */
-	static const float TIME_RES = 8.012820513;
 };
+
+extern DW1000Class DW1000;
 
 #endif

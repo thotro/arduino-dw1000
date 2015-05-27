@@ -17,6 +17,7 @@ Current milestone: Extensive RX/TX config testing with two chips; planned till b
 
 Features and design intentions:
  * Fully encapsulated SPI communication with the chip
+ * Fully encapsulated interrupt handling by means of custom callback handlers (currently only for sent and received messages, error handling, etc. will shortly follow)
  * Simple device status querying
  * Simple and readable RX/TX/config API (docs will follow shortly)
 
@@ -26,7 +27,7 @@ What works so far:
  * Management of IRQs
  * byte[] and (Arduino-)String based data RX/TX
  * RX/TX/config sessions
- * Stable transmission of packets between two chips
+ * Stable transmission of messages between two chips
 
 Next on the agenda:
  * Extensive testing of certain configurations, code cleanup (and bug fixing)
@@ -41,22 +42,25 @@ Misc todos:
 
 Usage is something like:
 ```
-DW1000 dw = DW1000(cs_pin, rst_pin);
-dw.initialize();
-attachInterrupt(...);
+#include <DW1000.h>
 ...
-dw.newConfiguration();
+// init with chip select, reset and interrupt pin/line
+DW1000.init(cs_pin, rst_pin, int_pin);
+...
+DW1000.newConfiguration();
 // configure specific aspects or choose defaults
-dw.setDefaults();
-dw.interruptOnSent(true);
+DW1000.setDefaults();
+DW1000.interruptOnSent(true);
 // .. and other stuff.
-dw.commitConfiguration();
+DW1000.commitConfiguration();
 ...
-dw.newTransmit();
+DW1000.attachSentHandler(some_handler_function);
+...
+DW1000.newTransmit();
 // configure specific aspects or choose defaults
-dw.setDefaults();
-dw.setData(some_data);
-dw.startTransmit();
+DW1000.setDefaults();
+DW1000.setData(some_data);
+DW1000.startTransmit();
 ...
 // similar for receiving
 ```

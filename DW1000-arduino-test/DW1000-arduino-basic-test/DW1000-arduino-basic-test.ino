@@ -16,20 +16,19 @@
 
 // reset line to the chip
 int RST = 9;
-// chip driver instances with chip select and reset
-DW1000 dw = DW1000(SS, RST);
 
 void setup() {
   // DEBUG monitoring
   Serial.begin(9600);
   // initialize the driver
-  dw.initialize();
+  DW1000.begin();
+  DW1000.init(SS, RST, 0);
   Serial.println("DW1000 initialized ...");
   // general configuration
-  dw.newConfiguration(); 
-  dw.setDeviceAddress(5);
-  dw.setNetworkId(10);
-  dw.commitConfiguration();
+  DW1000.newConfiguration(); 
+  DW1000.setDeviceAddress(5);
+  DW1000.setNetworkId(10);
+  DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
 }
 
@@ -37,12 +36,9 @@ void loop() {
     // wait a bit
     delay(1000);
     // DEBUG chip info and registers pretty printed
-    Serial.print("Device ID: "); Serial.println(dw.getPrintableDeviceIdentifier());
-    Serial.print("Unique ID: "); Serial.println(dw.getPrintableExtendedUniqueIdentifier());
-    Serial.print("Network ID & Device Address: "); Serial.println(dw.getPrintableNetworkIdAndShortAddress());
-    // DEBUG print device tuning results
-    Serial.println(dw.getPrettyBytes(AGC_TUNE, AGC_TUNE1_SUB, LEN_AGC_TUNE1));
-    Serial.println(dw.getPrettyBytes(AGC_TUNE, AGC_TUNE2_SUB, LEN_AGC_TUNE2));
+    Serial.print("Device ID: "); Serial.println(DW1000.getPrintableDeviceIdentifier());
+    Serial.print("Unique ID: "); Serial.println(DW1000.getPrintableExtendedUniqueIdentifier());
+    Serial.print("Network ID & Device Address: "); Serial.println(DW1000.getPrintableNetworkIdAndShortAddress());
     // wait a bit
     delay(10000);
 }
