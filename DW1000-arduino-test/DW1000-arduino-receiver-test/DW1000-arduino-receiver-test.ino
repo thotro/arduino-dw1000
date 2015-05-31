@@ -16,6 +16,7 @@
 
 // DEBUG packet sent status and count
 volatile boolean received = false;
+volatile boolean error = false;
 volatile int numReceived = 0;
 String message;
 // reset line to the chip
@@ -26,8 +27,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("### DW1000-arduino-receiver-test ###");
   // initialize the driver
-  DW1000.begin();
-  DW1000.init(SS, RST, 0);
+  DW1000.begin(SS, RST, 0);
   Serial.println("DW1000 initialized ...");
   // general configuration
   DW1000.newConfiguration();
@@ -54,9 +54,15 @@ void handleReceived() {
   DW1000.getData(message);
 }
 
+void handleReceiveError() {
+  error = true;
+}
+
 void receiver() {
   DW1000.newReceive();
   DW1000.setDefaults();
+  // so we don't need to restart the receiver manually
+  DW1000.permanentReceive(true);
   DW1000.startReceive();
 }
 
@@ -64,10 +70,12 @@ void loop() {
     // enter on confirmation of ISR status change (successfully received)
     if(received) {
       numReceived++;
-      Serial.print("Received packet ... #"); Serial.println(numReceived);
+      Serial.print("Received message ... #"); Serial.println(numReceived);
       Serial.print("Data is ... "); Serial.println(message);
-      // restart the receiver
       received = false;
-      receiver();
+    }
+    if(error) {
+      Serial.println("Error receiving a message");
+      error = false;
     }
 }

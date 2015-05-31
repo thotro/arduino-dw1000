@@ -28,8 +28,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("### DW1000-arduino-sender-test ###");
   // initialize the driver
-  DW1000.begin();
-  DW1000.init(SS, RST, 0);
+  DW1000.begin(SS, RST, 0);
   Serial.println("DW1000 initialized ...");
   // general configuration
   DW1000.newConfiguration();
@@ -61,7 +60,7 @@ void transmitter() {
   DW1000.setDefaults();
   String msg = "Hello DW1000, it's #"; msg += sentNum;
   DW1000.setData(msg);
-  //DW1000.delayedTransceive(500, DW1000::MILLISECONDS);
+  // TODO next:DW1000.delayedTransceive(500, DW1000::MILLISECONDS);
   DW1000.startTransmit();
   delaySent = millis();
 }
@@ -83,5 +82,5 @@ void loop() {
   sentNum++;
   // again, transmit some data
   transmitter();
-  delay(10);
+  delay(500);
 }

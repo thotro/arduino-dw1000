@@ -6,20 +6,25 @@ Project structure:
  * DW1000 ... contains the Arduino library (which is to be copied to the corresponding libraries folder of your Arduino install or imported via the GUI)
  * DW1000-arduino-test ... contains Arduino test code using the DW1000 library
    * DW1000-arduino-basic-test ... connectivity test
-   * DW1000-arduino-sender-test ... sender part of the basic sender/receiver test
+   * DW1000-arduino-sender-test ... sender part of the basic sender/receiver test; note that due to the manual delays and the amount of Serial prints that occur for logging/debugging, this sender is not intended for high message throughput
    * DW1000-arduino-receiver-test ... receiver part of the basic sender/receiver test
  * DW1000-unit-test ... contains plain C++ unit test code for the library
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
-Project status: 45%
+Project status: 55%
 
 Current milestone: Extensive RX/TX config testing with two chips; planned till beginning of June
 
 Features and design intentions:
  * Fully encapsulated SPI communication with the chip
- * Fully encapsulated interrupt handling by means of custom callback handlers (currently only for sent and received messages, error handling, etc. will shortly follow)
+ * Fully encapsulated interrupt handling by means of custom callback handlers; available is
+   * on sent (a message has been successfully sent)
+   * on receive (a message has been successfully received and its transmitted data is available)
+   * on receive error (something in between message detection and decoding went wrong)
+   * on receive timeout (only useful if timeouts are enabled and enabling timeouts is still a TODO :-)
+   * on receive timestamp available (might be useful for ranging applications)
  * Simple device status querying
- * Simple and readable RX/TX/config API (docs will follow shortly)
+ * Simple, readable RX/TX/config API (docs will follow shortly)
 
 What works so far:
  * SPI communication with the chip
@@ -38,14 +43,17 @@ Next on the agenda:
 
 Misc todos:
  * API docs to follow shortly
- * Wiring instruction and some pictures of the testbed (an Arduino Pro Mini, a )
+ * Wiring instruction and some pictures of the testbed
+   * an Arduino Pro Mini
+   * a DWM1000 on its adapter board for breadboard use
+   * a pull-down resistor to prevent spurious interrupts on GPIO8 (in case interrupt polarity is set to active-high which is the default setting anyway)
 
 Usage is something like:
 ```
 #include <DW1000.h>
 ...
 // init with chip select, reset and interrupt pin/line
-DW1000.init(cs_pin, rst_pin, int_pin);
+DW1000.begin(cs_pin, rst_pin, int_pin);
 ...
 DW1000.newConfiguration();
 // configure specific aspects or choose defaults

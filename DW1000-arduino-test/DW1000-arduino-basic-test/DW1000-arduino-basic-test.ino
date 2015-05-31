@@ -21,8 +21,7 @@ void setup() {
   // DEBUG monitoring
   Serial.begin(9600);
   // initialize the driver
-  DW1000.begin();
-  DW1000.init(SS, RST, 0);
+  DW1000.begin(SS, RST, 0);
   Serial.println("DW1000 initialized ...");
   // general configuration
   DW1000.newConfiguration(); 

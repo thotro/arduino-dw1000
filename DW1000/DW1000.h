@@ -64,10 +64,12 @@
 #define TXPHS_BIT 6
 #define TXFRS_BIT 7
 #define LDEDONE_BIT 10
+#define RXPHE_BIT 12
 #define RXDFR_BIT 13
 #define RXFCG_BIT 14
 #define RXFCE_BIT 15
 #define RXRFSL_BIT 16
+#define RXRFTO_BIT 17
 #define LDEERR_BIT 18
 
 // system event mask register
@@ -188,9 +190,8 @@ public:
 	 */
 
 	// construction with chip select, reset and irq pin number
-	static void begin();
+	static void begin(int ss, int rst, int irq);
 	static void end();
-	static void init(int ss, int rst, int irq);
 	static void reset();
 	static void tune();
 
@@ -216,6 +217,7 @@ public:
 	static void pulseFrequency(byte freq);
 	static void preambleLength(byte prealen);
 	static void extendedFrameLength(boolean val);
+	static void permanentReceive(boolean val);
 	static void waitForResponse(boolean val);
 	static void setData(byte data[], int n);
 	static void setData(const String& data);
@@ -231,27 +233,40 @@ public:
 	void setDefaults();
 
 	// SYS_STATUS, device status flags
-	static boolean isLDEDone();
+	static boolean isReceiveTimestampAvailable();
 	static boolean isTransmitDone();
 	static boolean isReceiveDone();
-	static boolean isReceiveSuccess();
+	static boolean isReceiveError();
+	static boolean isReceiveTimeout();
 
 	// SYS_MASK, interrupt handling
 	static void interruptOnSent(boolean val);
 	static void interruptOnReceived(boolean val);
+	static void interruptOnReceiveError(boolean val);
+	static void interruptOnReceiveTimeout(boolean val);
+	static void interruptOnReceiveTimestampAvailable(boolean val);
 	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 	static void clearInterrupts();
 
 	static void clearAllStatus();
 	static void clearReceiveStatus();
+	static void clearReceiveTimestampAvailableStatus();
 	static void clearTransmitStatus(); // TODO impl
 
-	inline static void attachSentHandler(void (*handleSent)(void)) {
+	static void attachSentHandler(void (*handleSent)(void)) {
 		_handleSent = handleSent;
 	}
-
-	inline static void attachReceivedHandler(void (*handleReceived)(void)) {
+	static void attachReceivedHandler(void (*handleReceived)(void)) {
 		_handleReceived = handleReceived;
+	}
+	static void attachReceiveErrorHandler(void (*handleReceiveError)(void)) {
+		_handleReceiveError = handleReceiveError;
+	}
+	static void attachReceiveTimeoutHandler(void (*handleReceiveTimeout)(void)) {
+		_handleReceiveTimeout = handleReceiveTimeout;
+	}
+	static void attachReceiveTimestampAvailableHandler(void (*handleReceiveTimestampAvailable)(void)) {
+		_handleReceiveTimestampAvailable = handleReceiveTimestampAvailable;
 	}
 
 	// RX_TIME, ..., timing, timestamps, etc.
@@ -311,12 +326,12 @@ private:
 	static unsigned int _rst;
 	static unsigned int _irq;
 
-	/* flag for debouncing interrupts. */
-	static boolean _handledInterrupt;
-
 	/* callbacks. */
 	static void (*_handleSent)(void);
 	static void (*_handleReceived)(void);
+	static void (*_handleReceiveError)(void);
+	static void (*_handleReceiveTimeout)(void);
+	static void (*_handleReceiveTimestampAvailable)(void);
 
 	/* fixed buffer for printed messages. */
 	static char _msgBuf[1024];
@@ -334,6 +349,9 @@ private:
 
 	/* internal helper to determine send mode for set data. */
 	static boolean _extendedFrameLength;
+
+	/* internal helper to remember whether to act as a permanent receiver. */
+	static boolean _permanentReceive;
 
 	// whether RX or TX is active
 	static int _deviceMode;

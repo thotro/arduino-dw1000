@@ -16,13 +16,19 @@ DW1000Class DW1000;
  * #### Static member variables ##############################################
  * ######################################################################### */
 
+// pins
 unsigned int DW1000Class::_ss;
 unsigned int DW1000Class::_rst;
 unsigned int DW1000Class::_irq;
-boolean DW1000Class::_handledInterrupt = false;
+// IRQ callbacks
 void (*DW1000Class::_handleSent)(void) = 0;
 void (*DW1000Class::_handleReceived)(void) = 0;
+void (*DW1000Class::_handleReceiveError)(void) = 0;
+void (*DW1000Class::_handleReceiveTimeout)(void) = 0;
+void (*DW1000Class::_handleReceiveTimestampAvailable)(void) = 0;
+// message printing
 char DW1000Class::_msgBuf[1024];
+// registers
 byte DW1000Class::_syscfg[LEN_SYS_CFG];
 byte DW1000Class::_sysctrl[LEN_SYS_CTRL];
 byte DW1000Class::_sysstatus[LEN_SYS_STATUS];
@@ -30,31 +36,30 @@ byte DW1000Class::_txfctrl[LEN_TX_FCTRL];
 byte DW1000Class::_sysmask[LEN_SYS_MASK];
 byte DW1000Class::_chanctrl[LEN_CHAN_CTRL];
 byte DW1000Class::_networkAndAddress[LEN_PANADR];
-boolean DW1000Class::_extendedFrameLength;
-int DW1000Class::_deviceMode;
+// driver internal state
+boolean DW1000Class::_extendedFrameLength = false;
+boolean DW1000Class::_permanentReceive = false;
+int DW1000Class::_deviceMode = IDLE_MODE;
 
 /* ###########################################################################
  * #### Init and end #######################################################
  * ######################################################################### */
 
-void DW1000Class::begin() {
+void DW1000Class::end() {
+	SPI.end();
+}
+
+void DW1000Class::begin(int ss, int rst, int irq) {
+	// SPI setup
 	SPI.begin();
 	SPI.setBitOrder(MSBFIRST);
 	SPI.setDataMode(SPI_MODE0);
 	// TODO increase clock speed after chip clock lock (CPLOCK in 0x0f)
 	SPI.setClockDivider(SPI_CLOCK_DIV8);
-}
-
-void DW1000Class::end() {
-	SPI.end();
-}
-
-void DW1000Class::init(int ss, int rst, int irq) {
 	// pin and basic member setup
 	_ss = ss;
 	_rst = rst;
 	_irq = irq;
-	_handledInterrupt = false;
 	_deviceMode = IDLE_MODE;
 	_extendedFrameLength = false;
 	pinMode(_ss, OUTPUT);
@@ -69,7 +74,7 @@ void DW1000Class::init(int ss, int rst, int irq) {
 	// default system configuration
 	memset(_syscfg, 0, LEN_SYS_CFG);
 	setDoubleBuffering(false);
-	setInterruptPolarity(false);
+	setInterruptPolarity(true);
 	writeSystemConfigurationRegister();
 	// default interrupt mask, i.e. no interrupts
 	clearInterrupts();
@@ -87,7 +92,7 @@ void DW1000Class::init(int ss, int rst, int irq) {
 	tune();
 	delay(10);
 	// attach interrupt
-	attachInterrupt(_irq, DW1000Class::handleInterrupt, LOW);
+	attachInterrupt(_irq, DW1000Class::handleInterrupt, RISING);
 }
 
 void DW1000Class::reset() {
@@ -95,6 +100,8 @@ void DW1000Class::reset() {
 	delay(10);
 	digitalWrite(_rst, HIGH);
 	delay(10);
+	// force into idle mode (although it should be already after reset)
+	idle();
 }
 
 void DW1000Class::tune() {
@@ -134,24 +141,36 @@ void DW1000Class::tune() {
  * ######################################################################### */
 
 void DW1000Class::handleInterrupt() {
-	// clear interrupt assertions
-	clearInterrupts();
-	writeSystemEventMaskRegister();
-	// debounce
-	if(_handledInterrupt) {
-		return;
-	}
-	_handledInterrupt = true;
 	// read current status and handle via callbacks
 	readSystemEventStatusRegister();
 	if(isTransmitDone() && _handleSent != 0) {
 		(*_handleSent)();
-	} else if(isReceiveSuccess() && _handleReceived != 0) {
+		clearTransmitStatus();
+	}
+	if(isReceiveDone() && _handleReceived != 0) {
 		(*_handleReceived)();
+		clearReceiveStatus();
+		if(_permanentReceive) {
+			startReceive();
+		}
+	} else if(isReceiveError() && _handleReceiveError != 0) {
+		(*_handleReceiveError)();
+		clearReceiveStatus();
+		if(_permanentReceive) {
+			startReceive();
+		}
+	} else if(isReceiveTimeout() && _handleReceiveTimeout != 0) {
+		(*_handleReceiveTimeout)();
+		clearReceiveStatus();
+		if(_permanentReceive) {
+			startReceive();
+		}
+	}
+	if(isReceiveTimestampAvailable() && _handleReceiveTimestampAvailable != 0) {
+		(*_handleReceiveTimestampAvailable)();
+		clearReceiveTimestampAvailableStatus();
 	}
 	// TODO impl other callbacks
-	// all status has been handled, so clear
-	clearAllStatus();
 }
 
 /* ###########################################################################
@@ -268,6 +287,21 @@ void DW1000Class::interruptOnReceived(boolean val) {
 	setBit(_sysmask, LEN_SYS_MASK, RXDFR_BIT, val);
 }
 
+void DW1000Class::interruptOnReceiveError(boolean val) {
+	setBit(_sysmask, LEN_SYS_STATUS, LDEERR_BIT, val);
+	setBit(_sysmask, LEN_SYS_STATUS, RXFCE_BIT, val);
+	setBit(_sysmask, LEN_SYS_STATUS, RXPHE_BIT, val);
+	setBit(_sysmask, LEN_SYS_STATUS, RXRFSL_BIT, val);
+}
+
+void DW1000Class::interruptOnReceiveTimeout(boolean val) {
+	setBit(_sysmask, LEN_SYS_MASK, RXRFTO_BIT, val);
+}
+
+void DW1000Class::interruptOnReceiveTimestampAvailable(boolean val) {
+	setBit(_sysmask, LEN_SYS_MASK, LDEDONE_BIT, val);
+}
+
 void DW1000Class::interruptOnAutomaticAcknowledgeTrigger(boolean val) {
 	setBit(_sysmask, LEN_SYS_MASK, AAT_BIT, val);
 }
@@ -277,11 +311,39 @@ void DW1000Class::clearInterrupts() {
 }
 
 void DW1000Class::idle() {
-	_handledInterrupt = false;
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
 	setBit(_sysctrl, LEN_SYS_CTRL, TRXOFF_BIT, true);
 	_deviceMode = IDLE_MODE;
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
+}
+
+void DW1000Class::newReceive() {
+	idle();
+	memset(_sysctrl, 0, LEN_SYS_CTRL);
+	clearReceiveStatus();
+	_deviceMode = RX_MODE;
+}
+
+void DW1000Class::startReceive() {
+	setBit(_sysctrl, LEN_SYS_CTRL, RXENAB_BIT, true);
+	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
+}
+
+void DW1000Class::newTransmit() {
+	idle();
+	memset(_sysctrl, 0, LEN_SYS_CTRL);
+	clearTransmitStatus();
+	_deviceMode = TX_MODE;
+}
+
+void DW1000Class::startTransmit() {
+	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
+	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
+	if(_permanentReceive) {
+		startReceive();
+	} else {
+		_deviceMode = IDLE_MODE;
+	}
 }
 
 void DW1000Class::newConfiguration() {
@@ -290,6 +352,7 @@ void DW1000Class::newConfiguration() {
 	readSystemConfigurationRegister();
 	readChannelControlRegister();
 	readTransmitFrameControlRegister();
+	readSystemEventMaskRegister();
 }
 
 void DW1000Class::commitConfiguration() {
@@ -297,6 +360,7 @@ void DW1000Class::commitConfiguration() {
 	writeSystemConfigurationRegister();
 	writeChannelControlRegister();
 	writeTransmitFrameControlRegister();
+	writeSystemEventMaskRegister();
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -374,51 +438,32 @@ void DW1000Class::extendedFrameLength(boolean val) {
 	_sysctrl[3] |= extLen;
 }
 
-void DW1000Class::newReceive() {
-	memset(_sysctrl, 0, LEN_SYS_CTRL);
-	clearReceiveStatus();
-	_deviceMode = RX_MODE;
-}
-
-void DW1000Class::startReceive() {
-	interruptOnReceived(true);
-	interruptOnAutomaticAcknowledgeTrigger(true);
-	writeSystemEventMaskRegister();
-	_handledInterrupt = false;
-	setBit(_sysctrl, LEN_SYS_CTRL, RXENAB_BIT, true);
-	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
-}
-
-void DW1000Class::newTransmit() {
-	memset(_sysctrl, 0, LEN_SYS_CTRL);
-	clearTransmitStatus();
-	_deviceMode = TX_MODE;
-}
-
-void DW1000Class::startTransmit() {
-	interruptOnSent(true);
-	interruptOnAutomaticAcknowledgeTrigger(true);
-	writeSystemEventMaskRegister();
-	_handledInterrupt = false;
-	// set transmit flag
-	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
-	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
-	// reset to idle
-	_deviceMode = IDLE_MODE;
+void DW1000Class::permanentReceive(boolean val) {
+	_permanentReceive = val;
+	if(val) {
+		// in case permanent, also reenable receiver once failed
+		setReceiverAutoReenable(true);
+	}
 }
 
 void DW1000Class::setDefaults() {
 	if(_deviceMode == TX_MODE) {
-		suppressFrameCheck(false);
+		interruptOnSent(true);
 		extendedFrameLength(false);
+		suppressFrameCheck(false);
 	} else if(_deviceMode == RX_MODE) {
-		suppressFrameCheck(false);
 		extendedFrameLength(false);
+		suppressFrameCheck(false);
+		//permanentReceive(true); // includes RX auto reenable
 	} else if(_deviceMode == IDLE_MODE) {
 		/*dataRate(TRX_RATE_6800KBPS);
 		pulseFrequency(TX_PULSE_FREQ_16MHZ);
-		preambleLength(TX_PREAMBLE_LEN_1024);
-		setReceiverAutoReenable(true);*/
+		preambleLength(TX_PREAMBLE_LEN_1024);*/
+		interruptOnSent(true);
+		interruptOnReceived(true);
+		writeSystemEventMaskRegister();
+		interruptOnAutomaticAcknowledgeTrigger(true);
+		setReceiverAutoReenable(true);
 	}
 }
 
@@ -531,7 +576,7 @@ boolean DW1000Class::isTransmitDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, TXFRS_BIT);
 }
 
-boolean DW1000Class::isLDEDone() {
+boolean DW1000Class::isReceiveTimestampAvailable() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
 }
 
@@ -539,27 +584,29 @@ boolean DW1000Class::isReceiveDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT);
 }
 
-boolean DW1000Class::isReceiveSuccess() {
-	boolean ldeDone, ldeErr, rxGood, rxErr, rxDecodeErr;
-	// first check for errors
+boolean DW1000Class::isReceiveError() {
+	boolean ldeErr, rxCRCErr, rxHeaderErr, rxDecodeErr;
 	ldeErr = getBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT);
-	rxErr = getBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT);
+	rxCRCErr = getBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT);
+	rxHeaderErr = getBit(_sysstatus, LEN_SYS_STATUS, RXPHE_BIT);
 	rxDecodeErr = getBit(_sysstatus, LEN_SYS_STATUS, RXRFSL_BIT);
-	if(ldeErr || rxErr || rxDecodeErr) {
-		return false; 
+	if(ldeErr || rxCRCErr || rxHeaderErr || rxDecodeErr) {
+		return true; 
 	}
-	// no errors, check for success indications
-	rxGood = getBit(_sysstatus, LEN_SYS_STATUS, RXFCG_BIT);
-	ldeDone = getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
-	if(rxGood && ldeDone) {
-		return true;
-	}
-	// TODO proper 'undecided' handling
 	return false;
+}
+
+boolean DW1000Class::isReceiveTimeout() {
+	return getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT);
 }
 
 void DW1000Class::clearAllStatus() {
 	memset(_sysstatus, 0, LEN_SYS_STATUS);
+	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
+}
+
+void DW1000Class::clearReceiveTimestampAvailableStatus() {
+	setBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT, true);
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
@@ -568,6 +615,7 @@ void DW1000Class::clearReceiveStatus() {
 	setBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT, true);
+	setBit(_sysstatus, LEN_SYS_STATUS, RXPHE_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, RXFCG_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, RXRFSL_BIT, true);
