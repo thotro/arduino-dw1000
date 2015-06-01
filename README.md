@@ -13,7 +13,9 @@ Project structure:
 
 Project status: 55%
 
-Current milestone: Extensive RX/TX config testing with two chips; planned till beginning of June
+Current milestone: First simple two-way ranging application; by mid of June.
+
+Following milestone: Frame filtering rules, node addressing and MAC data format implementation
 
 Features and design intentions:
  * Fully encapsulated SPI communication with the chip
@@ -32,6 +34,7 @@ What works so far:
  * Management of IRQs
  * byte[] and (Arduino-)String based data RX/TX
  * RX/TX/config sessions
+ * Delayed/timed RX/TX
  * Stable transmission of messages between two chips
 
 Next on the agenda:
