@@ -191,6 +191,8 @@ public:
 
 	// construction with chip select, reset and irq pin number
 	static void begin(int ss, int rst, int irq);
+	static void begin(int rst, int irq);
+	static void select(int ss);
 	static void end();
 	static void reset();
 	static void tune();

@@ -49,7 +49,18 @@ void DW1000Class::end() {
 	SPI.end();
 }
 
+void DW1000Class::select(int ss) {
+	_ss = ss;
+	pinMode(_ss, OUTPUT);
+	digitalWrite(_ss, HIGH);
+}
+
 void DW1000Class::begin(int ss, int rst, int irq) {
+	select(ss);
+	begin(rst, irq);
+}
+
+void DW1000Class::begin(int rst, int irq) {
 	// SPI setup
 	SPI.begin();
 	SPI.setBitOrder(MSBFIRST);
@@ -57,13 +68,10 @@ void DW1000Class::begin(int ss, int rst, int irq) {
 	// TODO increase clock speed after chip clock lock (CPLOCK in 0x0f)
 	SPI.setClockDivider(SPI_CLOCK_DIV8);
 	// pin and basic member setup
-	_ss = ss;
 	_rst = rst;
 	_irq = irq;
 	_deviceMode = IDLE_MODE;
 	_extendedFrameLength = false;
-	pinMode(_ss, OUTPUT);
-	digitalWrite(_ss, HIGH);
 	pinMode(_rst, OUTPUT);
 	digitalWrite(_rst, HIGH);
 	// reset chip
@@ -385,7 +393,7 @@ unsigned long DW1000Class::delayedTransceive(unsigned int value, unsigned long f
 		return -1;
 	}
 	byte delayBytes[5];
-	// TODO consider counter wrap-around
+	// note: counter wrap-around is considered by unsigned long overflow modulo behavior
 	unsigned long tsValue = getSystemTimestamp() + (value * factorNs) / TIME_RES;
 	writeLongToTimestamp(tsValue, delayBytes);
 	writeBytes(DX_TIME, NO_SUB, delayBytes, LEN_DX_TIME);

@@ -68,6 +68,7 @@ DW1000.newTransmit();
 // configure specific aspects or choose defaults
 DW1000.setDefaults();
 DW1000.setData(some_data);
+DW1000.delayedTransceive(100, DW1000.MILLISECONDS);
 DW1000.startTransmit();
 ...
 // similar for receiving
