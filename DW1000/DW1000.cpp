@@ -348,6 +348,7 @@ void DW1000Class::startTransmit() {
 	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 	if(_permanentReceive) {
+		memset(_sysctrl, 0, LEN_SYS_CTRL);
 		startReceive();
 	} else {
 		_deviceMode = IDLE_MODE;
@@ -451,6 +452,7 @@ void DW1000Class::permanentReceive(boolean val) {
 	if(val) {
 		// in case permanent, also reenable receiver once failed
 		setReceiverAutoReenable(true);
+		writeSystemConfigurationRegister();
 	}
 }
 
