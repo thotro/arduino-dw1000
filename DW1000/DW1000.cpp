@@ -384,7 +384,7 @@ boolean DW1000Class::isSuppressFrameCheck() {
 	return getBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT);
 }
 
-unsigned long DW1000Class::delayedTransceive(unsigned int value, unsigned long factorNs) {
+float DW1000Class::delayedTransceive(unsigned int value, unsigned long factorUs) {
 	if(_deviceMode == TX_MODE) {
 		setBit(_sysctrl, LEN_SYS_CTRL, TXDLYS_BIT, true);
 	} else if(_deviceMode == RX_MODE) {
@@ -395,8 +395,10 @@ unsigned long DW1000Class::delayedTransceive(unsigned int value, unsigned long f
 	}
 	byte delayBytes[5];
 	// note: counter wrap-around is considered by unsigned long overflow modulo behavior
-	unsigned long tsValue = getSystemTimestamp() + (value * factorNs) / TIME_RES;
-	writeLongToTimestamp(tsValue, delayBytes);
+	float tsValue = getSystemTimestamp() + (value * factorUs);
+	writeFloatUsToTimestamp(tsValue, delayBytes);
+	delayBytes[0] = 0;
+	delayBytes[1] &= 0xFE;
 	writeBytes(DX_TIME, NO_SUB, delayBytes, LEN_DX_TIME);
 	return tsValue;
 }
@@ -548,38 +550,43 @@ void DW1000Class::getData(String& data) {
 	free(dataBytes);
 }
 
-unsigned long DW1000Class::getTransmitTimestamp() {
+float DW1000Class::getTransmitTimestamp() {
 	byte txTimeBytes[LEN_TX_STAMP];
 	readBytes(TX_TIME, TX_STAMP_SUB, txTimeBytes, LEN_TX_STAMP);
-	return getTimestampAsLong(txTimeBytes+1);
+	return readTimestampAsFloatUs(txTimeBytes);
 }
 
-unsigned long DW1000Class::getReceiveTimestamp() {
+float DW1000Class::getReceiveTimestamp() {
 	byte rxTimeBytes[LEN_RX_STAMP];
 	readBytes(RX_TIME, RX_STAMP_SUB, rxTimeBytes, LEN_RX_STAMP);
-	return getTimestampAsLong(rxTimeBytes+1);
+	return readTimestampAsFloatUs(rxTimeBytes);
 }
 
-unsigned long DW1000Class::getSystemTimestamp() {
+float DW1000Class::getSystemTimestamp() {
 	byte sysTimeBytes[LEN_SYS_TIME];
 	readBytes(SYS_TIME, NO_SUB, sysTimeBytes, LEN_SYS_TIME);
-	return getTimestampAsLong(sysTimeBytes+1);
+	return readTimestampAsFloatUs(sysTimeBytes);
 }
 
-unsigned long DW1000Class::getTimestampAsLong(byte ts[]) {
-	unsigned long tsValue = ((unsigned long)ts[0] >> 1);
-	tsValue |= ((unsigned long)ts[1] << 7);
-	tsValue |= ((unsigned long)ts[2] << 15);
-	tsValue |= ((unsigned long)ts[3] << 23);
-	return tsValue;
+float DW1000Class::readTimestampAsFloatUs(byte ts[]) {
+	float tsValue = ts[0] & 0xFF;
+	tsValue += ((ts[1] & 0xFF) * 256.0f);
+	tsValue += ((ts[2] & 0xFF) * 65536.0f);
+	tsValue += ((ts[3] & 0xFF) * 16777216.0f);
+	tsValue += ((ts[4] & 0xFF) * 4294967296.0f);
+	return tsValue * TIME_RES;
 }
 
-void DW1000Class::writeLongToTimestamp(unsigned long tsValue, byte ts[]) {
-	ts[0] = (byte)0;
-	ts[1] = (byte)((tsValue << 1) & 0xFF);
-	ts[2] = (byte)((tsValue >> 7) & 0xFF);
-	ts[3] = (byte)((tsValue >> 15) & 0xFF);
-	ts[4] = (byte)((tsValue >> 23) & 0xFF);
+void DW1000Class::writeFloatUsToTimestamp(float tsValue, byte ts[]) {
+	int i = 0;
+	byte val = 0;
+	memset(ts, 0, LEN_STAMP);
+	tsValue *= TIME_RES_INV;
+	while(i < LEN_STAMP && tsValue >= 1) {
+		ts[i] = ((byte)fmod(tsValue, 256.0f) & 0xFF);
+		tsValue = floor(tsValue / 256);
+		i++;
+	} 
 }
 
 boolean DW1000Class::isTransmitDone() {

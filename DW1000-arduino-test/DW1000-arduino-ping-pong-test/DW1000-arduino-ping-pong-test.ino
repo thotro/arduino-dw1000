@@ -7,12 +7,13 @@
  * published by the Free Software Foundation.
  *
  *
- * Use this to test two-way ranging functionality with two
- * DW1000. This is the tag component's code which polls for range computation. 
- * Addressing and frame filtering is currently done in a custom way, as no MAC 
- * features are implemented yet.
+ * Use this to test two-way communication functionality with two
+ * DW1000. Both Arduinos use this sketch, but one node configured
+ * as initiator/sender of the (first) ping message and the other 
+ * being configured as receiver/answerer of the (first) ping message.
  *
- * Complements the "DW1000-arduino-ranging-anchor" sketch. 
+ * Configure each node by setting their "trxToggle" attribute to either
+ * "SENDER" or "RECEIVER".
  */
 
 #include <SPI.h>
@@ -22,12 +23,9 @@
 #define SENDER true
 #define RECEIVER false
 // toggle and message RX/TX
-// first node
-//volatile boolean trxToggle = SENDER;
-// second node
-volatile boolean trxToggle = RECEIVER;
+// NOTE: the other Arduino needs to be configured with RECEIVER
+volatile boolean trxToggle = SENDER;
 volatile boolean trxAck = false;
-//volatile unsigned int msgNum = 0;
 String msg;
 // reset line to the chip
 int RST = 9;

@@ -26,15 +26,16 @@
 volatile byte expectedMsgId = POLL;
 volatile boolean sentAck = false;
 volatile boolean receivedAck = false;
+boolean protocolFailed = false;
 // timestamps to remember
-unsigned long timePollSent;
-unsigned long timePollReceived;
-unsigned long timePollAckSent;
-unsigned long timePollAckReceived;
-unsigned long timeRangeSent;
-unsigned long timeRangeReceived;
+float timePollSent;
+float timePollReceived;
+float timePollAckSent;
+float timePollAckReceived;
+float timeRangeSent;
+float timeRangeReceived;
 // data buffer
-#define LEN_DATA 13
+#define LEN_DATA 16
 byte data[LEN_DATA];
 // reset line to the chip
 int RST = 9;
@@ -97,7 +98,7 @@ void receiver() {
   DW1000.newReceive();
   DW1000.setDefaults();
   // so we don't need to restart the receiver manually
-  DW1000.permanentReceive(false);
+  DW1000.permanentReceive(true);
   DW1000.startReceive();
 }
 
@@ -119,7 +120,7 @@ void loop() {
   if(sentAck) {
     sentAck = false;
     // get timestamp
-    unsigned long txTime = DW1000.getTransmitTimestamp();
+    float txTime = DW1000.getTransmitTimestamp();
     byte msgId = data[0];
     if(msgId == POLL_ACK) {
       timePollAckSent = txTime;
@@ -128,43 +129,38 @@ void loop() {
   } else if(receivedAck) {
     receivedAck = false;;
     // get timestamp
-    unsigned long rxTime = DW1000.getReceiveTimestamp();
+    float rxTime = DW1000.getReceiveTimestamp();
     // get message and parse
     DW1000.getData(data, LEN_DATA);
     byte msgId = data[0];
     if(msgId != expectedMsgId) {
       // unexpected message, start over again
       Serial.print("Received wrong message # "); Serial.println(msgId);
-      delay(2000);
-      expectedMsgId = POLL;
-      return;
+      protocolFailed = true;
     }
     if(msgId == POLL) {
+      protocolFailed = false;
       timePollReceived = rxTime;
       expectedMsgId = RANGE;
       Serial.print("Received POLL @ "); Serial.println(timePollReceived);
       transmitPollAck();
     } else if(msgId == RANGE) {
       timeRangeReceived = rxTime;
-      timePollSent = readTimestamp(data+1);
-      timePollAckReceived = readTimestamp(data+5);
-      timeRangeSent = readTimestamp(data+9);
       expectedMsgId = POLL;
-      Serial.print("Received RANGE @ "); Serial.println(timeRangeReceived);
-      Serial.print("POLL sent @ "); Serial.println(timePollSent);
-      Serial.print("POLL ACK received @ "); Serial.println(timePollAckReceived);
-      Serial.print("RANGE sent @ "); Serial.println(timeRangeSent);
-      Serial.print("Range time is "); Serial.println(getRange());
+      if(!protocolFailed) {
+        timePollSent = DW1000.readTimestampAsFloatUs(data+1);
+        timePollAckReceived = DW1000.readTimestampAsFloatUs(data+6);
+        timeRangeSent = DW1000.readTimestampAsFloatUs(data+11);
+        Serial.print("Received RANGE @ "); Serial.println(timeRangeReceived);
+        Serial.print("POLL sent @ "); Serial.println(timePollSent);
+        Serial.print("POLL ACK received @ "); Serial.println(timePollAckReceived);
+        Serial.print("RANGE sent @ "); Serial.println(timeRangeSent);
+        Serial.print("Range time is "); Serial.println(getRange());
+      } else {
+        // TODO set report with failure code/msg
+      }
       transmitRangeReport();
     }
   }
 }
 
-/* Helper function to convert data bytes back to long timestamps. */
-unsigned long readTimestamp(byte data[]) {
-  unsigned long tsValue = (unsigned long)(data[0]);
-  tsValue |= (unsigned long)(data[1] << 8); 
-  tsValue |= (unsigned long)(data[2] << 16);
-  tsValue |= (unsigned long)(data[3] << 24);
-  return tsValue;
-}

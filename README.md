@@ -8,12 +8,14 @@ Project structure:
    * DW1000-arduino-basic-test ... connectivity test
    * DW1000-arduino-sender-test ... sender part of the basic sender/receiver test; note that due to the manual delays and the amount of Serial prints that occur for logging/debugging, this sender is not intended for high message throughput
    * DW1000-arduino-receiver-test ... receiver part of the basic sender/receiver test
- * DW1000-unit-test ... contains plain C++ unit test code for the library
+   * DW1000-ping-pong-test ... sender and receiver part of a simple ping pong messaging test between two modules
+   * DW1000-arduino-ranging-anchor ... the anchor part (i.e. the range-computing reference module) of the simple ranging test application
+   * DW1000-arduino-ranging-tag ... the tag part (i.e. a module that is considered for range determination to/by the anchor) of the simple ranging application
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
-Project status: 55%
+Project status: 65%
 
-Current milestone: First simple two-way ranging application; by mid of June.
+Current milestone: Extensive testing of two-way ranging application; by end of June.
 
 Following milestone: Frame filtering rules, node addressing and MAC data format implementation
 
@@ -26,7 +28,7 @@ Features and design intentions:
    * on receive timeout (only useful if timeouts are enabled and enabling timeouts is still a TODO :-)
    * on receive timestamp available (might be useful for ranging applications)
  * Simple device status querying
- * Simple, readable RX/TX/config API (docs will follow shortly)
+ * Simple, comprehensible RX/TX session config and general config API (docs will follow shortly)
 
 What works so far:
  * SPI communication with the chip
@@ -36,20 +38,16 @@ What works so far:
  * RX/TX/config sessions
  * Delayed/timed RX/TX
  * Stable transmission of messages between two chips
+ * Arduino test applications (Basic, Sender/receiver, Ping-pong, Simple ranging) demonstrating library reference use
 
-Next on the agenda:
+TODO:
  * Extensive testing of certain configurations, code cleanup (and bug fixing)
  * Performance benchmarks of different configurations
- * Real-time location sensing specific code
- * Ranging and other simple communication examples (as Arduino code files)
- * ...
-
-Misc todos:
- * API docs to follow shortly
- * Wiring instruction and some pictures of the testbed
-   * an Arduino Pro Mini
-   * a DWM1000 on its adapter board for breadboard use
-   * a pull-down resistor to prevent spurious interrupts on GPIO8 (in case interrupt polarity is set to active-high which is the default setting anyway)
+ * Ranging of multiple tags
+ * Module calibration
+ * Setting and appending of data to be sent (e.g. "appendFloat")
+ * MAC message format and frame filtering/adressing
+ * API docs
 
 Usage is something like:
 ```

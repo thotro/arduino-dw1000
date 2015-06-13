@@ -10,6 +10,15 @@
 #ifndef _DW1000_H_INCLUDED
 #define _DW1000_H_INCLUDED
 
+// Time resolution in micro-seconds of time based registers/values.
+// Each bit in a timestamp counts for a period of approx. 15.65ps
+#define TIME_RES 0.000015650040064103
+#define TIME_RES_INV 63897.6
+#define TIME_OVERFLOW 1099511627776
+
+// time stamp byte length
+#define LEN_STAMP 5
+
 // enum to determine RX or TX mode of device
 #define IDLE_MODE 0x00
 #define RX_MODE 0x01
@@ -79,23 +88,23 @@
 
 // system time counter
 #define SYS_TIME 0x06
-#define LEN_SYS_TIME 5
+#define LEN_SYS_TIME LEN_STAMP
 
 // RX timestamp register
 #define RX_TIME 0x15
 #define LEN_RX_TIME 14
 #define RX_STAMP_SUB 0
-#define LEN_RX_STAMP 5
+#define LEN_RX_STAMP LEN_STAMP
 
 // TX timestamp register
 #define TX_TIME 0x17
 #define LEN_TX_TIME 10
 #define TX_STAMP_SUB 0
-#define LEN_TX_STAMP 5
+#define LEN_TX_STAMP LEN_STAMP
 
 // timing register (for delayed RX/TX)
 #define DX_TIME 0x0A
-#define LEN_DX_TIME 5
+#define LEN_DX_TIME LEN_STAMP
 
 // transmit data buffer
 #define TX_BUFFER 0x09
@@ -214,7 +223,7 @@ public:
 
 	// SYS_CTRL, TX/RX_FCTRL, transmit and receive configuration
 	static void suppressFrameCheck(boolean val);
-	static unsigned long delayedTransceive(unsigned int value, unsigned long factorNs);
+	static float delayedTransceive(unsigned int value, unsigned long factorUs);
 	static void dataRate(byte rate);
 	static void pulseFrequency(byte freq);
 	static void preambleLength(byte prealen);
@@ -226,9 +235,9 @@ public:
 	static void getData(byte data[], int n);
 	static void getData(String& data);
 	static int getDataLength();
-	static unsigned long getTransmitTimestamp();
-	static unsigned long getReceiveTimestamp();
-	static unsigned long getSystemTimestamp();
+	static float getTransmitTimestamp();
+	static float getReceiveTimestamp();
+	static float getSystemTimestamp();
 	static boolean isSuppressFrameCheck();
 
 	// RX/TX default settings
@@ -289,6 +298,10 @@ public:
 	static void newTransmit();
 	static void startTransmit();
 
+	// helpers, converting DW1000 timestamp values to and from float. */
+	static float readTimestampAsFloatUs(byte ts[]);
+	static void writeFloatUsToTimestamp(float tsValue, byte ts[]);
+
 	// debug pretty print registers
 	static char* getPrettyBytes(byte cmd, word offset, int n);
 	static char* getPrettyBytes(byte data[], int n);
@@ -313,14 +326,11 @@ public:
 	static const byte TX_PREAMBLE_LEN_2048 = 0x0A;
 	static const byte TX_PREAMBLE_LEN_4096 = 0x03;
 
-	/* Time resolution [ns] of time based registers/values. */
-	static const float TIME_RES = 8.012820513;
-
-	/* Time factors (relative to [ns]) for setting delayed transceive. */
-	static const unsigned long SECONDS = 1e9;
-	static const unsigned long MILLISECONDS = 1e6;
-	static const unsigned long MICROSECONDS = 1e3;
-	static const unsigned long NANOSECONDS = 1;
+	/* Time factors (relative to [us]) for setting delayed transceive. */
+	static const unsigned long SECONDS = 1e6;
+	static const unsigned long MILLISECONDS = 1e3;
+	static const unsigned long MICROSECONDS = 1;
+	static const unsigned long NANOSECONDS = 1e-3;
 
 private:
 	/* chip select, reset and interrupt pins. */
@@ -380,10 +390,6 @@ private:
 
 	/* writing numeric values to bytes. */
 	static void writeValueToBytes(byte data[], int val, int n); 
-
-	/* writing DW1000 timestamp values to unsigned long. */
-	static unsigned long getTimestampAsLong(byte ts[]);
-	static void writeLongToTimestamp(unsigned long tsValue, byte ts[]);
 
 	/* internal helper for bit operations on multi-bytes. */
 	static boolean getBit(byte data[], int n, int bit);

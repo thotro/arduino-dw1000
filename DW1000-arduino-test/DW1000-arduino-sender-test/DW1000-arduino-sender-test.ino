@@ -61,7 +61,7 @@ void transmitter() {
   String msg = "Hello DW1000, it's #"; msg += sentNum;
   DW1000.setData(msg);
   // delay sending the message for the given amount
-  DW1000.delayedTransceive(500, DW1000.MILLISECONDS);
+  DW1000.delayedTransceive(2000, DW1000.MILLISECONDS);
   DW1000.startTransmit();
   delaySent = millis();
 }
@@ -79,7 +79,7 @@ void loop() {
   Serial.print("Processed packet ... #"); Serial.println(sentNum);
   Serial.print("Sent timestamp ... "); Serial.println(newSentTime);
   // note: delta is just for simple demo as not correct on system time counter wrap-around
-  Serial.print("Delta send time [s] ... "); Serial.println((newSentTime - sentTime) * 1.0e-9 * 8.01282);
+  Serial.print("Delta send time [s] ... "); Serial.println((newSentTime - sentTime) * 1.0e-6);
   sentTime = newSentTime;
   sentNum++;
   // again, transmit some data

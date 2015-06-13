@@ -27,11 +27,11 @@ volatile byte expectedMsgId = POLL_ACK;
 volatile boolean sentAck = false;
 volatile boolean receivedAck = false;
 // timestamps to remember
-unsigned long timePollSent;
-unsigned long timePollAckReceived;
-unsigned long timeRangeSent;
+float timePollSent;
+float timePollAckReceived;
+float timeRangeSent;
 // data buffer
-#define LEN_DATA 13
+#define LEN_DATA 16
 byte data[LEN_DATA];
 // reset line to the chip
 int RST = 9;
@@ -79,7 +79,6 @@ void transmitPoll() {
   data[0] = POLL;
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
-  receiver();
 }
 
 void transmitRange() {
@@ -88,19 +87,18 @@ void transmitRange() {
   data[0] = RANGE;
   // delay sending the message and remember expected future sent timestamp
   timeRangeSent = DW1000.delayedTransceive(100, DW1000.MILLISECONDS);
-  writeTimestamp(timePollSent, data+1);
-  writeTimestamp(timePollAckReceived, data+5);
-  writeTimestamp(timeRangeSent, data+9);
+  DW1000.writeFloatUsToTimestamp(timePollSent, data+1);
+  DW1000.writeFloatUsToTimestamp(timePollAckReceived, data+6);
+  DW1000.writeFloatUsToTimestamp(timeRangeSent, data+11);
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
-  receiver();
 }
 
 void receiver() {
   DW1000.newReceive();
   DW1000.setDefaults();
   // so we don't need to restart the receiver manually
-  DW1000.permanentReceive(false);
+  DW1000.permanentReceive(true);
   DW1000.startReceive();
 }
 
@@ -112,7 +110,7 @@ void loop() {
   if(sentAck) {
     sentAck = false; 
     // get timestamp
-    unsigned long txTime = DW1000.getTransmitTimestamp();
+    float txTime = DW1000.getTransmitTimestamp();
     byte msgId = data[0];
     if(msgId == POLL) {
       timePollSent = txTime;
@@ -124,7 +122,7 @@ void loop() {
   } else if(receivedAck) {
     receivedAck = false;
     // get timestamp
-    unsigned long rxTime = DW1000.getReceiveTimestamp();
+    float rxTime = DW1000.getReceiveTimestamp();
     // get message and parse
     DW1000.getData(data, LEN_DATA);
     byte msgId = data[0];
@@ -147,24 +145,9 @@ void loop() {
       expectedMsgId = POLL_ACK;
       Serial.print("Received RANGE REPORT");
       delay(2000);
+      transmitPoll();
     }
   }
 }
 
-/* Helper function to convert data bytes back to long timestamps. */
-unsigned long readTimestamp(byte data[]) {
-  unsigned long tsValue = (unsigned long)(data[0]);
-  tsValue |= (unsigned long)(data[1] << 8); 
-  tsValue |= (unsigned long)(data[2] << 16);
-  tsValue |= (unsigned long)(data[3] << 24);
-  return tsValue;
-}
-
-/* Helper function to convert long timestamps to data bytes. */
-void writeTimestamp(unsigned long timestamp, byte data[]) {
-  data[0] = (byte)(timestamp & 0xFF);
-  data[1] = (byte)((timestamp >> 8) & 0xFF);
-  data[2] = (byte)((timestamp >> 16) & 0xFF);
-  data[3] = (byte)((timestamp >> 24) & 0xFF);
-}
 
