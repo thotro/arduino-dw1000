@@ -37,7 +37,13 @@ byte DW1000Class::_sysmask[LEN_SYS_MASK];
 byte DW1000Class::_chanctrl[LEN_CHAN_CTRL];
 byte DW1000Class::_networkAndAddress[LEN_PANADR];
 // driver internal state
-boolean DW1000Class::_extendedFrameLength = false;
+byte DW1000Class::_extendedFrameLength;
+byte DW1000Class::_pacSize;
+byte DW1000Class::_pulseFrequency;
+byte DW1000Class::_dataRate;
+byte DW1000Class::_preambleLength;
+byte DW1000Class::_preambleCode;
+byte DW1000Class::_channel;
 boolean DW1000Class::_permanentReceive = false;
 int DW1000Class::_deviceMode = IDLE_MODE;
 
@@ -113,35 +119,323 @@ void DW1000Class::reset() {
 }
 
 void DW1000Class::tune() {
-	// re-tune chip for channel 5 (default)
+	// these registers are going to be tuned/configured
 	byte agctune1[LEN_AGC_TUNE1];
 	byte agctune2[LEN_AGC_TUNE2];
+	byte agctune3[LEN_AGC_TUNE3];
+	byte drxtune0b[LEN_DRX_TUNE0b];
+	byte drxtune1a[LEN_DRX_TUNE1a];
+	byte drxtune1b[LEN_DRX_TUNE1b];
 	byte drxtune2[LEN_DRX_TUNE2];
+	byte drxtune4H[LEN_DRX_TUNE4H];
 	byte ldecfg1[LEN_LDE_CFG1];
 	byte ldecfg2[LEN_LDE_CFG2];
+	byte lderepc[LEN_LDE_REPC];
 	byte txpower[LEN_TX_POWER];
+	byte rfrxctrlh[LEN_RF_RXCTRLH];
 	byte rftxctrl[LEN_RF_TXCTRL];
 	byte tcpgdelay[LEN_TC_PGDELAY];
+	byte fspllcfg[LEN_FS_PLLCFG];
 	byte fsplltune[LEN_FS_PLLTUNE];
-	writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
+	// AGC_TUNE1
+	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+		writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
+	} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+		writeValueToBytes(agctune1, 0x889B, LEN_AGC_TUNE1);
+	} else {
+		// TODO proper error/warning handling
+	}
+	// AGC_TUNE2
 	writeValueToBytes(agctune2, 0x2502A907, LEN_AGC_TUNE2);
-	writeValueToBytes(drxtune2, 0x311A002D, LEN_DRX_TUNE2);
-	writeValueToBytes(ldecfg1, 0x6D, LEN_LDE_CFG1);
-	writeValueToBytes(ldecfg2, 0x1607, LEN_LDE_CFG2);
-	writeValueToBytes(txpower, 0x0E082848, LEN_TX_POWER);
-	writeValueToBytes(rftxctrl, 0x001E3FE0, LEN_RF_TXCTRL);
-	writeValueToBytes(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
-	writeValueToBytes(fsplltune, 0xA6, LEN_FS_PLLTUNE);
+	// AGC_TUNE3
+	writeValueToBytes(agctune3, 0x0035, LEN_AGC_TUNE3);
+	// DRX_TUNE0b
+	if(_dataRate == TRX_RATE_110KBPS) {
+		writeValueToBytes(drxtune0b, 0x0016, LEN_DRX_TUNE0b);
+	} else if(_dataRate == TRX_RATE_850KBPS) {
+		writeValueToBytes(drxtune0b, 0x0006, LEN_DRX_TUNE0b);
+	} else if(_dataRate == TRX_RATE_6800KBPS) {
+		writeValueToBytes(drxtune0b, 0x0001, LEN_DRX_TUNE0b);
+	} else {
+		// TODO proper error/warning handling
+	}
+	// DRX_TUNE1a
+	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+		writeValueToBytes(drxtune1a, 0x0087, LEN_DRX_TUNE1a);
+	} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+		writeValueToBytes(drxtune1a, 0x008D, LEN_DRX_TUNE1a);
+	} else {
+		// TODO proper error/warning handling
+	}
+	// DRX_TUNE1b
+	if(_preambleLength ==  TX_PREAMBLE_LEN_1536 || _preambleLength ==  TX_PREAMBLE_LEN_2048 ||  
+			_preambleLength ==  TX_PREAMBLE_LEN_4096) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(drxtune1b, 0x0064, LEN_DRX_TUNE1b);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_preambleLength != TX_PREAMBLE_LEN_64) {
+		if(_dataRate == TRX_RATE_850KBPS || _dataRate == TRX_RATE_6800KBPS) {
+			writeValueToBytes(drxtune1b, 0x0020, LEN_DRX_TUNE1b);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else {
+		if(_dataRate == TRX_RATE_6800KBPS) {
+			writeValueToBytes(drxtune1b, 0x0010, LEN_DRX_TUNE1b);
+		} else {
+			// TODO proper error/warning handling
+		}
+	}
+	// DRX_TUNE2
+	if(_pacSize == PAC_SIZE_8) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(drxtune2, 0x311A002D, LEN_DRX_TUNE2);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(drxtune2, 0x313B006B, LEN_DRX_TUNE2);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_pacSize == PAC_SIZE_16) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(drxtune2, 0x331A0052, LEN_DRX_TUNE2);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(drxtune2, 0x333B00BE, LEN_DRX_TUNE2);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_pacSize == PAC_SIZE_32) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(drxtune2, 0x351A009A, LEN_DRX_TUNE2);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(drxtune2, 0x353B015E, LEN_DRX_TUNE2);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_pacSize == PAC_SIZE_64) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(drxtune2, 0x371A011D, LEN_DRX_TUNE2);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(drxtune2, 0x373B0296, LEN_DRX_TUNE2);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else {
+		// TODO proper error/warning handling
+	}
+	// DRX_TUNE4H
+	if(_preambleLength == TX_PREAMBLE_LEN_64) {
+		writeValueToBytes(drxtune4H, 0x0010, LEN_DRX_TUNE4H);
+	} else {
+		writeValueToBytes(drxtune4H, 0x0028, LEN_DRX_TUNE4H);
+	}
+	// RF_RXCTRLH
+	if(_channel != CHANNEL_4 && _channel != CHANNEL_7) {
+		writeValueToBytes(rfrxctrlh, 0xD8, LEN_RF_RXCTRLH);
+	} else {
+		writeValueToBytes(rfrxctrlh, 0xBC, LEN_RF_RXCTRLH);
+	}
+	// RX_TXCTRL
+	if(_channel == CHANNEL_1) {
+		writeValueToBytes(rftxctrl, 0x00005C40, LEN_RF_TXCTRL);
+	} else if(_channel == CHANNEL_2) {
+		writeValueToBytes(rftxctrl, 0x00045CA0, LEN_RF_TXCTRL);
+	} else if(_channel == CHANNEL_3) {
+		writeValueToBytes(rftxctrl, 0x00086CC0, LEN_RF_TXCTRL);
+	} else if(_channel == CHANNEL_4) {
+		writeValueToBytes(rftxctrl, 0x00045C80, LEN_RF_TXCTRL);
+	} else if(_channel == CHANNEL_5) {
+		writeValueToBytes(rftxctrl, 0x001E3FE0, LEN_RF_TXCTRL);
+	} else if(_channel == CHANNEL_7) {
+		writeValueToBytes(rftxctrl, 0x001E7DE0, LEN_RF_TXCTRL);
+	} else {
+		// TODO proper error/warning handling
+	}
+	// TC_PGDELAY
+	if(_channel == CHANNEL_1) {
+		writeValueToBytes(tcpgdelay, 0xC9, LEN_TC_PGDELAY);
+	} else if(_channel == CHANNEL_2) {
+		writeValueToBytes(tcpgdelay, 0xC2, LEN_TC_PGDELAY);
+	} else if(_channel == CHANNEL_3) {
+		writeValueToBytes(tcpgdelay, 0xC5, LEN_TC_PGDELAY);
+	} else if(_channel == CHANNEL_4) {
+		writeValueToBytes(tcpgdelay, 0x95, LEN_TC_PGDELAY);
+	} else if(_channel == CHANNEL_5) {
+		writeValueToBytes(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
+	} else if(_channel == CHANNEL_7) {
+		writeValueToBytes(tcpgdelay, 0x93, LEN_TC_PGDELAY);
+	} else {
+		// TODO proper error/warning handling
+	}
+	// FS_PLLCFG and FS_PLLTUNE
+	if(_channel == CHANNEL_1) {
+		writeValueToBytes(fspllcfg, 0x09000407, LEN_FS_PLLCFG);
+		writeValueToBytes(fsplltune, 0x1E, LEN_FS_PLLTUNE);
+	} else if(_channel == CHANNEL_2 || _channel == CHANNEL_4) {
+		writeValueToBytes(fspllcfg, 0x08400508, LEN_FS_PLLCFG);
+		writeValueToBytes(fsplltune, 0x26, LEN_FS_PLLTUNE);
+	} else if(_channel == CHANNEL_3) {
+		writeValueToBytes(fspllcfg, 0x08401009, LEN_FS_PLLCFG);
+		writeValueToBytes(fsplltune, 0x5E, LEN_FS_PLLTUNE);
+	} else if(_channel == CHANNEL_5 || _channel == CHANNEL_7) {
+		writeValueToBytes(fspllcfg, 0x0800041D, LEN_FS_PLLCFG);
+		writeValueToBytes(fsplltune, 0xA6, LEN_FS_PLLTUNE);
+	} else {
+		// TODO proper error/warning handling
+	}
+	// LDE_CFG1
+	writeValueToBytes(ldecfg1, 0xD, LEN_LDE_CFG1);
+	// LDE_CFG2
+	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+		writeValueToBytes(ldecfg2, 0x1607, LEN_LDE_CFG2);
+	} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+		writeValueToBytes(ldecfg2, 0x0607, LEN_LDE_CFG2);
+	} else {
+		// TODO proper error/warning handling
+	}
+	// LDE_REPC
+	if(_preambleCode == PREAMBLE_CODE_16MHZ_1 || _preambleCode == PREAMBLE_CODE_16MHZ_2) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x5998 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x5998, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_16MHZ_3 || _preambleCode == PREAMBLE_CODE_16MHZ_8) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x51EA >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x51EA, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_16MHZ_4) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x428E >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x428E, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_16MHZ_5) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x451E >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x451E, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_16MHZ_6) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x2E14 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x2E14, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_16MHZ_7) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x8000 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x8000, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_64MHZ_9) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x28F4 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x28F4, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_64MHZ_10 || _preambleCode == PREAMBLE_CODE_64MHZ_17) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x3332 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x3332, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_64MHZ_11) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x3AE0 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x3AE0, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_64MHZ_12) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x3D70 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x3D70, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_64MHZ_18 || _preambleCode == PREAMBLE_CODE_64MHZ_19) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x35C2 >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x35C2, LEN_LDE_REPC);
+		}
+	} else if(_preambleCode == PREAMBLE_CODE_64MHZ_20) {
+		if(_dataRate == TRX_RATE_110KBPS) {
+			writeValueToBytes(lderepc, ((0x47AE >> 3) & 0xFFFF), LEN_LDE_REPC);
+		} else {
+			writeValueToBytes(lderepc, 0x47AE, LEN_LDE_REPC);
+		}
+	} else {
+		// TODO proper error/warning handling
+	}
+	// TX_POWER (enabled smart transmit power control)
+	if(_channel == CHANNEL_1 || _channel == CHANNEL_2) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(txpower, 0x15355575, LEN_TX_POWER);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(txpower, 0x07274767, LEN_TX_POWER);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_channel == CHANNEL_3) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(txpower, 0x0F2F4F6F, LEN_TX_POWER);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(txpower, 0x2B4B6B8B, LEN_TX_POWER);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_channel == CHANNEL_4) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(txpower, 0x1F1F3F5F, LEN_TX_POWER);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(txpower, 0x3A5A7A9A, LEN_TX_POWER);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_channel == CHANNEL_5) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(txpower, 0x0E082848, LEN_TX_POWER);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(txpower, 0x25456585, LEN_TX_POWER);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else if(_channel == CHANNEL_7) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			writeValueToBytes(txpower, 0x32527292, LEN_TX_POWER);
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			writeValueToBytes(txpower, 0x5171B1D1, LEN_TX_POWER);
+		} else {
+			// TODO proper error/warning handling
+		}
+	} else {
+		// TODO proper error/warning handling
+	}
+	// write configuration back to chip
 	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
 	writeBytes(AGC_TUNE, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
+	writeBytes(AGC_TUNE, AGC_TUNE3_SUB, agctune3, LEN_AGC_TUNE3);
+	writeBytes(DRX_TUNE, DRX_TUNE0b_SUB, drxtune0b, LEN_DRX_TUNE0b);
+	writeBytes(DRX_TUNE, DRX_TUNE1a_SUB, drxtune1a, LEN_DRX_TUNE1a);
+	writeBytes(DRX_TUNE, DRX_TUNE1b_SUB, drxtune1b, LEN_DRX_TUNE1b);
 	writeBytes(DRX_TUNE, DRX_TUNE2_SUB, drxtune2, LEN_DRX_TUNE2);
+	writeBytes(DRX_TUNE, DRX_TUNE4H_SUB, drxtune4H, LEN_DRX_TUNE4H);
 	writeBytes(LDE_CFG, LDE_CFG1_SUB, ldecfg1, LEN_LDE_CFG1);
 	writeBytes(LDE_CFG, LDE_CFG2_SUB, ldecfg2, LEN_LDE_CFG2);
+	writeBytes(LDE_CFG, LDE_REPC_SUB, lderepc, LEN_LDE_REPC);
 	writeBytes(TX_POWER, NO_SUB, txpower, LEN_TX_POWER);
+	writeBytes(RF_CONF, RF_RXCTRLH_SUB, rfrxctrlh, LEN_RF_RXCTRLH);
 	writeBytes(RF_CONF, RF_TXCTRL_SUB, rftxctrl, LEN_RF_TXCTRL);
 	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
 	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
+	writeBytes(FS_CTRL, FS_PLLCFG_SUB, fspllcfg, LEN_FS_PLLCFG);
 	// TODO LDOTUNE, see 2.5.5, p. 21
+
+// preamble length set
+	// TODO set PAC size accordingly for RX (see table 6, page 31)
 }
 
 /* ###########################################################################
@@ -384,7 +678,7 @@ boolean DW1000Class::isSuppressFrameCheck() {
 	return getBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT);
 }
 
-float DW1000Class::delayedTransceive(unsigned int value, unsigned long factorUs) {
+float DW1000Class::setDelay(unsigned int value, unsigned long factorUs) {
 	if(_deviceMode == TX_MODE) {
 		setBit(_sysctrl, LEN_SYS_CTRL, TXDLYS_BIT, true);
 	} else if(_deviceMode == RX_MODE) {
@@ -394,8 +688,8 @@ float DW1000Class::delayedTransceive(unsigned int value, unsigned long factorUs)
 		return -1;
 	}
 	byte delayBytes[5];
-	// note: counter wrap-around is considered by unsigned long overflow modulo behavior
 	float tsValue = getSystemTimestamp() + (value * factorUs);
+	tsValue = fmod(tsValue, TIME_OVERFLOW);
 	writeFloatUsToTimestamp(tsValue, delayBytes);
 	delayBytes[0] = 0;
 	delayBytes[1] &= 0xFE;
@@ -403,7 +697,7 @@ float DW1000Class::delayedTransceive(unsigned int value, unsigned long factorUs)
 	return tsValue;
 }
 
-void DW1000Class::dataRate(byte rate) {
+void DW1000Class::setDataRate(byte rate) {
 	rate &= 0x03;
 	if(rate >= 0x03) {
 		rate = TRX_RATE_850KBPS;
@@ -414,42 +708,39 @@ void DW1000Class::dataRate(byte rate) {
 	} else {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, false);
 	}
+	_dataRate = rate;
 }
 
-void DW1000Class::pulseFrequency(byte freq) {
+void DW1000Class::setPulseFrequency(byte freq) {
 	freq &= 0x03;
 	if(freq == 0x00 || freq >= 0x03) {
 		freq = TX_PULSE_FREQ_16MHZ;
 	}
 	_txfctrl[2] |= (byte)(freq & 0xFF);
 	_chanctrl[2] |= (byte)((freq << 2) & 0xFF);
-	// tuning
-	byte agctune1[LEN_AGC_TUNE1];
-	if(freq == TX_PULSE_FREQ_16MHZ) {
-		writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
-	} else if(freq == TX_PULSE_FREQ_64MHZ) {
-		writeValueToBytes(agctune1, 0x889B, LEN_AGC_TUNE1);
-	} else {
-		return;
-	}
-	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
+	_pulseFrequency = freq;
 }
 
-void DW1000Class::preambleLength(byte prealen) {
+void DW1000Class::setPreambleLength(byte prealen) {
 	prealen &= 0x0F;
 	_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
-	// TODO set PAC size accordingly for RX (see table 6, page 31)
-}
-
-void DW1000Class::extendedFrameLength(boolean val) {
-	byte extLen = 0x00;
-	if(val) {
-		extLen = 0x03;
+	if(prealen == TX_PREAMBLE_LEN_64 || prealen == TX_PREAMBLE_LEN_128) {
+		_pacSize = PAC_SIZE_8;
+	} else if(prealen == TX_PREAMBLE_LEN_256 || prealen == TX_PREAMBLE_LEN_512) {
+		_pacSize = PAC_SIZE_16;
+	} else if(prealen == TX_PREAMBLE_LEN_1024) {
+		_pacSize = PAC_SIZE_32;
+	} else {
+		_pacSize = PAC_SIZE_64;
 	}
-	_sysctrl[3] |= extLen;
+	_preambleLength = prealen;
 }
 
-void DW1000Class::permanentReceive(boolean val) {
+void DW1000Class::useExtendedFrameLength(boolean val) {
+	_extendedFrameLength = (val ? FRAME_LENGTH_EXTENDED : FRAME_LENGTH_NORMAL);
+}
+
+void DW1000Class::receivePermanently(boolean val) {
 	_permanentReceive = val;
 	if(val) {
 		// in case permanent, also reenable receiver once failed
@@ -458,13 +749,23 @@ void DW1000Class::permanentReceive(boolean val) {
 	}
 }
 
+void DW1000Class::setChannel(byte channel) {
+	_channel = channel;
+}
+
+void DW1000Class::setPreambleCode(byte preacode) {
+	_preambleCode = preacode;
+}
+
 void DW1000Class::setDefaults() {
 	if(_deviceMode == TX_MODE) {
 		interruptOnSent(true);
-		extendedFrameLength(false);
+		// frame length setting
+		_sysctrl[3] |= _extendedFrameLength;
 		suppressFrameCheck(false);
 	} else if(_deviceMode == RX_MODE) {
-		extendedFrameLength(false);
+		// frame length setting
+		_sysctrl[3] |= _extendedFrameLength;
 		suppressFrameCheck(false);
 		//permanentReceive(true); // includes RX auto reenable
 	} else if(_deviceMode == IDLE_MODE) {

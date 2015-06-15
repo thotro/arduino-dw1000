@@ -62,7 +62,7 @@ void receiver() {
   DW1000.newReceive();
   DW1000.setDefaults();
   // so we don't need to restart the receiver manually
-  DW1000.permanentReceive(true);
+  DW1000.receivePermanently(true);
   DW1000.startReceive();
 }
 

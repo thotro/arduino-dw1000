@@ -23,6 +23,7 @@
 #define POLL_ACK 1
 #define RANGE 2
 #define RANGE_REPORT 3
+#define RANGE_FAILED 255
 volatile byte expectedMsgId = POLL;
 volatile boolean sentAck = false;
 volatile boolean receivedAck = false;
@@ -85,10 +86,21 @@ void transmitPollAck() {
   receiver();
 }
 
-void transmitRangeReport() {
+void transmitRangeReport(float curRange) {
   DW1000.newTransmit();
   DW1000.setDefaults();
   data[0] = RANGE_REPORT;
+  // write final ranging result
+  DW1000.writeFloatUsToTimestamp(curRange, data+1);
+  DW1000.setData(data, LEN_DATA);
+  DW1000.startTransmit();
+  receiver();
+}
+
+void transmitRangeFailed() {
+  DW1000.newTransmit();
+  DW1000.setDefaults();
+  data[0] = RANGE_FAILED;
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
   receiver();
@@ -98,15 +110,15 @@ void receiver() {
   DW1000.newReceive();
   DW1000.setDefaults();
   // so we don't need to restart the receiver manually
-  DW1000.permanentReceive(true);
+  DW1000.receivePermanently(true);
   DW1000.startReceive();
 }
 
-unsigned long getRange() {
+float getRange() {
   // correct timestamps (in case system time counter wrap-arounds occured)
   // TODO
   // two roundtrip times - each minus message preparation times / 4
-  unsigned long timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
+  float timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
       (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived)) / 4;
   // TODO mult by speed of light
   return timeOfFlight;
@@ -155,11 +167,12 @@ void loop() {
         Serial.print("POLL sent @ "); Serial.println(timePollSent);
         Serial.print("POLL ACK received @ "); Serial.println(timePollAckReceived);
         Serial.print("RANGE sent @ "); Serial.println(timeRangeSent);
-        Serial.print("Range time is "); Serial.println(getRange());
+        float curRange = getRange();
+        Serial.print("Range time is "); Serial.println(curRange);
+        transmitRangeReport(curRange);
       } else {
-        // TODO set report with failure code/msg
+        transmitRangeFailed();
       }
-      transmitRangeReport();
     }
   }
 }

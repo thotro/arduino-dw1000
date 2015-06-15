@@ -23,6 +23,7 @@
 #define POLL_ACK 1
 #define RANGE 2
 #define RANGE_REPORT 3
+#define RANGE_FAILED 255
 volatile byte expectedMsgId = POLL_ACK;
 volatile boolean sentAck = false;
 volatile boolean receivedAck = false;
@@ -86,7 +87,7 @@ void transmitRange() {
   DW1000.setDefaults();
   data[0] = RANGE;
   // delay sending the message and remember expected future sent timestamp
-  timeRangeSent = DW1000.delayedTransceive(100, DW1000.MILLISECONDS);
+  timeRangeSent = DW1000.setDelay(100, DW1000.MILLISECONDS);
   DW1000.writeFloatUsToTimestamp(timePollSent, data+1);
   DW1000.writeFloatUsToTimestamp(timePollAckReceived, data+6);
   DW1000.writeFloatUsToTimestamp(timeRangeSent, data+11);
@@ -98,7 +99,7 @@ void receiver() {
   DW1000.newReceive();
   DW1000.setDefaults();
   // so we don't need to restart the receiver manually
-  DW1000.permanentReceive(true);
+  DW1000.receivePermanently(true);
   DW1000.startReceive();
 }
 
@@ -140,10 +141,14 @@ void loop() {
       Serial.print("Received POLL ACK @ "); Serial.println(timePollAckReceived);
       transmitRange();
     } else if(msgId == RANGE_REPORT) {
-      // TODO implement whatever needs to be done with the range value
-      // here we ignore it and start over
       expectedMsgId = POLL_ACK;
-      Serial.print("Received RANGE REPORT");
+      float curRange = DW1000.readTimestampAsFloatUs(data+1);
+      Serial.print("Received RANGE REPORT = "); Serial.println(curRange);
+      delay(2000);
+      transmitPoll();
+    } else if(msgId == RANGE_FAILED) {
+      expectedMsgId = POLL_ACK;
+      Serial.println("Received RANGE FAILED");
       delay(2000);
       transmitPoll();
     }

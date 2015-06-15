@@ -14,7 +14,6 @@
 // Each bit in a timestamp counts for a period of approx. 15.65ps
 #define TIME_RES 0.000015650040064103
 #define TIME_RES_INV 63897.6
-#define TIME_OVERFLOW 1099511627776
 
 // time stamp byte length
 #define LEN_STAMP 5
@@ -142,22 +141,34 @@
 #define AGC_TUNE 0x23
 #define AGC_TUNE1_SUB 0x04
 #define AGC_TUNE2_SUB 0x0C
+#define AGC_TUNE3_SUB 0x12
 #define LEN_AGC_TUNE1 2
 #define LEN_AGC_TUNE2 4
+#define LEN_AGC_TUNE3 2
 
 // DRX_TUNE2 (for re-tuning only)
 // TODO needs to be adjusted with preamble len and PRF (see Table 31)
 #define DRX_TUNE 0x27
+#define DRX_TUNE0b_SUB 0x02
+#define DRX_TUNE1a_SUB 0x04
+#define DRX_TUNE1b_SUB 0x06
 #define DRX_TUNE2_SUB 0x08
+#define DRX_TUNE4H_SUB 0x26
+#define LEN_DRX_TUNE0b 2
+#define LEN_DRX_TUNE1a 2
+#define LEN_DRX_TUNE1b 2
 #define LEN_DRX_TUNE2 4
+#define LEN_DRX_TUNE4H 2
 
 // LDE_CFG1 (for re-tuning only)
 // TODO LDE_CFG2 needs to be adjusted with PRF (see Table 47)
 #define LDE_CFG 0x2E
 #define LDE_CFG1_SUB 0x0806
 #define LDE_CFG2_SUB 0x1806
+#define LDE_REPC_SUB 0x2804
 #define LEN_LDE_CFG1 1
 #define LEN_LDE_CFG2 2
+#define LEN_LDE_REPC 2
 
 // TX_POWER (for re-tuning only)
 #define TX_POWER 0x1E
@@ -166,7 +177,9 @@
 // RF_CONF (for re-tuning only)
 // TODO RX_TXCTRL needs to be adjusted with channel (see Table 35)
 #define RF_CONF 0x28
+#define RF_RXCTRLH_SUB 0x0B
 #define RF_TXCTRL_SUB 0x0C
+#define LEN_RF_RXCTRLH 1
 #define LEN_RF_TXCTRL 4
 
 // TX_CAL (for re-tuning only)
@@ -178,7 +191,9 @@
 // FS_CTRL (for re-tuning only)
 // TODO FS_PLLTUNE needs to be adjusted with channel (see Table 40)
 #define FS_CTRL 0x2B
+#define FS_PLLCFG_SUB 0x07
 #define FS_PLLTUNE_SUB 0x0B
+#define LEN_FS_PLLCFG 4
 #define LEN_FS_PLLTUNE 1
 
 #include <stdio.h>
@@ -204,7 +219,6 @@ public:
 	static void select(int ss);
 	static void end();
 	static void reset();
-	static void tune();
 
 	// device id, address, etc.
 	static char* getPrintableDeviceIdentifier();
@@ -223,12 +237,14 @@ public:
 
 	// SYS_CTRL, TX/RX_FCTRL, transmit and receive configuration
 	static void suppressFrameCheck(boolean val);
-	static float delayedTransceive(unsigned int value, unsigned long factorUs);
-	static void dataRate(byte rate);
-	static void pulseFrequency(byte freq);
-	static void preambleLength(byte prealen);
-	static void extendedFrameLength(boolean val);
-	static void permanentReceive(boolean val);
+	static float setDelay(unsigned int value, unsigned long factorUs);
+	static void setDataRate(byte rate);
+	static void setPulseFrequency(byte freq);
+	static void setPreambleLength(byte prealen);
+	static void setChannel(byte channel);
+	static void setPreambleCode(byte preacode);
+	static void useExtendedFrameLength(boolean val);
+	static void receivePermanently(boolean val);
 	static void waitForResponse(boolean val);
 	static void setData(byte data[], int n);
 	static void setData(const String& data);
@@ -239,6 +255,9 @@ public:
 	static float getReceiveTimestamp();
 	static float getSystemTimestamp();
 	static boolean isSuppressFrameCheck();
+
+	// chip tuning
+	static void tune();
 
 	// RX/TX default settings
 	void setDefaults();
@@ -259,6 +278,7 @@ public:
 	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 	static void clearInterrupts();
 
+	// Interrupt and status handling
 	static void clearAllStatus();
 	static void clearReceiveStatus();
 	static void clearReceiveTimestampAvailableStatus();
@@ -279,9 +299,6 @@ public:
 	static void attachReceiveTimestampAvailableHandler(void (*handleReceiveTimestampAvailable)(void)) {
 		_handleReceiveTimestampAvailable = handleReceiveTimestampAvailable;
 	}
-
-	// RX_TIME, ..., timing, timestamps, etc.
-	// TODO void readReceiveTimestamp(byte[] timestamp);
 
 	// idle
 	static void idle();
@@ -326,11 +343,51 @@ public:
 	static const byte TX_PREAMBLE_LEN_2048 = 0x0A;
 	static const byte TX_PREAMBLE_LEN_4096 = 0x03;
 
-	/* Time factors (relative to [us]) for setting delayed transceive. */
+	// PAC size. */
+	static const byte PAC_SIZE_8 = 8;
+	static const byte PAC_SIZE_16 = 16;
+	static const byte PAC_SIZE_32 = 32;
+	static const byte PAC_SIZE_64 = 64;
+
+	/* time factors (relative to [us]) for setting delayed transceive. */
 	static const unsigned long SECONDS = 1e6;
 	static const unsigned long MILLISECONDS = 1e3;
 	static const unsigned long MICROSECONDS = 1;
 	static const unsigned long NANOSECONDS = 1e-3;
+
+	/* timer/counter overflow (40 bits). */
+	static const float TIME_OVERFLOW = 1099511627776.0f;
+
+	/* channel of operation. */
+	static const byte CHANNEL_1 = 1;
+	static const byte CHANNEL_2 = 2;
+	static const byte CHANNEL_3 = 3;
+	static const byte CHANNEL_4 = 4;
+	static const byte CHANNEL_5 = 5;
+	static const byte CHANNEL_7 = 7;
+
+	/* preamble codes. */
+	static const byte PREAMBLE_CODE_16MHZ_1 = 1;
+	static const byte PREAMBLE_CODE_16MHZ_2 = 2;
+	static const byte PREAMBLE_CODE_16MHZ_3 = 3;
+	static const byte PREAMBLE_CODE_16MHZ_4 = 4;
+	static const byte PREAMBLE_CODE_16MHZ_5 = 5;
+	static const byte PREAMBLE_CODE_16MHZ_6 = 6;
+	static const byte PREAMBLE_CODE_16MHZ_7 = 7;
+	static const byte PREAMBLE_CODE_16MHZ_8 = 8;
+	static const byte PREAMBLE_CODE_64MHZ_9 = 9;
+	static const byte PREAMBLE_CODE_64MHZ_10 = 10;
+	static const byte PREAMBLE_CODE_64MHZ_11 = 11;
+	static const byte PREAMBLE_CODE_64MHZ_12 = 12;
+	static const byte PREAMBLE_CODE_64MHZ_17 = 17;
+	static const byte PREAMBLE_CODE_64MHZ_18 = 18;
+	static const byte PREAMBLE_CODE_64MHZ_19 = 19;
+	static const byte PREAMBLE_CODE_64MHZ_20 = 20;
+
+	/* frame length settings. */
+	static const byte FRAME_LENGTH_NORMAL = 0x00;
+	static const byte FRAME_LENGTH_EXTENDED = 0x03;
+
 
 private:
 	/* chip select, reset and interrupt pins. */
@@ -359,8 +416,14 @@ private:
 	/* PAN and short address. */
 	static byte _networkAndAddress[LEN_PANADR];
 
-	/* internal helper to determine send mode for set data. */
-	static boolean _extendedFrameLength;
+	/* internal helper that guide tuning the chip. */
+	static byte _extendedFrameLength;
+	static byte _preambleCode;
+	static byte _channel;
+	static byte _preambleLength;
+	static byte _pulseFrequency;
+	static byte _dataRate;
+	static byte _pacSize;
 
 	/* internal helper to remember whether to act as a permanent receiver. */
 	static boolean _permanentReceive;

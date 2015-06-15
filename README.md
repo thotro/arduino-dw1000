@@ -13,7 +13,7 @@ Project structure:
    * DW1000-arduino-ranging-tag ... the tag part (i.e. a module that is considered for range determination to/by the anchor) of the simple ranging application
  * AdapterBoard ... contains PCB files for a 1/10 inch adapter board for the DW1000 module
 
-Project status: 65%
+Project status: 70%
 
 Current milestone: Extensive testing of two-way ranging application; by end of June.
 
@@ -29,6 +29,7 @@ Features and design intentions:
    * on receive timestamp available (might be useful for ranging applications)
  * Simple device status querying
  * Simple, comprehensible RX/TX session config and general config API (docs will follow shortly)
+ * Automatic tuning of the chip (i.e. as indicated at the various places in the spec)
 
 What works so far:
  * SPI communication with the chip
@@ -69,10 +70,16 @@ DW1000.newTransmit();
 // configure specific aspects or choose defaults
 DW1000.setDefaults();
 DW1000.setData(some_data);
-DW1000.delayedTransceive(100, DW1000.MILLISECONDS);
+DW1000.setDelay(100, DW1000.MILLISECONDS);
 DW1000.startTransmit();
 ...
-// similar for receiving
+// similar for receiving, like so ...
+DW1000.newReceive();
+DW1000.setDefaults();
+// so we don't need to restart the receiver manually each time
+DW1000.receivePermanently(true);
+DW1000.startReceive();
+...
 ```
 
 The testbed in use employs
