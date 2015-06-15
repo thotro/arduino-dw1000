@@ -627,6 +627,8 @@ void DW1000Class::newReceive() {
 }
 
 void DW1000Class::startReceive() {
+	_sysctrl[3] |= _extendedFrameLength;
+	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, !_frameCheck);
 	setBit(_sysctrl, LEN_SYS_CTRL, RXENAB_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 }
@@ -639,6 +641,8 @@ void DW1000Class::newTransmit() {
 }
 
 void DW1000Class::startTransmit() {
+	_sysctrl[3] |= _extendedFrameLength;
+	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, !_frameCheck);
 	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 	if(_permanentReceive) {
@@ -671,11 +675,7 @@ void DW1000Class::waitForResponse(boolean val) {
 }
 
 void DW1000Class::suppressFrameCheck(boolean val) {
-	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, val);
-}
-
-boolean DW1000Class::isSuppressFrameCheck() {
-	return getBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT);
+	_frameCheck = false;
 }
 
 float DW1000Class::setDelay(unsigned int value, unsigned long factorUs) {
@@ -751,49 +751,39 @@ void DW1000Class::receivePermanently(boolean val) {
 
 void DW1000Class::setChannel(byte channel) {
 	_channel = channel;
+	// TODO channel ctrl !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
 void DW1000Class::setPreambleCode(byte preacode) {
 	_preambleCode = preacode;
+	// TODO channel ctrl !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
 void DW1000Class::setDefaults() {
 	if(_deviceMode == TX_MODE) {
-		interruptOnSent(true);
-		// frame length setting
-		_sysctrl[3] |= _extendedFrameLength;
-		suppressFrameCheck(false);
+
 	} else if(_deviceMode == RX_MODE) {
-		// frame length setting
-		_sysctrl[3] |= _extendedFrameLength;
-		suppressFrameCheck(false);
-		//permanentReceive(true); // includes RX auto reenable
+
 	} else if(_deviceMode == IDLE_MODE) {
-		/*dataRate(TRX_RATE_6800KBPS);
-		pulseFrequency(TX_PULSE_FREQ_16MHZ);
-		preambleLength(TX_PREAMBLE_LEN_1024);*/
+		suppressFrameCheck(false);
 		interruptOnSent(true);
 		interruptOnReceived(true);
 		writeSystemEventMaskRegister();
 		interruptOnAutomaticAcknowledgeTrigger(true);
 		setReceiverAutoReenable(true);
+		// TODO enableMode(MODE_2) + impl all other modes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 }
 
 void DW1000Class::setData(byte data[], int n) {
-	if(!isSuppressFrameCheck()) {
+	if(_frameCheck) {
 		n+=2; // two bytes CRC-16
-	}
-	if(n > LEN_TX_BUFFER) {
-		return; // TODO proper error handling: frame/buffer size
 	}
 	if(n > LEN_EXT_UWB_FRAMES) {
 		return; // TODO proper error handling: frame/buffer size
 	}
-	if(n > LEN_UWB_FRAMES) {
-		_extendedFrameLength = true;
-	} else {
-		_extendedFrameLength = false;
+	if(n > LEN_UWB_FRAMES && !_extendedFrameLength) {
+		return; // TODO proper error handling: frame/buffer size
 	}
 	// transmit data and length
 	writeBytes(TX_BUFFER, NO_SUB, data, n);

@@ -137,7 +137,6 @@
 #define LEN_PMSC_CTRL0 2
 
 // AGC_TUNE1/2 (for re-tuning only)
-// TODO AGC_TUNE1 needs to be adjusted with PRF (see Table 22)
 #define AGC_TUNE 0x23
 #define AGC_TUNE1_SUB 0x04
 #define AGC_TUNE2_SUB 0x0C
@@ -147,7 +146,6 @@
 #define LEN_AGC_TUNE3 2
 
 // DRX_TUNE2 (for re-tuning only)
-// TODO needs to be adjusted with preamble len and PRF (see Table 31)
 #define DRX_TUNE 0x27
 #define DRX_TUNE0b_SUB 0x02
 #define DRX_TUNE1a_SUB 0x04
@@ -161,7 +159,6 @@
 #define LEN_DRX_TUNE4H 2
 
 // LDE_CFG1 (for re-tuning only)
-// TODO LDE_CFG2 needs to be adjusted with PRF (see Table 47)
 #define LDE_CFG 0x2E
 #define LDE_CFG1_SUB 0x0806
 #define LDE_CFG2_SUB 0x1806
@@ -175,7 +172,6 @@
 #define LEN_TX_POWER 4
 
 // RF_CONF (for re-tuning only)
-// TODO RX_TXCTRL needs to be adjusted with channel (see Table 35)
 #define RF_CONF 0x28
 #define RF_RXCTRLH_SUB 0x0B
 #define RF_TXCTRL_SUB 0x0C
@@ -183,13 +179,11 @@
 #define LEN_RF_TXCTRL 4
 
 // TX_CAL (for re-tuning only)
-// TODO TC_PGDELAY needs to be adjusted with channel (see Table 37)
 #define TX_CAL 0x2A
 #define TC_PGDELAY_SUB 0x0B
 #define LEN_TC_PGDELAY 1
 
 // FS_CTRL (for re-tuning only)
-// TODO FS_PLLTUNE needs to be adjusted with channel (see Table 40)
 #define FS_CTRL 0x2B
 #define FS_PLLCFG_SUB 0x07
 #define FS_PLLTUNE_SUB 0x0B
@@ -220,30 +214,30 @@ public:
 	static void end();
 	static void reset();
 
-	// device id, address, etc.
+	// print device id, address, etc.
 	static char* getPrintableDeviceIdentifier();
 	static char* getPrintableExtendedUniqueIdentifier();
 	static char* getPrintableNetworkIdAndShortAddress();
 
-	// PAN_ID, SHORT_ADDR, device address management
+	// device address management
 	static void setNetworkId(unsigned int val);
 	static void setDeviceAddress(unsigned int val);
 	
-	// SYS_CFG, general device configuration
+	// general device configuration
 	static void setFrameFilter(boolean val);
 	static void setDoubleBuffering(boolean val); // NOTE should be set to false
 	static void setReceiverAutoReenable(boolean val);
 	static void setInterruptPolarity(boolean val);
-
-	// SYS_CTRL, TX/RX_FCTRL, transmit and receive configuration
 	static void suppressFrameCheck(boolean val);
-	static float setDelay(unsigned int value, unsigned long factorUs);
 	static void setDataRate(byte rate);
 	static void setPulseFrequency(byte freq);
 	static void setPreambleLength(byte prealen);
 	static void setChannel(byte channel);
 	static void setPreambleCode(byte preacode);
 	static void useExtendedFrameLength(boolean val);
+
+	// transmit and receive configuration
+	static float setDelay(unsigned int value, unsigned long factorUs);
 	static void receivePermanently(boolean val);
 	static void waitForResponse(boolean val);
 	static void setData(byte data[], int n);
@@ -254,22 +248,15 @@ public:
 	static float getTransmitTimestamp();
 	static float getReceiveTimestamp();
 	static float getSystemTimestamp();
-	static boolean isSuppressFrameCheck();
 
-	// chip tuning
-	static void tune();
-
-	// RX/TX default settings
-	void setDefaults();
-
-	// SYS_STATUS, device status flags
+	// device status flags
 	static boolean isReceiveTimestampAvailable();
 	static boolean isTransmitDone();
 	static boolean isReceiveDone();
 	static boolean isReceiveError();
 	static boolean isReceiveTimeout();
 
-	// SYS_MASK, interrupt handling
+	// interrupt handling
 	static void interruptOnSent(boolean val);
 	static void interruptOnReceived(boolean val);
 	static void interruptOnReceiveError(boolean val);
@@ -277,13 +264,12 @@ public:
 	static void interruptOnReceiveTimestampAvailable(boolean val);
 	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 	static void clearInterrupts();
-
-	// Interrupt and status handling
 	static void clearAllStatus();
 	static void clearReceiveStatus();
 	static void clearReceiveTimestampAvailableStatus();
-	static void clearTransmitStatus(); // TODO impl
+	static void clearTransmitStatus();
 
+	// callback handler management
 	static void attachSentHandler(void (*handleSent)(void)) {
 		_handleSent = handleSent;
 	}
@@ -300,28 +286,44 @@ public:
 		_handleReceiveTimestampAvailable = handleReceiveTimestampAvailable;
 	}
 
-	// idle
+	// idle state
 	static void idle();
 
-	// general configuration
+	// general configuration state
 	static void newConfiguration();
 	static void commitConfiguration();
 
-	// reception
+	// reception state
 	static void newReceive();
 	static void startReceive();
 
-	// transmission
+	// transmission state
 	static void newTransmit();
 	static void startTransmit();
 
-	// helpers, converting DW1000 timestamp values to and from float. */
+	// chip tuning
+	static void tune();
+	// TODO impl modes
+
+	// use RX/TX specific and general default settings
+	void setDefaults();
+
+	// helpers, converting DW1000 timestamp values to and from float
 	static float readTimestampAsFloatUs(byte ts[]);
 	static void writeFloatUsToTimestamp(float tsValue, byte ts[]);
 
 	// debug pretty print registers
 	static char* getPrettyBytes(byte cmd, word offset, int n);
 	static char* getPrettyBytes(byte data[], int n);
+
+	// time factors (relative to [us]) for setting delayed transceive
+	static const unsigned long SECONDS = 1e6;
+	static const unsigned long MILLISECONDS = 1e3;
+	static const unsigned long MICROSECONDS = 1;
+	static const unsigned long NANOSECONDS = 1e-3;
+
+	// timer/counter overflow (40 bits)
+	static const float TIME_OVERFLOW = 1099511627776.0f;
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
@@ -348,15 +350,6 @@ public:
 	static const byte PAC_SIZE_16 = 16;
 	static const byte PAC_SIZE_32 = 32;
 	static const byte PAC_SIZE_64 = 64;
-
-	/* time factors (relative to [us]) for setting delayed transceive. */
-	static const unsigned long SECONDS = 1e6;
-	static const unsigned long MILLISECONDS = 1e3;
-	static const unsigned long MICROSECONDS = 1;
-	static const unsigned long NANOSECONDS = 1e-3;
-
-	/* timer/counter overflow (40 bits). */
-	static const float TIME_OVERFLOW = 1099511627776.0f;
 
 	/* channel of operation. */
 	static const byte CHANNEL_1 = 1;
@@ -387,7 +380,6 @@ public:
 	/* frame length settings. */
 	static const byte FRAME_LENGTH_NORMAL = 0x00;
 	static const byte FRAME_LENGTH_EXTENDED = 0x03;
-
 
 private:
 	/* chip select, reset and interrupt pins. */
@@ -425,8 +417,9 @@ private:
 	static byte _dataRate;
 	static byte _pacSize;
 
-	/* internal helper to remember whether to act as a permanent receiver. */
+	/* internal helper to remember how to properly act. */
 	static boolean _permanentReceive;
+	static boolean _frameCheck;
 
 	// whether RX or TX is active
 	static int _deviceMode;
