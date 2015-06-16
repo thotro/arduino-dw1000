@@ -128,13 +128,9 @@
 #define LEN_CHAN_CTRL 4
 
 // OTP control (for LDE micro code loading only)
-#define OTP_CTRL 0x2D
+#define OTP_IF 0x2D
 #define OTP_CTRL_SUB 0x06
 #define LEN_OTP_CTRL 2
-
-// PMSC_CTRL0 (for LDE micro code loading only)
-#define PMSC_CTRL0 0x36
-#define LEN_PMSC_CTRL0 2
 
 // AGC_TUNE1/2 (for re-tuning only)
 #define AGC_TUNE 0x23
@@ -190,6 +186,11 @@
 #define LEN_FS_PLLCFG 4
 #define LEN_FS_PLLTUNE 1
 
+// PMSC
+#define PMSC 0x36
+#define PMSC_CTRL0_SUB 0x00
+#define LEN_PMSC_CTRL0 4
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -207,12 +208,13 @@ public:
 	 * - replace all |= with bitChange (bitClear + bitSet)
 	 */
 
-	// construction with chip select, reset and irq pin number
-	static void begin(int ss, int rst, int irq);
-	static void begin(int rst, int irq);
+	// init with chip select, with or w/o reset and irq pin number
+	static void begin(int irq, int rst);
+	static void begin(int irq);
 	static void select(int ss);
 	static void end();
 	static void reset();
+	static void softReset();
 
 	// print device id, address, etc.
 	static char* getPrintableDeviceIdentifier();
@@ -303,6 +305,7 @@ public:
 
 	// chip tuning
 	static void tune();
+	static void enableMode(const byte mode[]);
 	// TODO impl modes
 
 	// use RX/TX specific and general default settings
@@ -380,6 +383,20 @@ public:
 	/* frame length settings. */
 	static const byte FRAME_LENGTH_NORMAL = 0x00;
 	static const byte FRAME_LENGTH_EXTENDED = 0x03;
+
+	/* pre-defined modes of operation (3 bytes for data rate, pulse frequency and preamble length). */
+	static const byte MODE_LOCATION_LONGRANGE_LOWPOWER[];
+	static const byte MODE_LOCATION_SHORTRANGE_LOWPOWER[];
+	static const byte MODE_LONGDATA_SHORTRANGE_LOWPOWER[];
+	static const byte MODE_LONGDATA_LONGRANGE_LOWPOWER[];
+	static const byte MODE_SHORTDATA_SHORTRANGE_LOWPOWER[];
+	static const byte MODE_SHORTDATA_LONGRANGE_LOWPOWER[];
+	static const byte MODE_LOCATION_LONGRANGE_ACCURACY[];
+	static const byte MODE_LOCATION_SHORTRANGE_ACCURACY[];
+	static const byte MODE_LONGDATA_SHORTRANGE_ACCURACY[];
+	static const byte MODE_LONGDATA_LONGRANGE_ACCURACY[];
+	static const byte MODE_SHORTDATA_SHORTRANGE_ACCURACY[];
+	static const byte MODE_SHORTDATA_LONGRANGE_ACCURACY[];
 
 private:
 	/* chip select, reset and interrupt pins. */

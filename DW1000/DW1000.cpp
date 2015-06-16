@@ -37,15 +37,29 @@ byte DW1000Class::_sysmask[LEN_SYS_MASK];
 byte DW1000Class::_chanctrl[LEN_CHAN_CTRL];
 byte DW1000Class::_networkAndAddress[LEN_PANADR];
 // driver internal state
-byte DW1000Class::_extendedFrameLength;
-byte DW1000Class::_pacSize;
-byte DW1000Class::_pulseFrequency;
-byte DW1000Class::_dataRate;
-byte DW1000Class::_preambleLength;
-byte DW1000Class::_preambleCode;
-byte DW1000Class::_channel;
+byte DW1000Class::_extendedFrameLength = FRAME_LENGTH_NORMAL;
+byte DW1000Class::_pacSize = PAC_SIZE_8;
+byte DW1000Class::_pulseFrequency = TX_PULSE_FREQ_16MHZ;
+byte DW1000Class::_dataRate = TRX_RATE_6800KBPS;
+byte DW1000Class::_preambleLength = TX_PREAMBLE_LEN_128;
+byte DW1000Class::_preambleCode = PREAMBLE_CODE_16MHZ_4;
+byte DW1000Class::_channel = CHANNEL_5;
+byte DW1000Class::_frameCheck = true;
 boolean DW1000Class::_permanentReceive = false;
 int DW1000Class::_deviceMode = IDLE_MODE;
+// modes of operation
+const byte DW1000Class::MODE_LOCATION_LONGRANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LOCATION_SHORTRANGE_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
+const byte DW1000Class::MODE_LONGDATA_SHORTRANGE_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LONGDATA_LONGRANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_SHORTDATA_SHORTRANGE_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
+const byte DW1000Class::MODE_SHORTDATA_LONGRANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LOCATION_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LOCATION_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
+const byte DW1000Class::MODE_LONGDATA_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LONGDATA_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_SHORTDATA_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
+const byte DW1000Class::MODE_SHORTDATA_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
 
 /* ###########################################################################
  * #### Init and end #######################################################
@@ -61,12 +75,11 @@ void DW1000Class::select(int ss) {
 	digitalWrite(_ss, HIGH);
 }
 
-void DW1000Class::begin(int ss, int rst, int irq) {
-	select(ss);
-	begin(rst, irq);
+void DW1000Class::begin(int irq) {
+	begin(irq, -1);
 }
 
-void DW1000Class::begin(int rst, int irq) {
+void DW1000Class::begin(int irq, int rst) {
 	// SPI setup
 	SPI.begin();
 	SPI.setBitOrder(MSBFIRST);
@@ -77,11 +90,14 @@ void DW1000Class::begin(int rst, int irq) {
 	_rst = rst;
 	_irq = irq;
 	_deviceMode = IDLE_MODE;
-	_extendedFrameLength = false;
 	pinMode(_rst, OUTPUT);
 	digitalWrite(_rst, HIGH);
-	// reset chip
-	reset();
+	// reset chip (either soft or hard)
+	if(rst < 0) {
+		softReset();
+	} else {
+		reset();
+	}
 	// default network and node id
 	writeValueToBytes(_networkAndAddress, 0xFF, LEN_PANADR);
 	writeNetworkIdAndDeviceAddress();
@@ -96,15 +112,18 @@ void DW1000Class::begin(int rst, int irq) {
 	// tell the chip to load the LDE microcode
 	byte pmscctrl0[LEN_PMSC_CTRL0];
 	byte otpctrl[LEN_OTP_CTRL];
-	writeValueToBytes(otpctrl, 0x8000, LEN_OTP_CTRL);
-	writeValueToBytes(pmscctrl0, 0x0301, LEN_PMSC_CTRL0);
-	writeBytes(PMSC_CTRL0, NO_SUB, pmscctrl0, LEN_PMSC_CTRL0);
-	writeBytes(OTP_CTRL, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
+	readBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	readBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
+	pmscctrl0[0] = 0x01;
+	pmscctrl0[1] = 0x03;
+	otpctrl[0] = 0x00;
+	otpctrl[1] = 0x80;
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	writeBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
 	delay(10);
-	writeValueToBytes(pmscctrl0, 0x0200, LEN_PMSC_CTRL0);
-	writeBytes(PMSC_CTRL0, NO_SUB, pmscctrl0, LEN_PMSC_CTRL0);
-	tune();
-	delay(10);
+	pmscctrl0[0] = 0x00;
+	pmscctrl0[1] = 0x02;
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 	// attach interrupt
 	attachInterrupt(_irq, DW1000Class::handleInterrupt, RISING);
 }
@@ -116,6 +135,28 @@ void DW1000Class::reset() {
 	delay(10);
 	// force into idle mode (although it should be already after reset)
 	idle();
+}
+
+void DW1000Class::softReset() {
+	byte pmscctrl0[LEN_PMSC_CTRL0];
+	readBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	pmscctrl0[0] = 0x01;
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	pmscctrl0[3] = 0x00;
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	delay(10);
+	pmscctrl0[0] = 0x00;
+	pmscctrl0[3] = 0xF0;
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+}
+
+void DW1000Class::enableMode(const byte mode[]) {
+	setDataRate(mode[0]);
+	setPulseFrequency(mode[1]);
+	setPreambleLength(mode[2]);
+	// TODO add channel and code to mode tuples
+	setChannel(CHANNEL_5);
+	setPreambleCode(PREAMBLE_CODE_16MHZ_4);
 }
 
 void DW1000Class::tune() {
@@ -627,7 +668,6 @@ void DW1000Class::newReceive() {
 }
 
 void DW1000Class::startReceive() {
-	_sysctrl[3] |= _extendedFrameLength;
 	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, !_frameCheck);
 	setBit(_sysctrl, LEN_SYS_CTRL, RXENAB_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
@@ -641,7 +681,6 @@ void DW1000Class::newTransmit() {
 }
 
 void DW1000Class::startTransmit() {
-	_sysctrl[3] |= _extendedFrameLength;
 	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, !_frameCheck);
 	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
@@ -668,6 +707,8 @@ void DW1000Class::commitConfiguration() {
 	writeChannelControlRegister();
 	writeTransmitFrameControlRegister();
 	writeSystemEventMaskRegister();
+	// tune according to configuration
+	tune();
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -675,7 +716,7 @@ void DW1000Class::waitForResponse(boolean val) {
 }
 
 void DW1000Class::suppressFrameCheck(boolean val) {
-	_frameCheck = false;
+	_frameCheck = !val;
 }
 
 float DW1000Class::setDelay(unsigned int value, unsigned long factorUs) {
@@ -699,9 +740,6 @@ float DW1000Class::setDelay(unsigned int value, unsigned long factorUs) {
 
 void DW1000Class::setDataRate(byte rate) {
 	rate &= 0x03;
-	if(rate >= 0x03) {
-		rate = TRX_RATE_850KBPS;
-	}
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
 	if(rate == TRX_RATE_110KBPS) {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, true);
@@ -713,9 +751,6 @@ void DW1000Class::setDataRate(byte rate) {
 
 void DW1000Class::setPulseFrequency(byte freq) {
 	freq &= 0x03;
-	if(freq == 0x00 || freq >= 0x03) {
-		freq = TX_PULSE_FREQ_16MHZ;
-	}
 	_txfctrl[2] |= (byte)(freq & 0xFF);
 	_chanctrl[2] |= (byte)((freq << 2) & 0xFF);
 	_pulseFrequency = freq;
@@ -738,6 +773,7 @@ void DW1000Class::setPreambleLength(byte prealen) {
 
 void DW1000Class::useExtendedFrameLength(boolean val) {
 	_extendedFrameLength = (val ? FRAME_LENGTH_EXTENDED : FRAME_LENGTH_NORMAL);
+	_syscfg[3] |= _extendedFrameLength;
 }
 
 void DW1000Class::receivePermanently(boolean val) {
@@ -750,13 +786,16 @@ void DW1000Class::receivePermanently(boolean val) {
 }
 
 void DW1000Class::setChannel(byte channel) {
+	channel &= 0xF;
+	_chanctrl[0] = ((channel | (channel << 4)) & 0xFF);
 	_channel = channel;
-	// TODO channel ctrl !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
 void DW1000Class::setPreambleCode(byte preacode) {
+	preacode &= 0x1F;
+	byte rxtxpcode2 = (((preacode << 3) | (preacode >> 2)) & 0xFF);
+	byte rxtxpcode1 = _chanctrl[2] | ((preacode << 6) & 0xFF);
 	_preambleCode = preacode;
-	// TODO channel ctrl !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
 void DW1000Class::setDefaults() {
@@ -765,13 +804,16 @@ void DW1000Class::setDefaults() {
 	} else if(_deviceMode == RX_MODE) {
 
 	} else if(_deviceMode == IDLE_MODE) {
+		useExtendedFrameLength(false);
 		suppressFrameCheck(false);
 		interruptOnSent(true);
 		interruptOnReceived(true);
 		writeSystemEventMaskRegister();
 		interruptOnAutomaticAcknowledgeTrigger(true);
 		setReceiverAutoReenable(true);
-		// TODO enableMode(MODE_2) + impl all other modes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		// default mode when powering up the chip
+		// still explicitly selected for later tuning
+		enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
 	}
 }
 

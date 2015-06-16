@@ -30,6 +30,7 @@ Features and design intentions:
  * Simple device status querying
  * Simple, comprehensible RX/TX session config and general config API (docs will follow shortly)
  * Automatic tuning of the chip (i.e. as indicated at the various places in the spec)
+ * Simple control over multiple connected chips with one Arduino
 
 What works so far:
  * SPI communication with the chip
@@ -54,8 +55,10 @@ Usage is something like:
 ```
 #include <DW1000.h>
 ...
-// init with chip select, reset and interrupt pin/line
-DW1000.begin(cs_pin, rst_pin, int_pin);
+// init with interrupt pin/line and optionally with reset line
+DW1000.begin(irq_pin[, rst_pin]);
+// select a specific chip
+DW1000.select(cs_pin);
 ...
 DW1000.newConfiguration();
 // configure specific aspects or choose defaults
