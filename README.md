@@ -16,10 +16,10 @@ Project state
 Contents
 --------
 
- * [Project structure](./wiki/Project-structure)
- * [Features and design intentions](./wiki/Features)
- * [Testbed and Adapter board](./wiki/Testbed-and-Adapter-board)
- * [Benchmarks](./wiki/Benchmarks)
+ * [Project structure](../../wiki/Project-structure)
+ * [Features and design intentions](../../wiki/Features)
+ * [Testbed and Adapter board](../../wiki/Testbed-and-Adapter-board)
+ * [Benchmarks](../../wiki/Benchmarks)
 
 Usage
 -----
