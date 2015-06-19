@@ -93,7 +93,7 @@ void DW1000Class::begin(int irq, int rst) {
 	pinMode(_rst, OUTPUT);
 	digitalWrite(_rst, HIGH);
 	// reset chip (either soft or hard)
-	if(rst < 0) {
+	if(_rst <= 0) {
 		softReset();
 	} else {
 		reset();
@@ -109,6 +109,11 @@ void DW1000Class::begin(int irq, int rst) {
 	// default interrupt mask, i.e. no interrupts
 	clearInterrupts();
 	writeSystemEventMaskRegister();
+	// attach interrupt
+	attachInterrupt(_irq, DW1000Class::handleInterrupt, RISING);
+}
+
+void DW1000Class::loadLDE() {
 	// tell the chip to load the LDE microcode
 	byte pmscctrl0[LEN_PMSC_CTRL0];
 	byte otpctrl[LEN_OTP_CTRL];
@@ -124,8 +129,6 @@ void DW1000Class::begin(int irq, int rst) {
 	pmscctrl0[0] = 0x00;
 	pmscctrl0[1] = 0x02;
 	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
-	// attach interrupt
-	attachInterrupt(_irq, DW1000Class::handleInterrupt, RISING);
 }
 
 void DW1000Class::reset() {
@@ -148,6 +151,8 @@ void DW1000Class::softReset() {
 	pmscctrl0[0] = 0x00;
 	pmscctrl0[3] = 0xF0;
 	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	// force into idle mode
+	idle();
 }
 
 void DW1000Class::enableMode(const byte mode[]) {
@@ -160,6 +165,39 @@ void DW1000Class::enableMode(const byte mode[]) {
 }
 
 void DW1000Class::tune() {
+	return;
+	// re-tune chip for channel 5 (default)
+	byte agctune1[LEN_AGC_TUNE1];
+	byte agctune2[LEN_AGC_TUNE2];
+	byte drxtune2[LEN_DRX_TUNE2];
+	byte ldecfg1[LEN_LDE_CFG1];
+	byte ldecfg2[LEN_LDE_CFG2];
+	byte txpower[LEN_TX_POWER];
+	byte rftxctrl[LEN_RF_TXCTRL];
+	byte tcpgdelay[LEN_TC_PGDELAY];
+	byte fsplltune[LEN_FS_PLLTUNE];
+	writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
+	writeValueToBytes(agctune2, 0x2502A907, LEN_AGC_TUNE2);
+	writeValueToBytes(drxtune2, 0x311A002D, LEN_DRX_TUNE2);
+	writeValueToBytes(ldecfg1, 0xD, LEN_LDE_CFG1);
+	writeValueToBytes(ldecfg2, 0x1607, LEN_LDE_CFG2);
+	writeValueToBytes(txpower, 0x0E082848, LEN_TX_POWER);
+	writeValueToBytes(rftxctrl, 0x001E3FE0, LEN_RF_TXCTRL);
+	writeValueToBytes(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
+	writeValueToBytes(fsplltune, 0xA6, LEN_FS_PLLTUNE);
+	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
+	writeBytes(AGC_TUNE, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
+	writeBytes(DRX_TUNE, DRX_TUNE2_SUB, drxtune2, LEN_DRX_TUNE2);
+	writeBytes(LDE_CFG, LDE_CFG1_SUB, ldecfg1, LEN_LDE_CFG1);
+	writeBytes(LDE_CFG, LDE_CFG2_SUB, ldecfg2, LEN_LDE_CFG2);
+	writeBytes(TX_POWER, NO_SUB, txpower, LEN_TX_POWER);
+	writeBytes(RF_CONF, RF_TXCTRL_SUB, rftxctrl, LEN_RF_TXCTRL);
+	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
+	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
+	// TODO LDOTUNE, see 2.5.5, p. 21
+}
+
+/*void DW1000Class::tune() {
 	// these registers are going to be tuned/configured
 	byte agctune1[LEN_AGC_TUNE1];
 	byte agctune2[LEN_AGC_TUNE2];
@@ -474,10 +512,7 @@ void DW1000Class::tune() {
 	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
 	writeBytes(FS_CTRL, FS_PLLCFG_SUB, fspllcfg, LEN_FS_PLLCFG);
 	// TODO LDOTUNE, see 2.5.5, p. 21
-
-// preamble length set
-	// TODO set PAC size accordingly for RX (see table 6, page 31)
-}
+}*/
 
 /* ###########################################################################
  * #### Interrupt handling ###################################################
@@ -490,29 +525,35 @@ void DW1000Class::handleInterrupt() {
 		(*_handleSent)();
 		clearTransmitStatus();
 	}
-	if(isReceiveDone() && _handleReceived != 0) {
-		(*_handleReceived)();
-		clearReceiveStatus();
-		if(_permanentReceive) {
-			startReceive();
-		}
-	} else if(isReceiveError() && _handleReceiveError != 0) {
+	if(isReceiveError() && _handleReceiveError != 0) {
 		(*_handleReceiveError)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
+			memset(_sysctrl, 0, LEN_SYS_CTRL);
+			_deviceMode = RX_MODE;
 			startReceive();
 		}
 	} else if(isReceiveTimeout() && _handleReceiveTimeout != 0) {
 		(*_handleReceiveTimeout)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
+			memset(_sysctrl, 0, LEN_SYS_CTRL);
+			_deviceMode = RX_MODE;
 			startReceive();
 		}
-	}
-	if(isReceiveTimestampAvailable() && _handleReceiveTimestampAvailable != 0) {
+	} else if(isReceiveDone() && _handleReceived != 0) {
+		(*_handleReceived)();
+		clearReceiveStatus();
+		if(_permanentReceive) {
+			memset(_sysctrl, 0, LEN_SYS_CTRL);
+			_deviceMode = RX_MODE;
+			startReceive();
+		}
+	} 
+	/*if(isReceiveTimestampAvailable() && _handleReceiveTimestampAvailable != 0) {
 		(*_handleReceiveTimestampAvailable)();
 		clearReceiveTimestampAvailableStatus();
-	}
+	}*/
 	// TODO impl other callbacks
 }
 
@@ -628,6 +669,7 @@ void DW1000Class::interruptOnSent(boolean val) {
 
 void DW1000Class::interruptOnReceived(boolean val) {
 	setBit(_sysmask, LEN_SYS_MASK, RXDFR_BIT, val);
+	setBit(_sysmask, LEN_SYS_MASK, RXFCG_BIT, val);
 }
 
 void DW1000Class::interruptOnReceiveError(boolean val) {
@@ -685,7 +727,7 @@ void DW1000Class::startTransmit() {
 	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 	if(_permanentReceive) {
-		memset(_sysctrl, 0, LEN_SYS_CTRL);
+		//memset(_sysctrl, 0, LEN_SYS_CTRL);
 		startReceive();
 	} else {
 		_deviceMode = IDLE_MODE;
@@ -709,6 +751,9 @@ void DW1000Class::commitConfiguration() {
 	writeSystemEventMaskRegister();
 	// tune according to configuration
 	tune();
+	// TODO make configurable (if false disable LDE use)
+	// load LDE micro-code
+	loadLDE();
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -740,6 +785,7 @@ float DW1000Class::setDelay(unsigned int value, unsigned long factorUs) {
 
 void DW1000Class::setDataRate(byte rate) {
 	rate &= 0x03;
+	_txfctrl[1] &= 0x9F;
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
 	if(rate == TRX_RATE_110KBPS) {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, true);
@@ -751,13 +797,16 @@ void DW1000Class::setDataRate(byte rate) {
 
 void DW1000Class::setPulseFrequency(byte freq) {
 	freq &= 0x03;
+	_txfctrl[2] &= 0xFC;
 	_txfctrl[2] |= (byte)(freq & 0xFF);
+	_chanctrl[2] &= 0xF3;
 	_chanctrl[2] |= (byte)((freq << 2) & 0xFF);
 	_pulseFrequency = freq;
 }
 
 void DW1000Class::setPreambleLength(byte prealen) {
 	prealen &= 0x0F;
+	_txfctrl[2] &= 0xC3;
 	_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
 	if(prealen == TX_PREAMBLE_LEN_64 || prealen == TX_PREAMBLE_LEN_128) {
 		_pacSize = PAC_SIZE_8;
@@ -773,6 +822,7 @@ void DW1000Class::setPreambleLength(byte prealen) {
 
 void DW1000Class::useExtendedFrameLength(boolean val) {
 	_extendedFrameLength = (val ? FRAME_LENGTH_EXTENDED : FRAME_LENGTH_NORMAL);
+	_syscfg[3] &= 0xFC;
 	_syscfg[3] |= _extendedFrameLength;
 }
 
@@ -808,16 +858,17 @@ void DW1000Class::setDefaults() {
 		suppressFrameCheck(false);
 		interruptOnSent(true);
 		interruptOnReceived(true);
-		writeSystemEventMaskRegister();
+		interruptOnReceiveError(true);
 		interruptOnAutomaticAcknowledgeTrigger(true);
 		setReceiverAutoReenable(true);
 		// default mode when powering up the chip
 		// still explicitly selected for later tuning
-		enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
+		//enableMode(MODE_LOCATION_LONGRANGE_LOWPOWER);
+		//enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
 	}
 }
 
-void DW1000Class::setData(byte data[], int n) {
+void DW1000Class::setData(byte data[], unsigned int n) {
 	if(_frameCheck) {
 		n+=2; // two bytes CRC-16
 	}
@@ -830,12 +881,13 @@ void DW1000Class::setData(byte data[], int n) {
 	// transmit data and length
 	writeBytes(TX_BUFFER, NO_SUB, data, n);
 	_txfctrl[0] = (byte)(n & 0xFF); // 1 byte (regular length + 1 bit)
+	_txfctrl[1] &= 0xE0;
 	_txfctrl[1] |= (byte)((n >> 8) & 0x03);	// 2 added bits if extended length
 	writeTransmitFrameControlRegister();
 }
 
 void DW1000Class::setData(const String& data) {
-	int n = data.length()+1;
+	unsigned int n = data.length()+1;
 	byte* dataBytes = (byte*)malloc(n);
 	data.getBytes(dataBytes, n);
 	setData(dataBytes, n);
@@ -843,32 +895,35 @@ void DW1000Class::setData(const String& data) {
 	
 }
 
-int DW1000Class::getDataLength() {
+unsigned int DW1000Class::getDataLength() {
+	unsigned int len = 0;
 	if(_deviceMode == TX_MODE) {
 		// 10 bits of TX frame control register
-		return (((_txfctrl[1] << 8) | _txfctrl[0]) & 0x03FF);
+		len = ((((unsigned int)_txfctrl[1] << 8) | (unsigned int)_txfctrl[0]) & 0x03FF);
 	} else if(_deviceMode == RX_MODE) {
 		// 10 bits of RX frame control register
 		byte rxFrameInfo[LEN_RX_FINFO];
 		readBytes(RX_FINFO, NO_SUB, rxFrameInfo, LEN_RX_FINFO);
 		// TODO if other frame info bits are used somewhere else, store/cache bytes
-		return ((((rxFrameInfo[1] << 8) | rxFrameInfo[0]) & 0x03FF) - 2); // w/o FCS 
-	} else {
-		return -1; // ignore in idle state
+		len = ((((unsigned int)rxFrameInfo[1] << 8) | (unsigned int)rxFrameInfo[0]) & 0x03FF);
 	}
+	if(_frameCheck && len > 2) {
+		return len-2;
+	}
+	return len;
 }
 
-void DW1000Class::getData(byte data[], int n) {
-	if(n < 0) {
+void DW1000Class::getData(byte data[], unsigned int n) {
+	if(n <= 0) {
 		return;
 	}
 	readBytes(RX_BUFFER, NO_SUB, data, n);
 }
 
 void DW1000Class::getData(String& data) {
-	int i;
-	int n = getDataLength(); // number of bytes w/o the two FCS ones
-	if(n < 0) {
+	unsigned int i;
+	unsigned int n = getDataLength(); // number of bytes w/o the two FCS ones
+	if(n <= 0) {
 		return;
 	}
 	byte* dataBytes = (byte*)malloc(n);
@@ -931,6 +986,9 @@ boolean DW1000Class::isReceiveTimestampAvailable() {
 }
 
 boolean DW1000Class::isReceiveDone() {
+	if(_frameCheck) {
+		return getBit(_sysstatus, LEN_SYS_STATUS, RXFCG_BIT);
+	}
 	return getBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT);
 }
 

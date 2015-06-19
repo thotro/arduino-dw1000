@@ -215,6 +215,7 @@ public:
 	static void end();
 	static void reset();
 	static void softReset();
+	static void loadLDE();
 
 	// print device id, address, etc.
 	static char* getPrintableDeviceIdentifier();
@@ -242,11 +243,11 @@ public:
 	static float setDelay(unsigned int value, unsigned long factorUs);
 	static void receivePermanently(boolean val);
 	static void waitForResponse(boolean val);
-	static void setData(byte data[], int n);
+	static void setData(byte data[], unsigned int n);
 	static void setData(const String& data);
-	static void getData(byte data[], int n);
+	static void getData(byte data[], unsigned int n);
 	static void getData(String& data);
-	static int getDataLength();
+	static unsigned int getDataLength();
 	static float getTransmitTimestamp();
 	static float getReceiveTimestamp();
 	static float getSystemTimestamp();

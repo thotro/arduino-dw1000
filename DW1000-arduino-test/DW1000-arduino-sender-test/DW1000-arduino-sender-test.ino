@@ -56,13 +56,13 @@ void handleSent() {
 
 void transmitter() {
   // transmit some data
-  Serial.print("Transmitting packet ... #"); Serial.println(sentNum);
+  //Serial.print("Transmitting packet ... #"); Serial.println(sentNum);
   DW1000.newTransmit();
   DW1000.setDefaults();
   String msg = "Hello DW1000, it's #"; msg += sentNum;
   DW1000.setData(msg);
   // delay sending the message for the given amount
-  DW1000.setDelay(500, DW1000.MILLISECONDS);
+  //DW1000.setDelay(500, DW1000.MILLISECONDS);
   DW1000.startTransmit();
   delaySent = millis();
 }
@@ -75,12 +75,12 @@ void loop() {
   // (we are here after the given amount of send delay time has passed)
   sentAck = false;
   // update and print some information about the sent message
-  Serial.print("Delay sent [ms] ... "); Serial.println(millis() - delaySent);
+  //Serial.print("Delay sent [ms] ... "); Serial.println(millis() - delaySent);
   unsigned long newSentTime = DW1000.getTransmitTimestamp();
-  Serial.print("Processed packet ... #"); Serial.println(sentNum);
-  Serial.print("Sent timestamp ... "); Serial.println(newSentTime);
+  //Serial.print("Processed packet ... #"); Serial.println(sentNum);
+  //Serial.print("Sent timestamp ... "); Serial.println(newSentTime);
   // note: delta is just for simple demo as not correct on system time counter wrap-around
-  Serial.print("Delta send time [s] ... "); Serial.println((newSentTime - sentTime) * 1.0e-6);
+  //Serial.print("Delta send time [s] ... "); Serial.println((newSentTime - sentTime) * 1.0e-6);
   sentTime = newSentTime;
   sentNum++;
   // again, transmit some data

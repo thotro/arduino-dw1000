@@ -44,6 +44,7 @@ void setup() {
   Serial.print("Network ID & Device Address: "); Serial.println(DW1000.getPrintableNetworkIdAndShortAddress());
   // attach callback for (successfully) received messages
   DW1000.attachReceivedHandler(handleReceived);
+  DW1000.attachReceiveErrorHandler(handleReceiveError);
   // start reception
   receiver();
 }
@@ -51,8 +52,6 @@ void setup() {
 void handleReceived() {
   // status change on reception success
   received = true;
-  // get data as string
-  DW1000.getData(message);
 }
 
 void handleReceiveError() {
@@ -71,12 +70,20 @@ void loop() {
     // enter on confirmation of ISR status change (successfully received)
     if(received) {
       numReceived++;
-      Serial.print("Received message ... #"); Serial.println(numReceived);
-      Serial.print("Data is ... "); Serial.println(message);
+      // get data as string
+      DW1000.getData(message);
+      //Serial.print("Received message ... #"); Serial.println(numReceived);
+      //Serial.print("Data is ... "); Serial.println(message);
+      if(numReceived % 500 == 0) {
+        Serial.print("Received message ... #"); Serial.println(numReceived);
+        Serial.print("Data is ... "); Serial.println(message);
+      }
       received = false;
     }
     if(error) {
-      Serial.println("Error receiving a message");
+      //Serial.println("Error receiving a message");
       error = false;
+      DW1000.getData(message);
+      //Serial.print("Error data is ... "); Serial.println(message);
     }
 }
