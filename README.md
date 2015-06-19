@@ -51,7 +51,7 @@ DW1000.newTransmit();
 // configure specific aspects and/or choose defaults
 DW1000.setDefaults();
 DW1000.setData(some_data);
-DW1000.setDelay(100, DW1000.MILLISECONDS);
+[float futureTimestamp = ]DW1000.setDelay(100, DW1000.MILLISECONDS);
 // ... and other stuff - finally start the transmission
 DW1000.startTransmit();
 ...

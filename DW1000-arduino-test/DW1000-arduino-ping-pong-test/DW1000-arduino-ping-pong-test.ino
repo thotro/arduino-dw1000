@@ -26,6 +26,7 @@
 // NOTE: the other Arduino needs to be configured with RECEIVER
 volatile boolean trxToggle = SENDER;
 volatile boolean trxAck = false;
+volatile boolean rxError = false;
 String msg;
 // reset line to the chip
 int RST = 9;
@@ -36,7 +37,7 @@ void setup() {
   Serial.println("### DW1000-arduino-ping-pong-test ###");
   // initialize the driver
   DW1000.begin(0, RST);
-  DW1000.select(SS);;
+  DW1000.select(SS);
   Serial.println("DW1000 initialized ...");
   // general configuration
   DW1000.newConfiguration();
@@ -53,13 +54,14 @@ void setup() {
   // attach callback for (successfully) sent and received messages
   DW1000.attachSentHandler(handleSent);
   DW1000.attachReceivedHandler(handleReceived);
-  // anchor starts by transmitting a POLL message
+  DW1000.attachReceiveErrorHandler(handleReceiveError);
+  // sender starts by sending a PING message, receiver starts listening
   if(trxToggle == SENDER) {
-    msg = "Ping";
+    msg = "Ping ...";
     receiver();
     transmit();
   } else {
-    msg = "Pong";
+    msg = "... and Pong";
     receiver();
   }
 }
@@ -72,6 +74,11 @@ void handleSent() {
 void handleReceived() {
   // status change on received success
   trxAck = true;
+}
+
+void handleReceiveError() {
+  // error flag
+  rxError = true;
 }
 
 void transmit() {
@@ -90,20 +97,26 @@ void receiver() {
 }
 
 void loop() {
+  if(rxError) {
+     Serial.println("Failed to properly receive message.");
+     rxError = false;
+     return;
+  }
   if(!trxAck) {
     return;
   }
   // continue on any success confirmation
   trxAck = false; 
+  // a sender will be a receiver and vice versa
   trxToggle = !trxToggle;
   if(trxToggle == SENDER) {
-    // fomerly in receiving mode
+    // formerly a receiver
     String rxMsg; 
     DW1000.getData(rxMsg);
-    Serial.print("Received | "); Serial.println(rxMsg);
+    Serial.print("Received: "); Serial.println(rxMsg);
     transmit();
   } else {
-    Serial.print("Transmitted | "); Serial.println(msg);
+    Serial.print("Transmitted: "); Serial.println(msg);
   }
 }
 

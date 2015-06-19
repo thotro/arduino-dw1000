@@ -521,7 +521,7 @@ void DW1000Class::tune() {
 void DW1000Class::handleInterrupt() {
 	// read current status and handle via callbacks
 	readSystemEventStatusRegister();
-	if(isTransmitDone() && _handleSent != 0) {
+	if(isTransmitDone() &&_handleSent != 0) {
 		(*_handleSent)();
 		clearTransmitStatus();
 	}
@@ -529,24 +529,20 @@ void DW1000Class::handleInterrupt() {
 		(*_handleReceiveError)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
-			memset(_sysctrl, 0, LEN_SYS_CTRL);
-			_deviceMode = RX_MODE;
+			/*memset(_sysctrl, 0, LEN_SYS_CTRL);
+			_deviceMode = RX_MODE;*/
 			startReceive();
 		}
 	} else if(isReceiveTimeout() && _handleReceiveTimeout != 0) {
 		(*_handleReceiveTimeout)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
-			memset(_sysctrl, 0, LEN_SYS_CTRL);
-			_deviceMode = RX_MODE;
 			startReceive();
 		}
 	} else if(isReceiveDone() && _handleReceived != 0) {
 		(*_handleReceived)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
-			memset(_sysctrl, 0, LEN_SYS_CTRL);
-			_deviceMode = RX_MODE;
 			startReceive();
 		}
 	} 
@@ -727,7 +723,8 @@ void DW1000Class::startTransmit() {
 	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 	if(_permanentReceive) {
-		//memset(_sysctrl, 0, LEN_SYS_CTRL);
+		memset(_sysctrl, 0, LEN_SYS_CTRL);
+		_deviceMode = RX_MODE;
 		startReceive();
 	} else {
 		_deviceMode = IDLE_MODE;

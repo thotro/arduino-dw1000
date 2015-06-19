@@ -252,26 +252,6 @@ public:
 	static float getReceiveTimestamp();
 	static float getSystemTimestamp();
 
-	// device status flags
-	static boolean isReceiveTimestampAvailable();
-	static boolean isTransmitDone();
-	static boolean isReceiveDone();
-	static boolean isReceiveError();
-	static boolean isReceiveTimeout();
-
-	// interrupt handling
-	static void interruptOnSent(boolean val);
-	static void interruptOnReceived(boolean val);
-	static void interruptOnReceiveError(boolean val);
-	static void interruptOnReceiveTimeout(boolean val);
-	static void interruptOnReceiveTimestampAvailable(boolean val);
-	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
-	static void clearInterrupts();
-	static void clearAllStatus();
-	static void clearReceiveStatus();
-	static void clearReceiveTimestampAvailableStatus();
-	static void clearTransmitStatus();
-
 	// callback handler management
 	static void attachSentHandler(void (*handleSent)(void)) {
 		_handleSent = handleSent;
@@ -442,8 +422,28 @@ private:
 	// whether RX or TX is active
 	static int _deviceMode;
 
-	/* ISR. */
+	/* Arduino interrupt handler */
 	static void handleInterrupt();
+
+	/* device status flags */
+	static boolean isReceiveTimestampAvailable();
+	static boolean isTransmitDone();
+	static boolean isReceiveDone();
+	static boolean isReceiveError();
+	static boolean isReceiveTimeout();
+
+	/* interrupt configuration and handling */
+	static void interruptOnSent(boolean val);
+	static void interruptOnReceived(boolean val);
+	static void interruptOnReceiveError(boolean val);
+	static void interruptOnReceiveTimeout(boolean val);
+	static void interruptOnReceiveTimestampAvailable(boolean val);
+	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
+	static void clearInterrupts();
+	static void clearAllStatus();
+	static void clearReceiveStatus();
+	static void clearReceiveTimestampAvailableStatus();
+	static void clearTransmitStatus();
 
 	/* internal helper to read/write system registers. */
 	static void readSystemEventStatusRegister();

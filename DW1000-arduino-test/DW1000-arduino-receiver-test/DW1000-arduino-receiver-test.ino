@@ -72,18 +72,14 @@ void loop() {
       numReceived++;
       // get data as string
       DW1000.getData(message);
-      //Serial.print("Received message ... #"); Serial.println(numReceived);
-      //Serial.print("Data is ... "); Serial.println(message);
-      if(numReceived % 500 == 0) {
-        Serial.print("Received message ... #"); Serial.println(numReceived);
-        Serial.print("Data is ... "); Serial.println(message);
-      }
+      Serial.print("Received message ... #"); Serial.println(numReceived);
+      Serial.print("Data is ... "); Serial.println(message);
       received = false;
     }
     if(error) {
-      //Serial.println("Error receiving a message");
+      Serial.println("Error receiving a message");
       error = false;
       DW1000.getData(message);
-      //Serial.print("Error data is ... "); Serial.println(message);
+      Serial.print("Error data is ... "); Serial.println(message);
     }
 }
