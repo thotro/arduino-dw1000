@@ -164,8 +164,7 @@ void DW1000Class::enableMode(const byte mode[]) {
 	setPreambleCode(PREAMBLE_CODE_16MHZ_4);
 }
 
-void DW1000Class::tune() {
-	return;
+/*void DW1000Class::tune() {
 	// re-tune chip for channel 5 (default)
 	byte agctune1[LEN_AGC_TUNE1];
 	byte agctune2[LEN_AGC_TUNE2];
@@ -195,9 +194,10 @@ void DW1000Class::tune() {
 	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
 	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
 	// TODO LDOTUNE, see 2.5.5, p. 21
-}
+}*/
 
-/*void DW1000Class::tune() {
+void DW1000Class::tune() {
+	return;
 	// these registers are going to be tuned/configured
 	byte agctune1[LEN_AGC_TUNE1];
 	byte agctune2[LEN_AGC_TUNE2];
@@ -512,7 +512,7 @@ void DW1000Class::tune() {
 	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
 	writeBytes(FS_CTRL, FS_PLLCFG_SUB, fspllcfg, LEN_FS_PLLCFG);
 	// TODO LDOTUNE, see 2.5.5, p. 21
-}*/
+}
 
 /* ###########################################################################
  * #### Interrupt handling ###################################################

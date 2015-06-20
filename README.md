@@ -5,13 +5,13 @@ A library that offers functionality to use Decawave's DW1000 chips/modules with 
 Project state
 -------------
 
-**Progress:** 75% (to a first fully configurable, tested and stable release)
+**Progress:** 75% (of a first fully configurable, tested and stable release)
 
 **Current milestone:** Tuning and testing (sender/receiver, ping-pong and two-way ranging)
 
 **Subsequent milestone:** Frame filtering rules, nodes addressing and MAC data format
 
-**General notice:** A more or less stable transmission of messages between two modules is possible at the momement. The code for device tuning currently has issues and is disabled. This may lead to a few percent increased rate of dropped messages (those not received at all or which did not pass the CRC check).
+**General notice:** A (pretty much) stable transmission of messages between two modules is possible at the momement. The code for device tuning currently has issues and is disabled. This may lead to a few percent increased rate of dropped messages (those not received at all or which did not pass the CRC check).
 
 Contents
 --------
