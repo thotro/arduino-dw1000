@@ -953,27 +953,6 @@ DW1000Time DW1000Class::getSystemTimestamp() {
 	return DW1000Time(sysTimeBytes);
 }
 
-/*float DW1000Class::readTimestampAsFloatUs(byte ts[]) {
-	float tsValue = ts[0] & 0xFF;
-	tsValue += ((ts[1] & 0xFF) * 256.0f);
-	tsValue += ((ts[2] & 0xFF) * 65536.0f);
-	tsValue += ((ts[3] & 0xFF) * 16777216.0f);
-	tsValue += ((ts[4] & 0xFF) * 4294967296.0f);
-	return tsValue * TIME_RES;
-}
-
-void DW1000Class::writeFloatUsToTimestamp(float tsValue, byte ts[]) {
-	int i = 0;
-	byte val = 0;
-	memset(ts, 0, LEN_STAMP);
-	tsValue *= TIME_RES_INV;
-	while(i < LEN_STAMP && tsValue >= 1) {
-		ts[i] = ((byte)fmod(tsValue, 256.0f) & 0xFF);
-		tsValue = floor(tsValue / 256);
-		i++;
-	} 
-}*/
-
 boolean DW1000Class::isTransmitDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, TXFRS_BIT);
 }
