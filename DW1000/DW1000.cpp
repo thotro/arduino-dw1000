@@ -748,9 +748,11 @@ void DW1000Class::commitConfiguration() {
 	writeSystemEventMaskRegister();
 	// tune according to configuration
 	tune();
+	delay(10);
 	// TODO make configurable (if false disable LDE use)
 	// load LDE micro-code
 	loadLDE();
+	delay(10);
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -761,23 +763,22 @@ void DW1000Class::suppressFrameCheck(boolean val) {
 	_frameCheck = !val;
 }
 
-float DW1000Class::setDelay(unsigned int value, unsigned long factorUs) {
+DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 	if(_deviceMode == TX_MODE) {
 		setBit(_sysctrl, LEN_SYS_CTRL, TXDLYS_BIT, true);
 	} else if(_deviceMode == RX_MODE) {
 		setBit(_sysctrl, LEN_SYS_CTRL, RXDLYS_BIT, true);
 	} else {
 		// in idle, ignore
-		return -1;
+		return DW1000Time();
 	}
 	byte delayBytes[5];
-	float tsValue = getSystemTimestamp() + (value * factorUs);
-	tsValue = fmod(tsValue, TIME_OVERFLOW);
-	writeFloatUsToTimestamp(tsValue, delayBytes);
+	DW1000Time futureTime = getSystemTimestamp() + delay;
+	futureTime.getAsBytes(delayBytes);
 	delayBytes[0] = 0;
 	delayBytes[1] &= 0xFE;
 	writeBytes(DX_TIME, NO_SUB, delayBytes, LEN_DX_TIME);
-	return tsValue;
+	return futureTime;
 }
 
 void DW1000Class::setDataRate(byte rate) {
@@ -901,7 +902,6 @@ unsigned int DW1000Class::getDataLength() {
 		// 10 bits of RX frame control register
 		byte rxFrameInfo[LEN_RX_FINFO];
 		readBytes(RX_FINFO, NO_SUB, rxFrameInfo, LEN_RX_FINFO);
-		// TODO if other frame info bits are used somewhere else, store/cache bytes
 		len = ((((unsigned int)rxFrameInfo[1] << 8) | (unsigned int)rxFrameInfo[0]) & 0x03FF);
 	}
 	if(_frameCheck && len > 2) {
@@ -935,25 +935,25 @@ void DW1000Class::getData(String& data) {
 	free(dataBytes);
 }
 
-float DW1000Class::getTransmitTimestamp() {
+DW1000Time DW1000Class::getTransmitTimestamp() {
 	byte txTimeBytes[LEN_TX_STAMP];
 	readBytes(TX_TIME, TX_STAMP_SUB, txTimeBytes, LEN_TX_STAMP);
-	return readTimestampAsFloatUs(txTimeBytes);
+	return DW1000Time(txTimeBytes);
 }
 
-float DW1000Class::getReceiveTimestamp() {
+DW1000Time DW1000Class::getReceiveTimestamp() {
 	byte rxTimeBytes[LEN_RX_STAMP];
 	readBytes(RX_TIME, RX_STAMP_SUB, rxTimeBytes, LEN_RX_STAMP);
-	return readTimestampAsFloatUs(rxTimeBytes);
+	return DW1000Time(rxTimeBytes);
 }
 
-float DW1000Class::getSystemTimestamp() {
+DW1000Time DW1000Class::getSystemTimestamp() {
 	byte sysTimeBytes[LEN_SYS_TIME];
 	readBytes(SYS_TIME, NO_SUB, sysTimeBytes, LEN_SYS_TIME);
-	return readTimestampAsFloatUs(sysTimeBytes);
+	return DW1000Time(sysTimeBytes);
 }
 
-float DW1000Class::readTimestampAsFloatUs(byte ts[]) {
+/*float DW1000Class::readTimestampAsFloatUs(byte ts[]) {
 	float tsValue = ts[0] & 0xFF;
 	tsValue += ((ts[1] & 0xFF) * 256.0f);
 	tsValue += ((ts[2] & 0xFF) * 65536.0f);
@@ -972,7 +972,7 @@ void DW1000Class::writeFloatUsToTimestamp(float tsValue, byte ts[]) {
 		tsValue = floor(tsValue / 256);
 		i++;
 	} 
-}
+}*/
 
 boolean DW1000Class::isTransmitDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, TXFRS_BIT);

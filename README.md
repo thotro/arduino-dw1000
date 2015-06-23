@@ -24,7 +24,13 @@ Contents
 Usage
 -----
 
-General usage of the DW1000 library is as follows. API docs for the library will shortly follow.
+General usage of the DW1000 library is depicted below. Please see the Arduino test example codes for more up-to-date and operational reference usage. 
+
+At the moment the library contains two types:
+ * **DW1000:** The statically accessible entity to work with your modules. Offers a variety of configuration options and manages module states and actions.  
+ * **DW1000Time:** Container entities that handle DW1000 specific timing values. These are required to allow accurate timestamps and time based computations; they aid in avoiding potential precision and capacity problems of standard number formats in Arduino, but require less memory than 64-bit data type alternatives and most importantly take care of all bit-to-time (and vice versa) conversions.
+
+API docs for the library will shortly follow. 
 
 ```Arduino
 #include <DW1000.h>
@@ -38,20 +44,23 @@ DW1000.select(cs_pin);
 DW1000.newConfiguration();
 // configure specific aspects and/or choose defaults
 DW1000.setDefaults();
-DW1000.interruptOnSent(true);
-DW1000.suppressFrameCheck(true);
+DW1000.setDeviceAddress(5);
+DW1000.setNetworkId(10);
+DW1000.setFrameFilter(false);
 // ... and other stuff - finally upload to the module.
 DW1000.commitConfiguration();
 ...
 // set some interrupt callback routines
 DW1000.attachSentHandler(some_handler_function);
+DW1000.attachReceivedHandler(another_handler_function);
 ...
 // open a new transmit session
 DW1000.newTransmit();
 // configure specific aspects and/or choose defaults
 DW1000.setDefaults();
 DW1000.setData(some_data);
-[float futureTimestamp = ]DW1000.setDelay(100, DW1000.MILLISECONDS);
+DW1000Time delayTime = DW1000Time(100, DW1000Time::MILLISECONDS);
+[DW1000Time futureTimestamp = ]DW1000.setDelay(delayTime);
 // ... and other stuff - finally start the transmission
 DW1000.startTransmit();
 ...

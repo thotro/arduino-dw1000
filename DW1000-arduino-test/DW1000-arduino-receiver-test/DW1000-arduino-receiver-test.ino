@@ -69,6 +69,7 @@ void receiver() {
 void loop() {
     // enter on confirmation of ISR status change (successfully received)
     if(received) {
+      uint64_t a = 0;
       numReceived++;
       // get data as string
       DW1000.getData(message);

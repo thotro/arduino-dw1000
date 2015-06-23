@@ -195,6 +195,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Arduino.h>
+#include "Timestamp.h"
 #include "../SPI/SPI.h"
 
 class DW1000Class {
@@ -240,7 +241,8 @@ public:
 	static void useExtendedFrameLength(boolean val);
 
 	// transmit and receive configuration
-	static float setDelay(unsigned int value, unsigned long factorUs);
+	// TODO refactor delay to DW1000Time
+	static DW1000Time setDelay(const DW1000Time& delay);
 	static void receivePermanently(boolean val);
 	static void waitForResponse(boolean val);
 	static void setData(byte data[], unsigned int n);
@@ -248,9 +250,9 @@ public:
 	static void getData(byte data[], unsigned int n);
 	static void getData(String& data);
 	static unsigned int getDataLength();
-	static float getTransmitTimestamp();
-	static float getReceiveTimestamp();
-	static float getSystemTimestamp();
+	static DW1000Time getTransmitTimestamp();
+	static DW1000Time getReceiveTimestamp();
+	static DW1000Time getSystemTimestamp();
 
 	// callback handler management
 	static void attachSentHandler(void (*handleSent)(void)) {
@@ -293,21 +295,12 @@ public:
 	void setDefaults();
 
 	// helpers, converting DW1000 timestamp values to and from float
-	static float readTimestampAsFloatUs(byte ts[]);
-	static void writeFloatUsToTimestamp(float tsValue, byte ts[]);
+	//static float readTimestampAsFloatUs(byte ts[]);
+	//static void writeFloatUsToTimestamp(float tsValue, byte ts[]);
 
 	// debug pretty print registers
 	static char* getPrettyBytes(byte cmd, word offset, int n);
 	static char* getPrettyBytes(byte data[], int n);
-
-	// time factors (relative to [us]) for setting delayed transceive
-	static const unsigned long SECONDS = 1e6;
-	static const unsigned long MILLISECONDS = 1e3;
-	static const unsigned long MICROSECONDS = 1;
-	static const unsigned long NANOSECONDS = 1e-3;
-
-	// timer/counter overflow (40 bits)
-	static const float TIME_OVERFLOW = 1099511627776.0f;
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
