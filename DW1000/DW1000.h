@@ -241,7 +241,6 @@ public:
 	static void useExtendedFrameLength(boolean val);
 
 	// transmit and receive configuration
-	// TODO refactor delay to DW1000Time
 	static DW1000Time setDelay(const DW1000Time& delay);
 	static void receivePermanently(boolean val);
 	static void waitForResponse(boolean val);
@@ -289,14 +288,9 @@ public:
 	// chip tuning
 	static void tune();
 	static void enableMode(const byte mode[]);
-	// TODO impl modes
 
 	// use RX/TX specific and general default settings
 	void setDefaults();
-
-	// helpers, converting DW1000 timestamp values to and from float
-	//static float readTimestampAsFloatUs(byte ts[]);
-	//static void writeFloatUsToTimestamp(float tsValue, byte ts[]);
 
 	// debug pretty print registers
 	static char* getPrettyBytes(byte cmd, word offset, int n);
