@@ -122,7 +122,7 @@ float getRange() {
   DW1000Time timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
       (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived));// / 4;
   // TODO mult by speed of light
-  return timeOfFlight.getAsFloat();
+  return timeOfFlight.getAsInt();
 }
 
 void loop() {

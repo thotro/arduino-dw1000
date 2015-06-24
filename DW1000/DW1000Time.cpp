@@ -7,7 +7,7 @@
  * published by the Free Software Foundation.
  */
 
-#include "Timestamp.h"
+#include "DW1000Time.h"
 
 DW1000Time::DW1000Time() {
 	memset(_timestamp, 0, LEN_STAMP);
@@ -47,6 +47,15 @@ float DW1000Time::getAsFloat() const {
 	tsValue += ((_timestamp[2] & 0xFF) * 65536.0f);
 	tsValue += ((_timestamp[3] & 0xFF) * 16777216.0f);
 	tsValue += ((_timestamp[4] & 0xFF) * 4294967296.0f);
+	return tsValue * TIME_RES;
+}
+
+uint64_t DW1000Time::getAsInt() const {
+	uint64_t tsValue = _timestamp[0];
+	tsValue |= ((uint64_t)_timestamp[1] << 8);
+	tsValue |= ((uint64_t)_timestamp[2] << 16);
+	tsValue |= ((uint64_t)_timestamp[3] << 24);
+	tsValue |= ((uint64_t)_timestamp[4] << 32);
 	return tsValue * TIME_RES;
 }
 

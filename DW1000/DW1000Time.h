@@ -30,6 +30,7 @@ public:
 
 	float getAsFloat() const;
 	void getAsBytes(byte data[]) const;
+	uint64_t getAsInt() const;
 
 	DW1000Time& operator=(const DW1000Time &assign);
 	DW1000Time& operator+=(const DW1000Time &add);

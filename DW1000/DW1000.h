@@ -195,7 +195,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Arduino.h>
-#include "Timestamp.h"
+#include "DW1000Time.h"
 #include "../SPI/SPI.h"
 
 class DW1000Class {
@@ -293,8 +293,8 @@ public:
 	void setDefaults();
 
 	// debug pretty print registers
-	static char* getPrettyBytes(byte cmd, word offset, int n);
-	static char* getPrettyBytes(byte data[], int n);
+	static char* getPrettyBytes(byte cmd, word offset, unsigned int n);
+	static char* getPrettyBytes(byte data[], unsigned int n);
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
@@ -446,15 +446,15 @@ private:
 	static void writeTransmitFrameControlRegister();
 
 	/* reading and writing bytes from and to DW1000 module. */
-	static void readBytes(byte cmd, word offset, byte data[], int n);
-	static void writeBytes(byte cmd, word offset, byte data[], int n);
+	static void readBytes(byte cmd, word offset, byte data[], unsigned int n);
+	static void writeBytes(byte cmd, word offset, byte data[], unsigned int n);
 
 	/* writing numeric values to bytes. */
-	static void writeValueToBytes(byte data[], int val, int n); 
+	static void writeValueToBytes(byte data[], long val, unsigned int n); 
 
 	/* internal helper for bit operations on multi-bytes. */
-	static boolean getBit(byte data[], int n, int bit);
-	static void setBit(byte data[], int n, int bit, boolean val);
+	static boolean getBit(byte data[], unsigned int n, unsigned int bit);
+	static void setBit(byte data[], unsigned int n, unsigned int bit, boolean val);
 	
 	/* Register is 6 bit, 7 = write, 6 = sub-adressing, 5-0 = register value
 	 * Total header with sub-adressing can be 15 bit. */
