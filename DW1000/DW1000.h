@@ -195,6 +195,10 @@
 #define PMSC_CTRL0_SUB 0x00
 #define LEN_PMSC_CTRL0 4
 
+// TX_ANTD Antenna delays
+#define TX_ANTD 0x18
+#define LEN_TX_ANTD 2
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -223,9 +227,9 @@ public:
 	static void loadLDE();
 
 	// print device id, address, etc.
-	static char* getPrintableDeviceIdentifier();
-	static char* getPrintableExtendedUniqueIdentifier();
-	static char* getPrintableNetworkIdAndShortAddress();
+	static void getPrintableDeviceIdentifier(char msgBuffer[]);
+	static void getPrintableExtendedUniqueIdentifier(char msgBuffer[]);
+	static void getPrintableNetworkIdAndShortAddress(char msgBuffer[]);
 
 	// device address management
 	static void setNetworkId(unsigned int val);
@@ -308,8 +312,8 @@ public:
 	void setDefaults();
 
 	// debug pretty print registers
-	static char* getPrettyBytes(byte cmd, word offset, unsigned int n);
-	static char* getPrettyBytes(byte data[], unsigned int n);
+	static void getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsigned int n);
+	static void getPrettyBytes(byte data[], char msgBuffer[], unsigned int n);
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
@@ -394,9 +398,6 @@ private:
 	static void (*_handleReceiveTimeout)(void);
 	static void (*_handleReceiveTimestampAvailable)(void);
 
-	/* fixed buffer for printed messages. */
-	static char _msgBuf[1024];
-
 	/* register caches. */
 	static byte _syscfg[LEN_SYS_CFG];
 	static byte _sysctrl[LEN_SYS_CTRL];
@@ -478,9 +479,14 @@ private:
 	static const byte READ_SUB = 0x40; // read with sub address
 
 	/* clocks available. */
-	static const byte AUTO_CLOCK = 0x0;
+	static const byte AUTO_CLOCK = 0x00;
 	static const byte XTI_CLOCK = 0x01;
 	static const byte PLL_CLOCK = 0x02;
+
+	/* SPI configs. */
+	static const SPISettings _fastSPI;
+	static const SPISettings _slowSPI;
+	static const SPISettings* _currentSPI;
 };
 
 extern DW1000Class DW1000;

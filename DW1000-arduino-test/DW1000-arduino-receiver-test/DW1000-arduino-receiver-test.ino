@@ -39,9 +39,13 @@ void setup() {
   DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
-  Serial.print("Device ID: "); Serial.println(DW1000.getPrintableDeviceIdentifier());
-  Serial.print("Unique ID: "); Serial.println(DW1000.getPrintableExtendedUniqueIdentifier());
-  Serial.print("Network ID & Device Address: "); Serial.println(DW1000.getPrintableNetworkIdAndShortAddress());
+  char msg[1024];
+  DW1000.getPrintableDeviceIdentifier(msg);
+  Serial.print("Device ID: "); Serial.println(msg);
+  DW1000.getPrintableExtendedUniqueIdentifier(msg);
+  Serial.print("Unique ID: "); Serial.println(msg);
+  DW1000.getPrintableNetworkIdAndShortAddress(msg);
+  Serial.print("Network ID & Device Address: "); Serial.println(msg);
   // attach callback for (successfully) received messages
   DW1000.attachReceivedHandler(handleReceived);
   DW1000.attachReceiveErrorHandler(handleReceiveError);

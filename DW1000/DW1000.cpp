@@ -26,8 +26,6 @@ void (*DW1000Class::_handleReceived)(void) = 0;
 void (*DW1000Class::_handleReceiveError)(void) = 0;
 void (*DW1000Class::_handleReceiveTimeout)(void) = 0;
 void (*DW1000Class::_handleReceiveTimestampAvailable)(void) = 0;
-// message printing
-char DW1000Class::_msgBuf[1024];
 // registers
 byte DW1000Class::_syscfg[LEN_SYS_CFG];
 byte DW1000Class::_sysctrl[LEN_SYS_CTRL];
@@ -44,7 +42,7 @@ byte DW1000Class::_dataRate = TRX_RATE_6800KBPS;
 byte DW1000Class::_preambleLength = TX_PREAMBLE_LEN_128;
 byte DW1000Class::_preambleCode = PREAMBLE_CODE_16MHZ_4;
 byte DW1000Class::_channel = CHANNEL_5;
-byte DW1000Class::_frameCheck = true;
+boolean DW1000Class::_frameCheck = true;
 boolean DW1000Class::_permanentReceive = false;
 int DW1000Class::_deviceMode = IDLE_MODE;
 // modes of operation
@@ -60,6 +58,10 @@ const byte DW1000Class::MODE_LONGDATA_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS
 const byte DW1000Class::MODE_LONGDATA_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
 const byte DW1000Class::MODE_SHORTDATA_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
 const byte DW1000Class::MODE_SHORTDATA_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+// SPI settings
+const SPISettings DW1000Class::_fastSPI = SPISettings(16000000L, MSBFIRST, SPI_MODE0);
+const SPISettings DW1000Class::_slowSPI = SPISettings(2000000L, MSBFIRST, SPI_MODE0);
+const SPISettings* DW1000Class::_currentSPI = &_fastSPI;
 
 /* ###########################################################################
  * #### Init and end #######################################################
@@ -80,12 +82,10 @@ void DW1000Class::begin(int irq) {
 }
 
 void DW1000Class::begin(int irq, int rst) {
-	// SPI setup
-	SPI.begin();
-	SPI.setBitOrder(MSBFIRST);
-	SPI.setDataMode(SPI_MODE0);
-	// TODO increase clock speed after chip clock lock (CPLOCK in 0x0f)
-	SPI.setClockDivider(SPI_CLOCK_DIV8);
+	// generous initial init/wake-up-idle delay
+	delay(10);
+	// start SPI
+ 	SPI.begin(); 
 	// pin and basic member setup
 	_rst = rst;
 	_irq = irq;
@@ -144,12 +144,15 @@ void DW1000Class::enableClock(byte clock) {
 	memset(pmscctrl0, 0, LEN_PMSC_CTRL0);
 	readBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 	if(clock == AUTO_CLOCK) {
+		_currentSPI = &_fastSPI;
 		pmscctrl0[0] = AUTO_CLOCK;
 		pmscctrl0[1] &= 0xFE;
 	} else if(clock == XTI_CLOCK) {
+		_currentSPI = &_slowSPI;
 		pmscctrl0[0] &= 0xFC;
 		pmscctrl0[0] |= XTI_CLOCK;
 	} else if(clock == PLL_CLOCK) {
+		_currentSPI = &_fastSPI;
 		pmscctrl0[0] &= 0xFC;
 		pmscctrl0[0] |= PLL_CLOCK;
 	} else {
@@ -550,28 +553,25 @@ void DW1000Class::handleInterrupt() {
  * #### Pretty printed device information ####################################
  * ######################################################################### */
 
-char* DW1000Class::getPrintableDeviceIdentifier() {
+void DW1000Class::getPrintableDeviceIdentifier(char msgBuffer[]) {
 	byte data[LEN_DEV_ID];
 	readBytes(DEV_ID, NO_SUB, data, LEN_DEV_ID);
-	sprintf(_msgBuf, "DECA - model: %d, version: %d, revision: %d", 
+	sprintf(msgBuffer, "DECA - model: %d, version: %d, revision: %d", 
 		data[1], (data[0] >> 4) & 0x0F, data[0] & 0x0F);
-	return _msgBuf;
 }
 
-char* DW1000Class::getPrintableExtendedUniqueIdentifier() {
+void DW1000Class::getPrintableExtendedUniqueIdentifier(char msgBuffer[]) {
 	byte data[LEN_EUI];
 	readBytes(EUI, NO_SUB, data, LEN_EUI);
-	sprintf(_msgBuf, "EUI: %d:%d:%d:%d:%d, OUI: %d:%d:%d",
+	sprintf(msgBuffer, "EUI: %d:%d:%d:%d:%d, OUI: %d:%d:%d",
 		data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-	return _msgBuf;
 }
 
-char* DW1000Class::getPrintableNetworkIdAndShortAddress() {
+void DW1000Class::getPrintableNetworkIdAndShortAddress(char msgBuffer[]) {
 	byte data[LEN_PANADR];
 	readBytes(PANADR, NO_SUB, data, LEN_PANADR);
-	sprintf(_msgBuf, "PAN: %u, Short Address: %u",
+	sprintf(msgBuffer, "PAN: %u, Short Address: %u",
 		(unsigned int)((data[3] << 8) | data[2]), (unsigned int)((data[1] << 8) | data[0]));
-	return _msgBuf;
 }
 
 /* ###########################################################################
@@ -712,6 +712,7 @@ void DW1000Class::newTransmit() {
 }
 
 void DW1000Class::startTransmit() {
+	writeTransmitFrameControlRegister();
 	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, !_frameCheck);
 	setBit(_sysctrl, LEN_SYS_CTRL, TXSTRT_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
@@ -740,15 +741,20 @@ void DW1000Class::commitConfiguration() {
 	loadLDE();
 	delay(10);
 	enableClock(AUTO_CLOCK);
+	// TODO clean up code
+	byte antennaDelay[LEN_TX_ANTD];
+	writeValueToBytes(antennaDelay, 16384, LEN_TX_ANTD);
+	writeBytes(TX_ANTD, NO_SUB, antennaDelay, LEN_TX_ANTD);
+    	writeBytes(LDE_CFG, LDE_CFG2_SUB, antennaDelay, LEN_LDE_CFG2); 
+	// tune according to configuration
+	tune();
+	delay(10);
 	// write all configurations back to device
 	writeNetworkIdAndDeviceAddress();
 	writeSystemConfigurationRegister();
 	writeChannelControlRegister();
 	writeTransmitFrameControlRegister();
 	writeSystemEventMaskRegister();
-	// tune according to configuration
-	tune();
-	delay(10);
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -859,8 +865,8 @@ void DW1000Class::setDefaults() {
 		setReceiverAutoReenable(true);
 		// default mode when powering up the chip
 		// still explicitly selected for later tuning
-		//enableMode(MODE_LOCATION_LONGRANGE_LOWPOWER);
-		enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
+		enableMode(MODE_LOCATION_LONGRANGE_LOWPOWER);
+		//enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
 	}
 }
 
@@ -879,7 +885,6 @@ void DW1000Class::setData(byte data[], unsigned int n) {
 	_txfctrl[0] = (byte)(n & 0xFF); // 1 byte (regular length + 1 bit)
 	_txfctrl[1] &= 0xE0;
 	_txfctrl[1] |= (byte)((n >> 8) & 0x03);	// 2 added bits if extended length
-	writeTransmitFrameControlRegister();
 }
 
 void DW1000Class::setData(const String& data) {
@@ -1120,6 +1125,7 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		}
 	}
 	noInterrupts();
+	SPI.beginTransaction(*_currentSPI);
 	digitalWrite(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
@@ -1128,6 +1134,7 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		data[i] = SPI.transfer(JUNK);
 	}
 	digitalWrite(_ss,HIGH);
+	SPI.endTransaction();
 	interrupts();
 }
 
@@ -1183,6 +1190,7 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 		}
 	}
 	noInterrupts();
+	SPI.beginTransaction(*_currentSPI);
 	digitalWrite(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
@@ -1192,55 +1200,54 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 	}
 	delay(1);
 	digitalWrite(_ss,HIGH);
+	SPI.endTransaction();
 	interrupts();
 	delay(1);
 }
 
-char* DW1000Class::getPrettyBytes(byte data[], unsigned int n) {
+void DW1000Class::getPrettyBytes(byte data[], char msgBuffer[], unsigned int n) {
 	unsigned int i, j, b;
-	b = sprintf(_msgBuf, "Data, bytes: %d\nB: 7 6 5 4 3 2 1 0\n", n);
+	b = sprintf(msgBuffer, "Data, bytes: %d\nB: 7 6 5 4 3 2 1 0\n", n);
 	for(i = 0; i < n; i++) {
 		byte curByte = data[i];
-		snprintf(&_msgBuf[b++], 2, "%d", (i + 1));
-		_msgBuf[b++] = (char)((i + 1) & 0xFF); _msgBuf[b++] = ':'; _msgBuf[b++] = ' ';
+		snprintf(&msgBuffer[b++], 2, "%d", (i + 1));
+		msgBuffer[b++] = (char)((i + 1) & 0xFF); msgBuffer[b++] = ':'; msgBuffer[b++] = ' ';
 		for(j = 0; j < 8; j++) {
-			_msgBuf[b++] = ((curByte >> (7 - j)) & 0x01) ? '1' : '0';
+			msgBuffer[b++] = ((curByte >> (7 - j)) & 0x01) ? '1' : '0';
 			if(j < 7) {
-				_msgBuf[b++] = ' '; 
+				msgBuffer[b++] = ' '; 
 			} else if(i < n-1) {
-				_msgBuf[b++] = '\n';
+				msgBuffer[b++] = '\n';
 			} else {
-				_msgBuf[b++] = '\0';
+				msgBuffer[b++] = '\0';
 			}
 		}
 		
 	}
-	_msgBuf[b++] = '\0';
-	return _msgBuf;
+	msgBuffer[b++] = '\0';
 }
 
-char* DW1000Class::getPrettyBytes(byte cmd, word offset, unsigned int n) {
+void DW1000Class::getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsigned int n) {
 	unsigned int i, j, b;
 	byte* readBuf = (byte*)malloc(n);
 	readBytes(cmd, offset, readBuf, n);
-	b = sprintf(_msgBuf, "Reg: 0x%02x, bytes: %d\nB: 7 6 5 4 3 2 1 0\n", cmd, n);
+	b = sprintf(msgBuffer, "Reg: 0x%02x, bytes: %d\nB: 7 6 5 4 3 2 1 0\n", cmd, n);
 	for(i = 0; i < n; i++) {
 		byte curByte = readBuf[i];
-		snprintf(&_msgBuf[b++], 2, "%d", (i + 1));
-		_msgBuf[b++] = (char)((i + 1) & 0xFF); _msgBuf[b++] = ':'; _msgBuf[b++] = ' ';
+		snprintf(&msgBuffer[b++], 2, "%d", (i + 1));
+		msgBuffer[b++] = (char)((i + 1) & 0xFF); msgBuffer[b++] = ':'; msgBuffer[b++] = ' ';
 		for(j = 0; j < 8; j++) {
-			_msgBuf[b++] = ((curByte >> (7 - j)) & 0x01) ? '1' : '0';
+			msgBuffer[b++] = ((curByte >> (7 - j)) & 0x01) ? '1' : '0';
 			if(j < 7) {
-				_msgBuf[b++] = ' '; 
+				msgBuffer[b++] = ' '; 
 			} else if(i < n-1) {
-				_msgBuf[b++] = '\n';
+				msgBuffer[b++] = '\n';
 			} else {
-				_msgBuf[b++] = '\0';
+				msgBuffer[b++] = '\0';
 			}
 		}
 		
 	}
-	_msgBuf[b++] = '\0';
+	msgBuffer[b++] = '\0';
 	free(readBuf);
-	return _msgBuf;
 }
