@@ -54,7 +54,6 @@ void setup() {
   DW1000.setDefaults();
   DW1000.setDeviceAddress(1);
   DW1000.setNetworkId(10);
-  DW1000.setFrameFilter(false);
   DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
@@ -124,19 +123,39 @@ float getRange() {
   // TODO
   // two roundtrip times - each minus message preparation times / 4
   Serial.println("START DATA");
-  //Serial.print("POLL RECEIVED ");
-  Serial.println(timePollReceived.getAsFloat());
-  //Serial.print("POLL ACK SENT ");
-  Serial.println(timePollAckSent.getAsFloat());
-  //Serial.print("RANGE RECEIVED ");
-  Serial.println(timeRangeReceived.getAsFloat());
-  //Serial.print("POLL SENT ");
-  Serial.println(timePollSent.getAsFloat());
-  //Serial.print("POLL ACK RECEIVED ");
-  Serial.println(timePollAckReceived.getAsFloat());
-  //Serial.print("RANGE SENT ");
-  Serial.println(timeRangeSent.getAsFloat());
-  
+  byte d[5];
+  char msgBuf[1024];
+  /*Serial.print("POLL RECEIVED ");
+  timePollReceived.getAsBytes(d);
+  memset(msgBuf, 0, 1024);
+  DW1000.getPrettyBytes(d, msgBuf, 5);
+  Serial.println(msgBuf);
+  Serial.print("POLL ACK SENT ");
+  timePollAckSent.getAsBytes(d);
+  memset(msgBuf, 0, 1024);
+  DW1000.getPrettyBytes(d, msgBuf, 5);
+  Serial.println(msgBuf);
+  Serial.print("RANGE RECEIVED ");
+  timeRangeReceived.getAsBytes(d);
+  memset(msgBuf, 0, 1024);
+  DW1000.getPrettyBytes(d, msgBuf, 5);
+  Serial.println(msgBuf);
+  Serial.print("POLL SENT ");
+  timePollSent.getAsBytes(d);
+  memset(msgBuf, 0, 1024);
+  DW1000.getPrettyBytes(d, msgBuf, 5);
+  Serial.println(msgBuf);
+  Serial.print("POLL ACK RECEIVED ");
+  timePollAckReceived.getAsBytes(d);
+  memset(msgBuf, 0, 1024);
+  DW1000.getPrettyBytes(d, msgBuf, 5);
+  Serial.println(msgBuf);
+  Serial.print("RANGE SENT ");
+  timeRangeSent.getAsBytes(d);
+  memset(msgBuf, 0, 1024);
+  DW1000.getPrettyBytes(d, msgBuf, 5);
+  Serial.println(msgBuf);*/
+
   DW1000Time timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
       (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived));// / 4;
   

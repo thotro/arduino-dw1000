@@ -5,6 +5,9 @@
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
+
+ * @file DW1000.h
+ * Arduino driver library (header file) for the Decawave DW1000 UWB transceiver IC.
  */
 
 #ifndef _DW1000_H_INCLUDED
@@ -213,31 +216,47 @@ public:
  	 * - TR in TX_FCTRL for flagging for ranging messages
 	 * - CANSFCS in SYS_CTRL to cancel frame check suppression
 	 * - HSRBP in SYS_CTRL to determine in double buffered mode from which buffer to read
-	 *
-	 * - replace all |= with bitChange (bitClear + bitSet)
 	 */
 
-	// init with chip select, with or w/o reset and irq pin number
+	/* ##### Init ################################################################ */
+	/** 
+	Initiates and starts a sessions with one or more DW1000.
+
+	@param[in] irq The interrupt line/pin that connects the Arduino.
+	@param[in] rst The reset line/pin for hard IC resets that connects the Arduino.
+	*/
 	static void begin(int irq, int rst);
+	
+	/** 
+	Initiates and starts a sessions with one or more DW1000. Soft resets (i.e. command 		triggered) are used and no reset line needs to be wired.
+
+	@param[in] irq The interrupt line/pin that connects the Arduino.
+	*/
 	static void begin(int irq);
+
+	/** 
+	Selects a specific DW1000 IC for communication. In case of a single DW1000 in use
+	this call only needs to be done once at start up, but is still mandatory.
+
+	@param[in] ss The chip select line/pin that connects the to-be-select chip wit the
+	Arduino.
+	*/
 	static void select(int ss);
 	static void end();
 	static void reset();
 	static void softReset();
 	static void loadLDE();
 
-	// print device id, address, etc.
+	/* ##### Print device id, address, etc ####################################### */
 	static void getPrintableDeviceIdentifier(char msgBuffer[]);
 	static void getPrintableExtendedUniqueIdentifier(char msgBuffer[]);
 	static void getPrintableNetworkIdAndShortAddress(char msgBuffer[]);
 
-	// device address management
+	/* device address management. */
 	static void setNetworkId(unsigned int val);
 	static void setDeviceAddress(unsigned int val);
 	
-	// general device configuration
-	static void setFrameFilter(boolean val);
-	static void setDoubleBuffering(boolean val); // NOTE should be set to false
+	/* general device configuration. */
 	static void setReceiverAutoReenable(boolean val);
 	static void setInterruptPolarity(boolean val);
 	static void suppressFrameCheck(boolean val);
@@ -246,12 +265,10 @@ public:
 	static void setPreambleLength(byte prealen);
 	static void setChannel(byte channel);
 	static void setPreambleCode(byte preacode);
-	static void useExtendedFrameLength(boolean val);
 
-	// transmit and receive configuration
+	/* transmit and receive configuration. */
 	static DW1000Time setDelay(const DW1000Time& delay);
 	static void receivePermanently(boolean val);
-	static void waitForResponse(boolean val);
 	static void setData(byte data[], unsigned int n);
 	static void setData(const String& data);
 	static void getData(byte data[], unsigned int n);
@@ -264,7 +281,7 @@ public:
 	static void getReceiveTimestamp(byte data[]);
 	static void getSystemTimestamp(byte data[]);
 
-	// interrupt management
+	/* interrupt management. */
 	static void interruptOnSent(boolean val);
 	static void interruptOnReceived(boolean val);
 	static void interruptOnReceiveError(boolean val);
@@ -272,7 +289,7 @@ public:
 	static void interruptOnReceiveTimestampAvailable(boolean val);
 	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 
-	// callback handler management
+	/* callback handler management. */
 	static void attachSentHandler(void (*handleSent)(void)) {
 		_handleSent = handleSent;
 	}
@@ -285,10 +302,12 @@ public:
 	static void attachReceiveTimeoutHandler(void (*handleReceiveTimeout)(void)) {
 		_handleReceiveTimeout = handleReceiveTimeout;
 	}
-	static void attachReceiveTimestampAvailableHandler(void (*handleReceiveTimestampAvailable)(void)) {
+	static void attachReceiveTimestampAvailableHandler(
+			void (*handleReceiveTimestampAvailable)(void)) {
 		_handleReceiveTimestampAvailable = handleReceiveTimestampAvailable;
 	}
 
+	/* device state management. */
 	// idle state
 	static void idle();
 
@@ -304,14 +323,14 @@ public:
 	static void newTransmit();
 	static void startTransmit();
 
-	// chip tuning
+	/* chip tuning and operating mode selection. */
 	static void tune();
 	static void enableMode(const byte mode[]);
 
 	// use RX/TX specific and general default settings
-	void setDefaults();
+	static void setDefaults();
 
-	// debug pretty print registers
+	/* debug pretty print registers. */
 	static void getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsigned int n);
 	static void getPrettyBytes(byte data[], char msgBuffer[], unsigned int n);
 
@@ -371,7 +390,8 @@ public:
 	static const byte FRAME_LENGTH_NORMAL = 0x00;
 	static const byte FRAME_LENGTH_EXTENDED = 0x03;
 
-	/* pre-defined modes of operation (3 bytes for data rate, pulse frequency and preamble length). */
+	/* pre-defined modes of operation (3 bytes for data rate, pulse frequency and 
+	preamble length). */
 	static const byte MODE_LOCATION_LONGRANGE_LOWPOWER[];
 	static const byte MODE_LOCATION_SHORTRANGE_LOWPOWER[];
 	static const byte MODE_LONGDATA_SHORTRANGE_LOWPOWER[];
@@ -427,6 +447,16 @@ private:
 
 	/* Arduino interrupt handler */
 	static void handleInterrupt();
+
+	/* not yet implemented/considered settings - hence private. */
+	// TODO implement MAC, addressing and auto-acknowledge
+	static void setFrameFilter(boolean val);
+	// note: not sure if going to be implemented for now
+	static void setDoubleBuffering(boolean val);
+	// TODO is implemented, but needs testing
+	static void useExtendedFrameLength(boolean val);
+	// TODO is implemented, but needs testing	
+	static void waitForResponse(boolean val);
 
 	/* device status flags */
 	static boolean isReceiveTimestampAvailable();

@@ -746,15 +746,15 @@ void DW1000Class::commitConfiguration() {
 	writeValueToBytes(antennaDelay, 16384, LEN_TX_ANTD);
 	writeBytes(TX_ANTD, NO_SUB, antennaDelay, LEN_TX_ANTD);
     	writeBytes(LDE_CFG, LDE_CFG2_SUB, antennaDelay, LEN_LDE_CFG2); 
-	// tune according to configuration
-	tune();
-	delay(10);
 	// write all configurations back to device
 	writeNetworkIdAndDeviceAddress();
 	writeSystemConfigurationRegister();
 	writeChannelControlRegister();
 	writeTransmitFrameControlRegister();
 	writeSystemEventMaskRegister();
+	// tune according to configuration
+	tune();
+	delay(10);
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -858,6 +858,7 @@ void DW1000Class::setDefaults() {
 	} else if(_deviceMode == IDLE_MODE) {
 		useExtendedFrameLength(false);
 		suppressFrameCheck(false);
+		setFrameFilter(false);
 		interruptOnSent(true);
 		interruptOnReceived(true);
 		interruptOnReceiveError(true);
@@ -865,8 +866,8 @@ void DW1000Class::setDefaults() {
 		setReceiverAutoReenable(true);
 		// default mode when powering up the chip
 		// still explicitly selected for later tuning
-		enableMode(MODE_LOCATION_LONGRANGE_LOWPOWER);
-		//enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
+		//enableMode(MODE_LOCATION_LONGRANGE_LOWPOWER);
+		enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
 	}
 }
 
