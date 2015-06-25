@@ -129,8 +129,12 @@
 
 // OTP control (for LDE micro code loading only)
 #define OTP_IF 0x2D
+#define OTP_ADDR_SUB 0x04
 #define OTP_CTRL_SUB 0x06
+#define OTP_RDAT_SUB 0x0A
+#define LEN_OTP_ADDR 2
 #define LEN_OTP_CTRL 2
+#define LEN_OTP_RDAT 4
 
 // AGC_TUNE1/2 (for re-tuning only)
 #define AGC_TUNE 0x23
@@ -249,9 +253,20 @@ public:
 	static void getData(byte data[], unsigned int n);
 	static void getData(String& data);
 	static unsigned int getDataLength();
-	static DW1000Time getTransmitTimestamp();
-	static DW1000Time getReceiveTimestamp();
-	static DW1000Time getSystemTimestamp();
+	static void getTransmitTimestamp(DW1000Time& time);
+	static void getReceiveTimestamp(DW1000Time& time);
+	static void getSystemTimestamp(DW1000Time& time);
+	static void getTransmitTimestamp(byte data[]);
+	static void getReceiveTimestamp(byte data[]);
+	static void getSystemTimestamp(byte data[]);
+
+	// interrupt management
+	static void interruptOnSent(boolean val);
+	static void interruptOnReceived(boolean val);
+	static void interruptOnReceiveError(boolean val);
+	static void interruptOnReceiveTimeout(boolean val);
+	static void interruptOnReceiveTimestampAvailable(boolean val);
+	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 
 	// callback handler management
 	static void attachSentHandler(void (*handleSent)(void)) {
@@ -415,17 +430,12 @@ private:
 	/* device status flags */
 	static boolean isReceiveTimestampAvailable();
 	static boolean isTransmitDone();
+	static boolean isLDEDone();
 	static boolean isReceiveDone();
 	static boolean isReceiveError();
 	static boolean isReceiveTimeout();
 
-	/* interrupt configuration and handling */
-	static void interruptOnSent(boolean val);
-	static void interruptOnReceived(boolean val);
-	static void interruptOnReceiveError(boolean val);
-	static void interruptOnReceiveTimeout(boolean val);
-	static void interruptOnReceiveTimestampAvailable(boolean val);
-	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
+	/* interrupt state handling */
 	static void clearInterrupts();
 	static void clearAllStatus();
 	static void clearReceiveStatus();
@@ -445,8 +455,12 @@ private:
 	static void readTransmitFrameControlRegister();
 	static void writeTransmitFrameControlRegister();
 
+	/* clock management. */
+	static void enableClock(byte clock);
+
 	/* reading and writing bytes from and to DW1000 module. */
 	static void readBytes(byte cmd, word offset, byte data[], unsigned int n);
+	static void readBytesOTP(word address, byte data[]);
 	static void writeBytes(byte cmd, word offset, byte data[], unsigned int n);
 
 	/* writing numeric values to bytes. */
@@ -462,6 +476,11 @@ private:
 	static const byte WRITE_SUB = 0xC0; // write with sub address
 	static const byte READ = 0x00; // regular read
 	static const byte READ_SUB = 0x40; // read with sub address
+
+	/* clocks available. */
+	static const byte AUTO_CLOCK = 0x0;
+	static const byte XTI_CLOCK = 0x01;
+	static const byte PLL_CLOCK = 0x02;
 };
 
 extern DW1000Class DW1000;

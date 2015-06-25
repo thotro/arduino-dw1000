@@ -114,9 +114,17 @@ void DW1000Class::begin(int irq, int rst) {
 }
 
 void DW1000Class::loadLDE() {
+	// transfer any ldo tune values
+	byte ldoTune[LEN_OTP_RDAT];
+	readBytesOTP(0x04, ldoTune); // TODO #define
+	if(ldoTune[0] != 0) {
+		// TODO tuning available, copy over to RAM: use OTP_LDO bit
+	}
 	// tell the chip to load the LDE microcode
 	byte pmscctrl0[LEN_PMSC_CTRL0];
 	byte otpctrl[LEN_OTP_CTRL];
+	memset(pmscctrl0, 0, LEN_PMSC_CTRL0);
+	memset(otpctrl, 0, LEN_OTP_CTRL);
 	readBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 	readBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
 	pmscctrl0[0] = 0x01;
@@ -129,6 +137,26 @@ void DW1000Class::loadLDE() {
 	pmscctrl0[0] = 0x00;
 	pmscctrl0[1] = 0x02;
 	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+}
+
+void DW1000Class::enableClock(byte clock) {
+	byte pmscctrl0[LEN_PMSC_CTRL0];
+	memset(pmscctrl0, 0, LEN_PMSC_CTRL0);
+	readBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	if(clock == AUTO_CLOCK) {
+		pmscctrl0[0] = AUTO_CLOCK;
+		pmscctrl0[1] &= 0xFE;
+	} else if(clock == XTI_CLOCK) {
+		pmscctrl0[0] &= 0xFC;
+		pmscctrl0[0] |= XTI_CLOCK;
+	} else if(clock == PLL_CLOCK) {
+		pmscctrl0[0] &= 0xFC;
+		pmscctrl0[0] |= PLL_CLOCK;
+	} else {
+		// TODO deliver proper warning
+	}
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 1);
+    	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
 }
 
 void DW1000Class::reset() {
@@ -164,38 +192,6 @@ void DW1000Class::enableMode(const byte mode[]) {
 	setPreambleCode(PREAMBLE_CODE_16MHZ_4);
 }
 
-/*void DW1000Class::tune() {
-	// re-tune chip for channel 5 (default)
-	byte agctune1[LEN_AGC_TUNE1];
-	byte agctune2[LEN_AGC_TUNE2];
-	byte drxtune2[LEN_DRX_TUNE2];
-	byte ldecfg1[LEN_LDE_CFG1];
-	byte ldecfg2[LEN_LDE_CFG2];
-	byte txpower[LEN_TX_POWER];
-	byte rftxctrl[LEN_RF_TXCTRL];
-	byte tcpgdelay[LEN_TC_PGDELAY];
-	byte fsplltune[LEN_FS_PLLTUNE];
-	writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
-	writeValueToBytes(agctune2, 0x2502A907, LEN_AGC_TUNE2);
-	writeValueToBytes(drxtune2, 0x311A002D, LEN_DRX_TUNE2);
-	writeValueToBytes(ldecfg1, 0xD, LEN_LDE_CFG1);
-	writeValueToBytes(ldecfg2, 0x1607, LEN_LDE_CFG2);
-	writeValueToBytes(txpower, 0x0E082848, LEN_TX_POWER);
-	writeValueToBytes(rftxctrl, 0x001E3FE0, LEN_RF_TXCTRL);
-	writeValueToBytes(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
-	writeValueToBytes(fsplltune, 0xA6, LEN_FS_PLLTUNE);
-	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
-	writeBytes(AGC_TUNE, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
-	writeBytes(DRX_TUNE, DRX_TUNE2_SUB, drxtune2, LEN_DRX_TUNE2);
-	writeBytes(LDE_CFG, LDE_CFG1_SUB, ldecfg1, LEN_LDE_CFG1);
-	writeBytes(LDE_CFG, LDE_CFG2_SUB, ldecfg2, LEN_LDE_CFG2);
-	writeBytes(TX_POWER, NO_SUB, txpower, LEN_TX_POWER);
-	writeBytes(RF_CONF, RF_TXCTRL_SUB, rftxctrl, LEN_RF_TXCTRL);
-	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
-	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
-	// TODO LDOTUNE, see 2.5.5, p. 21
-}*/
-
 void DW1000Class::tune() {
 	// these registers are going to be tuned/configured
 	byte agctune1[LEN_AGC_TUNE1];
@@ -217,7 +213,6 @@ void DW1000Class::tune() {
 	byte fsplltune[LEN_FS_PLLTUNE];
 	// AGC_TUNE1
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
-		//Serial.println("Tune default 1");
 		writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
 	} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
 		writeValueToBytes(agctune1, 0x889B, LEN_AGC_TUNE1);
@@ -225,10 +220,8 @@ void DW1000Class::tune() {
 		// TODO proper error/warning handling
 	}
 	// AGC_TUNE2
-	//Serial.println("Tune default 2");
 	writeValueToBytes(agctune2, 0x2502A907L, LEN_AGC_TUNE2);
 	// AGC_TUNE3
-	//Serial.println("Tune default 3");
 	writeValueToBytes(agctune3, 0x0035, LEN_AGC_TUNE3);
 	// DRX_TUNE0b
 	if(_dataRate == TRX_RATE_110KBPS) {
@@ -236,14 +229,12 @@ void DW1000Class::tune() {
 	} else if(_dataRate == TRX_RATE_850KBPS) {
 		writeValueToBytes(drxtune0b, 0x0006, LEN_DRX_TUNE0b);
 	} else if(_dataRate == TRX_RATE_6800KBPS) {
-		//Serial.println("Tune default 4");
 		writeValueToBytes(drxtune0b, 0x0001, LEN_DRX_TUNE0b);
 	} else {
 		// TODO proper error/warning handling
 	}
 	// DRX_TUNE1a
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
-		//Serial.println("Tune default 5");
 		writeValueToBytes(drxtune1a, 0x0087, LEN_DRX_TUNE1a);
 	} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
 		writeValueToBytes(drxtune1a, 0x008D, LEN_DRX_TUNE1a);
@@ -260,7 +251,6 @@ void DW1000Class::tune() {
 		}
 	} else if(_preambleLength != TX_PREAMBLE_LEN_64) {
 		if(_dataRate == TRX_RATE_850KBPS || _dataRate == TRX_RATE_6800KBPS) {
-			//Serial.println("Tune default 6");
 			writeValueToBytes(drxtune1b, 0x0020, LEN_DRX_TUNE1b);
 		} else {
 			// TODO proper error/warning handling
@@ -275,7 +265,6 @@ void DW1000Class::tune() {
 	// DRX_TUNE2
 	if(_pacSize == PAC_SIZE_8) {
 		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
-			//Serial.println("Tune default 7");
 			writeValueToBytes(drxtune2, 0x311A002DL, LEN_DRX_TUNE2);
 		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
 			writeValueToBytes(drxtune2, 0x313B006BL, LEN_DRX_TUNE2);
@@ -313,12 +302,10 @@ void DW1000Class::tune() {
 	if(_preambleLength == TX_PREAMBLE_LEN_64) {
 		writeValueToBytes(drxtune4H, 0x0010, LEN_DRX_TUNE4H);
 	} else {
-		//Serial.println("Tune default 8");
 		writeValueToBytes(drxtune4H, 0x0028, LEN_DRX_TUNE4H);
 	}
 	// RF_RXCTRLH
 	if(_channel != CHANNEL_4 && _channel != CHANNEL_7) {
-		//Serial.println("Tune default 9");
 		writeValueToBytes(rfrxctrlh, 0xD8, LEN_RF_RXCTRLH);
 	} else {
 		writeValueToBytes(rfrxctrlh, 0xBC, LEN_RF_RXCTRLH);
@@ -333,7 +320,6 @@ void DW1000Class::tune() {
 	} else if(_channel == CHANNEL_4) {
 		writeValueToBytes(rftxctrl, 0x00045C80L, LEN_RF_TXCTRL);
 	} else if(_channel == CHANNEL_5) {
-		//Serial.println("Tune default 10");
 		writeValueToBytes(rftxctrl, 0x001E3FE0L, LEN_RF_TXCTRL);
 	} else if(_channel == CHANNEL_7) {
 		writeValueToBytes(rftxctrl, 0x001E7DE0L, LEN_RF_TXCTRL);
@@ -350,7 +336,6 @@ void DW1000Class::tune() {
 	} else if(_channel == CHANNEL_4) {
 		writeValueToBytes(tcpgdelay, 0x95, LEN_TC_PGDELAY);
 	} else if(_channel == CHANNEL_5) {
-		//Serial.println("Tune default 11");
 		writeValueToBytes(tcpgdelay, 0xC0, LEN_TC_PGDELAY);
 	} else if(_channel == CHANNEL_7) {
 		writeValueToBytes(tcpgdelay, 0x93, LEN_TC_PGDELAY);
@@ -368,18 +353,15 @@ void DW1000Class::tune() {
 		writeValueToBytes(fspllcfg, 0x08401009L, LEN_FS_PLLCFG);
 		writeValueToBytes(fsplltune, 0x5E, LEN_FS_PLLTUNE);
 	} else if(_channel == CHANNEL_5 || _channel == CHANNEL_7) {
-		//Serial.println("Tune default 12 and 13");
 		writeValueToBytes(fspllcfg, 0x0800041DL, LEN_FS_PLLCFG);
 		writeValueToBytes(fsplltune, 0xA6, LEN_FS_PLLTUNE);
 	} else {
 		// TODO proper error/warning handling
 	}
 	// LDE_CFG1
-	//Serial.println("Tune default 14");
 	writeValueToBytes(ldecfg1, 0xD, LEN_LDE_CFG1);
 	// LDE_CFG2
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
-		//Serial.println("Tune default 15");
 		writeValueToBytes(ldecfg2, 0x1607, LEN_LDE_CFG2);
 	} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
 		writeValueToBytes(ldecfg2, 0x0607, LEN_LDE_CFG2);
@@ -403,7 +385,6 @@ void DW1000Class::tune() {
 		if(_dataRate == TRX_RATE_110KBPS) {
 			writeValueToBytes(lderepc, ((0x428E >> 3) & 0xFFFF), LEN_LDE_REPC);
 		} else {
-			//Serial.println("Tune default 16");
 			writeValueToBytes(lderepc, 0x428E, LEN_LDE_REPC);
 		}
 	} else if(_preambleCode == PREAMBLE_CODE_16MHZ_5) {
@@ -490,7 +471,6 @@ void DW1000Class::tune() {
 		}
 	} else if(_channel == CHANNEL_5) {
 		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
-			//Serial.println("Tune default 17");
 			writeValueToBytes(txpower, 0x0E082848L, LEN_TX_POWER);
 		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
 			writeValueToBytes(txpower, 0x25456585L, LEN_TX_POWER);
@@ -540,12 +520,14 @@ void DW1000Class::handleInterrupt() {
 		(*_handleSent)();
 		clearTransmitStatus();
 	}
+	if(isReceiveTimestampAvailable() && _handleReceiveTimestampAvailable != 0) {
+		(*_handleReceiveTimestampAvailable)();
+		clearReceiveTimestampAvailableStatus();
+	}
 	if(isReceiveError() && _handleReceiveError != 0) {
 		(*_handleReceiveError)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
-			/*memset(_sysctrl, 0, LEN_SYS_CTRL);
-			_deviceMode = RX_MODE;*/
 			startReceive();
 		}
 	} else if(isReceiveTimeout() && _handleReceiveTimeout != 0) {
@@ -561,10 +543,6 @@ void DW1000Class::handleInterrupt() {
 			startReceive();
 		}
 	} 
-	/*if(isReceiveTimestampAvailable() && _handleReceiveTimestampAvailable != 0) {
-		(*_handleReceiveTimestampAvailable)();
-		clearReceiveTimestampAvailableStatus();
-	}*/
 	// TODO impl other callbacks
 }
 
@@ -756,6 +734,13 @@ void DW1000Class::newConfiguration() {
 }
 
 void DW1000Class::commitConfiguration() {
+	enableClock(XTI_CLOCK);
+	// TODO make configurable (if false disable LDE use)
+	// load LDE micro-code
+	loadLDE();
+	delay(10);
+	enableClock(AUTO_CLOCK);
+	// write all configurations back to device
 	writeNetworkIdAndDeviceAddress();
 	writeSystemConfigurationRegister();
 	writeChannelControlRegister();
@@ -763,10 +748,6 @@ void DW1000Class::commitConfiguration() {
 	writeSystemEventMaskRegister();
 	// tune according to configuration
 	tune();
-	delay(10);
-	// TODO make configurable (if false disable LDE use)
-	// load LDE micro-code
-	loadLDE();
 	delay(10);
 }
 
@@ -788,7 +769,9 @@ DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 		return DW1000Time();
 	}
 	byte delayBytes[5];
-	DW1000Time futureTime = getSystemTimestamp() + delay;
+	DW1000Time futureTime;
+	getSystemTimestamp(futureTime);
+	futureTime += delay;
 	futureTime.getAsBytes(delayBytes);
 	delayBytes[0] = 0;
 	delayBytes[1] &= 0xFE;
@@ -950,22 +933,34 @@ void DW1000Class::getData(String& data) {
 	free(dataBytes);
 }
 
-DW1000Time DW1000Class::getTransmitTimestamp() {
+void DW1000Class::getTransmitTimestamp(DW1000Time& time) {
 	byte txTimeBytes[LEN_TX_STAMP];
 	readBytes(TX_TIME, TX_STAMP_SUB, txTimeBytes, LEN_TX_STAMP);
-	return DW1000Time(txTimeBytes);
+	time.setFromBytes(txTimeBytes);
 }
 
-DW1000Time DW1000Class::getReceiveTimestamp() {
+void DW1000Class::getReceiveTimestamp(DW1000Time& time) {
 	byte rxTimeBytes[LEN_RX_STAMP];
 	readBytes(RX_TIME, RX_STAMP_SUB, rxTimeBytes, LEN_RX_STAMP);
-	return DW1000Time(rxTimeBytes);
+	time.setFromBytes(rxTimeBytes);
 }
 
-DW1000Time DW1000Class::getSystemTimestamp() {
+void DW1000Class::getSystemTimestamp(DW1000Time& time) {
 	byte sysTimeBytes[LEN_SYS_TIME];
 	readBytes(SYS_TIME, NO_SUB, sysTimeBytes, LEN_SYS_TIME);
-	return DW1000Time(sysTimeBytes);
+	time.setFromBytes(sysTimeBytes);
+}
+
+void DW1000Class::getTransmitTimestamp(byte data[]) {
+	readBytes(TX_TIME, TX_STAMP_SUB, data, LEN_TX_STAMP);
+}
+
+void DW1000Class::getReceiveTimestamp(byte data[]) {
+	readBytes(RX_TIME, RX_STAMP_SUB, data, LEN_RX_STAMP);
+}
+
+void DW1000Class::getSystemTimestamp(byte data[]) {
+	readBytes(SYS_TIME, NO_SUB, data, LEN_SYS_TIME);
 }
 
 boolean DW1000Class::isTransmitDone() {
@@ -973,6 +968,10 @@ boolean DW1000Class::isTransmitDone() {
 }
 
 boolean DW1000Class::isReceiveTimestampAvailable() {
+	return getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
+}
+
+boolean DW1000Class::isLDEDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
 }
 
@@ -1130,6 +1129,26 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 	}
 	digitalWrite(_ss,HIGH);
 	interrupts();
+}
+
+// always 4 bytes
+void DW1000Class::readBytesOTP(word address, byte data[]) {
+	byte addressBytes[LEN_OTP_ADDR];
+	byte otpctrl[LEN_OTP_CTRL];
+	readBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
+	// bytes of address
+	addressBytes[0] = (address & 0xFF);
+	addressBytes[1] = ((address >> 8) & 0xFF);
+    	// set address
+    	writeBytes(OTP_IF, OTP_ADDR_SUB, addressBytes, LEN_OTP_ADDR);
+	otpctrl[0] = 0x03;
+	writeBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
+	otpctrl[0] = 0x01;
+	writeBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
+	// read value
+	readBytes(OTP_IF, OTP_RDAT_SUB, data, LEN_OTP_RDAT);
+	otpctrl[0] = 0x00;
+	writeBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
 }
 
 /*

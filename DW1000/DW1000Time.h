@@ -12,8 +12,8 @@
 
 // Time resolution in micro-seconds of time based registers/values.
 // Each bit in a timestamp counts for a period of approx. 15.65ps
-#define TIME_RES 0.000015650040064103
-#define TIME_RES_INV 63897.6
+#define TIME_RES 0.000015650040064103f
+#define TIME_RES_INV 63897.6f
 
 // time stamp byte length
 #define LEN_STAMP 5
@@ -28,9 +28,12 @@ public:
 	DW1000Time(const DW1000Time& copy);
 	~DW1000Time();
 
+	void setFromBytes(byte data[]);
+	void setFromFloat(float time);
+
 	float getAsFloat() const;
 	void getAsBytes(byte data[]) const;
-	uint64_t getAsInt() const;
+	//int getAsCM() const;
 
 	DW1000Time& operator=(const DW1000Time &assign);
 	DW1000Time& operator+=(const DW1000Time &add);
@@ -54,8 +57,6 @@ private:
 
 	static void addTimestampBytes(byte r[], byte a[], const byte b[]);
 	static void subtractTimestampBytes(byte r[], byte a[], const byte b[]);
-
-	void setFromFloat(float time);
 };
 
 #endif

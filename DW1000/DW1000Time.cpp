@@ -14,7 +14,7 @@ DW1000Time::DW1000Time() {
 }
 
 DW1000Time::DW1000Time(byte data[]) {
-	memcpy(_timestamp, data, LEN_STAMP);
+	setFromBytes(data);
 }
 
 DW1000Time::DW1000Time(const DW1000Time& copy) {
@@ -36,28 +36,32 @@ void DW1000Time::setFromFloat(float time) {
 	time *= TIME_RES_INV;
 	while(i < LEN_STAMP && time >= 1) {
 		_timestamp[i] = ((byte)fmod(time, 256.0f) & 0xFF);
-		time = floor(time / 256);
+		time = floor(time / 256.0f);
 		i++;
 	} 
 }
 
-float DW1000Time::getAsFloat() const {
-	float tsValue = _timestamp[0] & 0xFF;
-	tsValue += ((_timestamp[1] & 0xFF) * 256.0f);
-	tsValue += ((_timestamp[2] & 0xFF) * 65536.0f);
-	tsValue += ((_timestamp[3] & 0xFF) * 16777216.0f);
-	tsValue += ((_timestamp[4] & 0xFF) * 4294967296.0f);
-	return tsValue * TIME_RES;
+void DW1000Time::setFromBytes(byte data[]) {
+	memcpy(_timestamp, data, LEN_STAMP);
 }
 
-uint64_t DW1000Time::getAsInt() const {
+float DW1000Time::getAsFloat() const {
+	float tsValue = (_timestamp[0] & 0xFF) * TIME_RES;
+	tsValue += ((_timestamp[1] & 0xFF) * 0.004006410256f);
+	tsValue += ((_timestamp[2] & 0xFF) * 1.02564102564f);
+	tsValue += ((_timestamp[3] & 0xFF) * 262.564102564f);
+	tsValue += ((_timestamp[4] & 0xFF) * 67216.4098339f);
+	return tsValue;
+}
+
+/*uint64_t DW1000Time::getAsInt() const {
 	uint64_t tsValue = _timestamp[0];
 	tsValue |= ((uint64_t)_timestamp[1] << 8);
 	tsValue |= ((uint64_t)_timestamp[2] << 16);
 	tsValue |= ((uint64_t)_timestamp[3] << 24);
 	tsValue |= ((uint64_t)_timestamp[4] << 32);
 	return tsValue * TIME_RES;
-}
+}*/
 
 void DW1000Time::getAsBytes(byte data[]) const {
 	memcpy(data, _timestamp, LEN_STAMP);

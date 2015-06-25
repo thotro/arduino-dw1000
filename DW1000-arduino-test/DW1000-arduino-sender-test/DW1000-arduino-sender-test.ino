@@ -77,7 +77,8 @@ void loop() {
   sentAck = false;
   // update and print some information about the sent message
   Serial.print("Delay sent [ms] ... "); Serial.println(millis() - delaySent);
-  DW1000Time newSentTime = DW1000.getTransmitTimestamp();
+  DW1000Time newSentTime;
+  DW1000.getTransmitTimestamp(newSentTime);
   Serial.print("Processed packet ... #"); Serial.println(sentNum);
   Serial.print("Sent timestamp ... "); Serial.println(newSentTime.getAsFloat());
   // note: delta is just for simple demo as not correct on system time counter wrap-around

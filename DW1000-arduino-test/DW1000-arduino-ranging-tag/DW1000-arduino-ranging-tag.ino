@@ -88,9 +88,8 @@ void transmitRange() {
   DW1000.setDefaults();
   data[0] = RANGE;
   // delay sending the message and remember expected future sent timestamp
-  DW1000Time deltaTime = DW1000Time(100, DW1000Time::MILLISECONDS);
+  DW1000Time deltaTime = DW1000Time(50, DW1000Time::MILLISECONDS);
   timeRangeSent = DW1000.setDelay(deltaTime);
-  //timeRangeSent = DW1000.getSystemTimestamp();
   Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
   timePollSent.getAsBytes(data+1);
   timePollAckReceived.getAsBytes(data+6);
@@ -114,20 +113,16 @@ void loop() {
   // continue on any success confirmation
   if(sentAck) {
     sentAck = false; 
-    // get timestamp
-    DW1000Time txTime = DW1000.getTransmitTimestamp();
     byte msgId = data[0];
     if(msgId == POLL) {
-      timePollSent = txTime;
+      DW1000.getTransmitTimestamp(timePollSent);
       Serial.print("Sent POLL @ "); Serial.println(timePollSent.getAsFloat());
     } else if(msgId == RANGE) {
-      timeRangeSent = txTime;
+      DW1000.getTransmitTimestamp(timeRangeSent);
       Serial.print("Sent RANGE @ "); Serial.println(timeRangeSent.getAsFloat());
     }
   } else if(receivedAck) {
     receivedAck = false;
-    // get timestamp
-    DW1000Time rxTime = DW1000.getReceiveTimestamp();
     // get message and parse
     DW1000.getData(data, LEN_DATA);
     byte msgId = data[0];
@@ -140,7 +135,7 @@ void loop() {
       return;
     }
     if(msgId == POLL_ACK) {
-      timePollAckReceived = rxTime;
+      DW1000.getReceiveTimestamp(timePollAckReceived);
       expectedMsgId = RANGE_REPORT;
       Serial.print("Received POLL ACK @ "); Serial.println(timePollAckReceived.getAsFloat());
       transmitRange();

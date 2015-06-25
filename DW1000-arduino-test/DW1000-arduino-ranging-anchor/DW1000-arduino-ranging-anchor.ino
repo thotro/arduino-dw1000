@@ -119,10 +119,24 @@ float getRange() {
   // correct timestamps (in case system time counter wrap-arounds occured)
   // TODO
   // two roundtrip times - each minus message preparation times / 4
+  Serial.println("START DATA");
+  //Serial.print("POLL RECEIVED ");
+  Serial.println(timePollReceived.getAsFloat());
+  //Serial.print("POLL ACK SENT ");
+  Serial.println(timePollAckSent.getAsFloat());
+  //Serial.print("RANGE RECEIVED ");
+  Serial.println(timeRangeReceived.getAsFloat());
+  //Serial.print("POLL SENT ");
+  Serial.println(timePollSent.getAsFloat());
+  //Serial.print("POLL ACK RECEIVED ");
+  Serial.println(timePollAckReceived.getAsFloat());
+  //Serial.print("RANGE SENT ");
+  Serial.println(timeRangeSent.getAsFloat());
+  
   DW1000Time timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
       (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived));// / 4;
-  // TODO mult by speed of light
-  return timeOfFlight.getAsInt();
+  
+  return timeOfFlight.getAsFloat();
 }
 
 void loop() {
@@ -132,17 +146,13 @@ void loop() {
   // continue on any success confirmation
   if(sentAck) {
     sentAck = false;
-    // get timestamp
-    DW1000Time txTime = DW1000.getTransmitTimestamp();
     byte msgId = data[0];
     if(msgId == POLL_ACK) {
-      timePollAckSent = txTime;
+      DW1000.getTransmitTimestamp(timePollAckSent);
       Serial.print("Sent POLL ACK @ "); Serial.println(timePollAckSent.getAsFloat());
     }
   } else if(receivedAck) {
-    receivedAck = false;;
-    // get timestamp
-    DW1000Time rxTime = DW1000.getReceiveTimestamp();
+    receivedAck = false;
     // get message and parse
     DW1000.getData(data, LEN_DATA);
     byte msgId = data[0];
@@ -153,17 +163,17 @@ void loop() {
     }
     if(msgId == POLL) {
       protocolFailed = false;
-      timePollReceived = rxTime;
+      DW1000.getReceiveTimestamp(timePollReceived);
       expectedMsgId = RANGE;
       Serial.print("Received POLL @ "); Serial.println(timePollReceived.getAsFloat());
       transmitPollAck();
     } else if(msgId == RANGE) {
-      timeRangeReceived = rxTime;
+      DW1000.getReceiveTimestamp(timeRangeReceived);
       expectedMsgId = POLL;
       if(!protocolFailed) {
-        timePollSent = DW1000Time(data+1);
-        timePollAckReceived = DW1000Time(data+6);
-        timeRangeSent = DW1000Time(data+11);
+        timePollSent.setFromBytes(data+1);
+        timePollAckReceived.setFromBytes(data+6);
+        timeRangeSent.setFromBytes(data+11);
         Serial.print("Received RANGE @ "); Serial.println(timeRangeReceived.getAsFloat());
         Serial.print("POLL sent @ "); Serial.println(timePollSent.getAsFloat());
         Serial.print("POLL ACK received @ "); Serial.println(timePollAckReceived.getAsFloat());

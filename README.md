@@ -5,7 +5,7 @@ A library that offers functionality to use Decawave's DW1000 chips/modules with 
 Project state
 -------------
 
-**Progress:** 75% (of a first fully configurable, tested and stable release)
+**Progress:** 80% (of a first fully configurable, tested and stable release)
 
 **Current milestone:** Tuning and testing (sender/receiver, ping-pong and two-way ranging)
 
