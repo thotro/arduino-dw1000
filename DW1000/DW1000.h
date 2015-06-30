@@ -162,13 +162,15 @@
 #define LEN_DRX_TUNE4H 2
 
 // LDE_CFG1 (for re-tuning only)
-#define LDE_CFG 0x2E
+#define LDE_IF 0x2E
 #define LDE_CFG1_SUB 0x0806
+#define LDE_RXANTD_SUB 0x1804
 #define LDE_CFG2_SUB 0x1806
 #define LDE_REPC_SUB 0x2804
 #define LEN_LDE_CFG1 1
 #define LEN_LDE_CFG2 2
 #define LEN_LDE_REPC 2
+#define LEN_LDE_RXANTD 2
 
 // TX_POWER (for re-tuning only)
 #define TX_POWER 0x1E
@@ -437,6 +439,7 @@ private:
 	static byte _pulseFrequency;
 	static byte _dataRate;
 	static byte _pacSize;
+	static DW1000Time _antennaDelay;
 
 	/* internal helper to remember how to properly act. */
 	static boolean _permanentReceive;

@@ -156,10 +156,13 @@ float getRange() {
   DW1000.getPrettyBytes(d, msgBuf, 5);
   Serial.println(msgBuf);*/
 
-  DW1000Time timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
+  return ((timePollAckReceived.getAsFloat()-timePollSent.getAsFloat())-(timePollAckSent.getAsFloat()-timePollReceived.getAsFloat()) +
+      (timeRangeReceived.getAsFloat()-timePollAckSent.getAsFloat())-(timeRangeSent.getAsFloat()-timePollAckReceived.getAsFloat()));// / 4;
+
+  /*DW1000Time timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
       (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived));// / 4;
   
-  return timeOfFlight.getAsFloat();
+  return timeOfFlight.getAsFloat();*/
 }
 
 void loop() {

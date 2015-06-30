@@ -42,6 +42,7 @@ byte DW1000Class::_dataRate = TRX_RATE_6800KBPS;
 byte DW1000Class::_preambleLength = TX_PREAMBLE_LEN_128;
 byte DW1000Class::_preambleCode = PREAMBLE_CODE_16MHZ_4;
 byte DW1000Class::_channel = CHANNEL_5;
+DW1000Time DW1000Class::_antennaDelay;
 boolean DW1000Class::_frameCheck = true;
 boolean DW1000Class::_permanentReceive = false;
 int DW1000Class::_deviceMode = IDLE_MODE;
@@ -500,9 +501,9 @@ void DW1000Class::tune() {
 	writeBytes(DRX_TUNE, DRX_TUNE1b_SUB, drxtune1b, LEN_DRX_TUNE1b);
 	writeBytes(DRX_TUNE, DRX_TUNE2_SUB, drxtune2, LEN_DRX_TUNE2);
 	writeBytes(DRX_TUNE, DRX_TUNE4H_SUB, drxtune4H, LEN_DRX_TUNE4H);
-	writeBytes(LDE_CFG, LDE_CFG1_SUB, ldecfg1, LEN_LDE_CFG1);
-	writeBytes(LDE_CFG, LDE_CFG2_SUB, ldecfg2, LEN_LDE_CFG2);
-	writeBytes(LDE_CFG, LDE_REPC_SUB, lderepc, LEN_LDE_REPC);
+	writeBytes(LDE_IF, LDE_CFG1_SUB, ldecfg1, LEN_LDE_CFG1);
+	writeBytes(LDE_IF, LDE_CFG2_SUB, ldecfg2, LEN_LDE_CFG2);
+	writeBytes(LDE_IF, LDE_REPC_SUB, lderepc, LEN_LDE_REPC);
 	writeBytes(TX_POWER, NO_SUB, txpower, LEN_TX_POWER);
 	writeBytes(RF_CONF, RF_RXCTRLH_SUB, rfrxctrlh, LEN_RF_RXCTRLH);
 	writeBytes(RF_CONF, RF_TXCTRL_SUB, rftxctrl, LEN_RF_TXCTRL);
@@ -741,11 +742,13 @@ void DW1000Class::commitConfiguration() {
 	loadLDE();
 	delay(10);
 	enableClock(AUTO_CLOCK);
-	// TODO clean up code
-	byte antennaDelay[LEN_TX_ANTD];
-	writeValueToBytes(antennaDelay, 16384, LEN_TX_ANTD);
-	writeBytes(TX_ANTD, NO_SUB, antennaDelay, LEN_TX_ANTD);
-    	writeBytes(LDE_CFG, LDE_CFG2_SUB, antennaDelay, LEN_LDE_CFG2); 
+	// TODO clean up code + antenna delay/calibration API
+	byte antennaDelayBytes[LEN_STAMP];
+	// TODO setter + check not larger two bytes integer
+	writeValueToBytes(antennaDelayBytes, 16384, LEN_STAMP);
+	_antennaDelay.setFromBytes(antennaDelayBytes);
+	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
+    	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD); 
 	// write all configurations back to device
 	writeNetworkIdAndDeviceAddress();
 	writeSystemConfigurationRegister();
@@ -782,6 +785,8 @@ DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 	delayBytes[0] = 0;
 	delayBytes[1] &= 0xFE;
 	writeBytes(DX_TIME, NO_SUB, delayBytes, LEN_DX_TIME);
+	// adjust expected time with configured antenna delay
+	futureTime += _antennaDelay;
 	return futureTime;
 }
 
