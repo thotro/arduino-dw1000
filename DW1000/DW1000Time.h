@@ -15,6 +15,9 @@
 #define TIME_RES 0.000015650040064103f
 #define TIME_RES_INV 63897.6f
 
+// Speed of radio waves [m/s] * timestamp resolution [~15.65ps] of DW1000
+#define DISTANCE_OF_RADIO 0.0046917639786159f
+
 // time stamp byte length
 #define LEN_STAMP 5
 
@@ -23,23 +26,33 @@
 class DW1000Time {
 public:
 	DW1000Time();
+	DW1000Time(long long unsigned int time);
+	DW1000Time(float timeUs);
 	DW1000Time(byte data[]);
 	DW1000Time(unsigned long value, float factorUs);
 	DW1000Time(const DW1000Time& copy);
 	~DW1000Time();
 
-	void setFromBytes(byte data[]);
-	void setFromFloat(float time);
+	void setTime(float timeUs);
+	void setTime(unsigned long value, float factorUs);
 
 	float getAsFloat() const;
 	void getAsBytes(byte data[]) const;
-	//int getAsCM() const;
+	float getAsMeters() const;
+
+	void getTimestamp(byte data[]) const;
+	long long unsigned int getTimestamp() const;
+	void setTimestamp(byte data[]);
 
 	DW1000Time& operator=(const DW1000Time &assign);
 	DW1000Time& operator+=(const DW1000Time &add);
 	const DW1000Time operator+(const DW1000Time &add) const;
 	DW1000Time& operator-=(const DW1000Time &sub);
 	const DW1000Time operator-(const DW1000Time &sub) const;
+	DW1000Time& operator*=(float factor);
+	const DW1000Time operator*(float factor) const;
+	DW1000Time& operator/=(float factor);
+	const DW1000Time operator/(float factor) const;
 	boolean operator==(const DW1000Time &cmp) const;
 	boolean operator!=(const DW1000Time &cmp) const;
 
@@ -50,13 +63,10 @@ public:
 	static const float NANOSECONDS = 1e-3;
 
 	// timer/counter overflow (40 bits)
-	static const float TIME_OVERFLOW = 1099511627776.0f;
+	static const long long unsigned int TIME_OVERFLOW = 1099511627776;
 
 private:
-	byte _timestamp[LEN_STAMP];
-
-	static void addTimestampBytes(byte r[], byte a[], const byte b[]);
-	static void subtractTimestampBytes(byte r[], byte a[], const byte b[]);
+	long long unsigned int _timestamp;
 };
 
 #endif

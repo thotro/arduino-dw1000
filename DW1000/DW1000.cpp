@@ -746,7 +746,7 @@ void DW1000Class::commitConfiguration() {
 	byte antennaDelayBytes[LEN_STAMP];
 	// TODO setter + check not larger two bytes integer
 	writeValueToBytes(antennaDelayBytes, 16384, LEN_STAMP);
-	_antennaDelay.setFromBytes(antennaDelayBytes);
+	_antennaDelay.setTimestamp(antennaDelayBytes);
 	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
     	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD); 
 	// write all configurations back to device
@@ -781,7 +781,7 @@ DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 	DW1000Time futureTime;
 	getSystemTimestamp(futureTime);
 	futureTime += delay;
-	futureTime.getAsBytes(delayBytes);
+	futureTime.getTimestamp(delayBytes);
 	delayBytes[0] = 0;
 	delayBytes[1] &= 0xFE;
 	writeBytes(DX_TIME, NO_SUB, delayBytes, LEN_DX_TIME);
@@ -947,19 +947,19 @@ void DW1000Class::getData(String& data) {
 void DW1000Class::getTransmitTimestamp(DW1000Time& time) {
 	byte txTimeBytes[LEN_TX_STAMP];
 	readBytes(TX_TIME, TX_STAMP_SUB, txTimeBytes, LEN_TX_STAMP);
-	time.setFromBytes(txTimeBytes);
+	time.setTimestamp(txTimeBytes);
 }
 
 void DW1000Class::getReceiveTimestamp(DW1000Time& time) {
 	byte rxTimeBytes[LEN_RX_STAMP];
 	readBytes(RX_TIME, RX_STAMP_SUB, rxTimeBytes, LEN_RX_STAMP);
-	time.setFromBytes(rxTimeBytes);
+	time.setTimestamp(rxTimeBytes);
 }
 
 void DW1000Class::getSystemTimestamp(DW1000Time& time) {
 	byte sysTimeBytes[LEN_SYS_TIME];
 	readBytes(SYS_TIME, NO_SUB, sysTimeBytes, LEN_SYS_TIME);
-	time.setFromBytes(sysTimeBytes);
+	time.setTimestamp(sysTimeBytes);
 }
 
 void DW1000Class::getTransmitTimestamp(byte data[]) {
@@ -979,10 +979,6 @@ boolean DW1000Class::isTransmitDone() {
 }
 
 boolean DW1000Class::isReceiveTimestampAvailable() {
-	return getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
-}
-
-boolean DW1000Class::isLDEDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
 }
 

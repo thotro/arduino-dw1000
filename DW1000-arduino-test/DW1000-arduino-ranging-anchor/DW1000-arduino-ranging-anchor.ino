@@ -15,6 +15,11 @@
  * Complements the "DW1000-arduino-ranging-tag" sketch. 
  */
 
+/*
+ * TODO: ranging needs to be done more often and results have to be taken
+ * on average.
+ */
+
 #include <SPI.h>
 #include <DW1000.h>
 
@@ -118,51 +123,12 @@ void receiver() {
   DW1000.startReceive();
 }
 
-float getRange() {
+DW1000Time getRange() {
   // correct timestamps (in case system time counter wrap-arounds occured)
   // TODO
   // two roundtrip times - each minus message preparation times / 4
-  Serial.println("START DATA");
-  byte d[5];
-  char msgBuf[1024];
-  /*Serial.print("POLL RECEIVED ");
-  timePollReceived.getAsBytes(d);
-  memset(msgBuf, 0, 1024);
-  DW1000.getPrettyBytes(d, msgBuf, 5);
-  Serial.println(msgBuf);
-  Serial.print("POLL ACK SENT ");
-  timePollAckSent.getAsBytes(d);
-  memset(msgBuf, 0, 1024);
-  DW1000.getPrettyBytes(d, msgBuf, 5);
-  Serial.println(msgBuf);
-  Serial.print("RANGE RECEIVED ");
-  timeRangeReceived.getAsBytes(d);
-  memset(msgBuf, 0, 1024);
-  DW1000.getPrettyBytes(d, msgBuf, 5);
-  Serial.println(msgBuf);
-  Serial.print("POLL SENT ");
-  timePollSent.getAsBytes(d);
-  memset(msgBuf, 0, 1024);
-  DW1000.getPrettyBytes(d, msgBuf, 5);
-  Serial.println(msgBuf);
-  Serial.print("POLL ACK RECEIVED ");
-  timePollAckReceived.getAsBytes(d);
-  memset(msgBuf, 0, 1024);
-  DW1000.getPrettyBytes(d, msgBuf, 5);
-  Serial.println(msgBuf);
-  Serial.print("RANGE SENT ");
-  timeRangeSent.getAsBytes(d);
-  memset(msgBuf, 0, 1024);
-  DW1000.getPrettyBytes(d, msgBuf, 5);
-  Serial.println(msgBuf);*/
-
-  return ((timePollAckReceived.getAsFloat()-timePollSent.getAsFloat())-(timePollAckSent.getAsFloat()-timePollReceived.getAsFloat()) +
-      (timeRangeReceived.getAsFloat()-timePollAckSent.getAsFloat())-(timeRangeSent.getAsFloat()-timePollAckReceived.getAsFloat()));// / 4;
-
-  /*DW1000Time timeOfFlight = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
-      (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived));// / 4;
-  
-  return timeOfFlight.getAsFloat();*/
+  return ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
+      (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived)) / 4;
 }
 
 void loop() {
@@ -197,16 +163,17 @@ void loop() {
       DW1000.getReceiveTimestamp(timeRangeReceived);
       expectedMsgId = POLL;
       if(!protocolFailed) {
-        timePollSent.setFromBytes(data+1);
-        timePollAckReceived.setFromBytes(data+6);
-        timeRangeSent.setFromBytes(data+11);
+        timePollSent.setTimestamp(data+1);
+        timePollAckReceived.setTimestamp(data+6);
+        timeRangeSent.setTimestamp(data+11);
         Serial.print("Received RANGE @ "); Serial.println(timeRangeReceived.getAsFloat());
         Serial.print("POLL sent @ "); Serial.println(timePollSent.getAsFloat());
         Serial.print("POLL ACK received @ "); Serial.println(timePollAckReceived.getAsFloat());
         Serial.print("RANGE sent @ "); Serial.println(timeRangeSent.getAsFloat());
-        float curRange = getRange();
-        Serial.print("Range time is "); Serial.println(curRange);
-        transmitRangeReport(curRange);
+        DW1000Time curRange = getRange();
+        Serial.print("Range time is "); Serial.println(curRange.getAsFloat(), 4);
+        Serial.print("Range is "); Serial.println(curRange.getAsMeters());
+        transmitRangeReport(curRange.getAsFloat());
       } else {
         transmitRangeFailed();
       }

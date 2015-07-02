@@ -29,7 +29,7 @@ General usage of the DW1000 library is depicted below. Please see the Arduino te
 At the moment the library contains two types:
  * **DW1000:** The statically accessible entity to work with your modules. Offers a variety of configuration options and manages module states and actions. 
  
- * **DW1000Time:** Container entities that handle DW1000 specific timing values. These are required to allow accurate timestamps and time based computations; they aid in avoiding potential precision and capacity problems of standard number formats in Arduino, but require less memory than 64-bit data type alternatives and most importantly take care of all bit-to-time (and vice versa) conversions.
+ * **DW1000Time:** Container entities that handle DW1000 specific timing values. These are required to allow accurate timestamps and time based computations; they aid in avoiding potential precision and capacity problems of standard number formats in Arduino and basically are wrapper objects for 64-bit unsigned integer data types; most importantly they take care of all bit-to-time-and-distance (and vice versa) conversions.
 
 API docs for the library will shortly follow. 
 
@@ -47,7 +47,6 @@ DW1000.newConfiguration();
 DW1000.setDefaults();
 DW1000.setDeviceAddress(5);
 DW1000.setNetworkId(10);
-DW1000.setFrameFilter(false);
 // ... and other stuff - finally upload to the module.
 DW1000.commitConfiguration();
 ...

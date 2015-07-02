@@ -24,7 +24,7 @@
 #define RECEIVER false
 // toggle and message RX/TX
 // NOTE: the other Arduino needs to be configured with RECEIVER
-volatile boolean trxToggle = SENDER;
+volatile boolean trxToggle = RECEIVER;
 volatile boolean trxAck = false;
 volatile boolean rxError = false;
 String msg;
@@ -44,7 +44,6 @@ void setup() {
   DW1000.setDefaults();
   DW1000.setDeviceAddress(1);
   DW1000.setNetworkId(10);
-  DW1000.setFrameFilter(false);
   DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed

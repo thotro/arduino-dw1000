@@ -15,6 +15,11 @@
  * Complements the "DW1000-arduino-ranging-anchor" sketch. 
  */
 
+ /*
+  * TODO: either ACK frames to check if message loss or watchdog timer to recover
+  * from protocol failure on tag side.
+  */
+
 #include <SPI.h>
 #include <DW1000.h>
 
@@ -91,14 +96,14 @@ void transmitRange() {
   DW1000.setDefaults();
   data[0] = RANGE;
   // delay sending the message and remember expected future sent timestamp
-  DW1000Time deltaTime = DW1000Time(50, DW1000Time::MILLISECONDS);
+  DW1000Time deltaTime = DW1000Time(10, DW1000Time::MILLISECONDS);
   timeRangeSent = DW1000.setDelay(deltaTime);
-  Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
-  timePollSent.getAsBytes(data+1);
-  timePollAckReceived.getAsBytes(data+6);
-  timeRangeSent.getAsBytes(data+11);
+  timePollSent.getTimestamp(data+1);
+  timePollAckReceived.getTimestamp(data+6);
+  timeRangeSent.getTimestamp(data+11);
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
+  Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
 }
 
 void receiver() {

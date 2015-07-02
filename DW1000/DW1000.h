@@ -464,7 +464,6 @@ private:
 	/* device status flags */
 	static boolean isReceiveTimestampAvailable();
 	static boolean isTransmitDone();
-	static boolean isLDEDone();
 	static boolean isReceiveDone();
 	static boolean isReceiveError();
 	static boolean isReceiveTimeout();
