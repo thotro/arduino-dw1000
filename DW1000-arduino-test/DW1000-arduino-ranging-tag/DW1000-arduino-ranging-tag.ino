@@ -58,13 +58,15 @@ void setup() {
   DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
-  char msg[1024];
+  char msg[256];
   DW1000.getPrintableDeviceIdentifier(msg);
   Serial.print("Device ID: "); Serial.println(msg);
   DW1000.getPrintableExtendedUniqueIdentifier(msg);
   Serial.print("Unique ID: "); Serial.println(msg);
   DW1000.getPrintableNetworkIdAndShortAddress(msg);
   Serial.print("Network ID & Device Address: "); Serial.println(msg);
+  DW1000.getPrintableDeviceMode(msg);
+  Serial.print("Device mode: "); Serial.println(msg);
   // attach callback for (successfully) sent and received messages
   DW1000.attachSentHandler(handleSent);
   DW1000.attachReceivedHandler(handleReceived);
@@ -103,7 +105,7 @@ void transmitRange() {
   timeRangeSent.getTimestamp(data+11);
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
-  Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
+  //Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
 }
 
 void receiver() {
@@ -124,12 +126,13 @@ void loop() {
     byte msgId = data[0];
     if(msgId == POLL) {
       DW1000.getTransmitTimestamp(timePollSent);
-      Serial.print("Sent POLL @ "); Serial.println(timePollSent.getAsFloat());
+      //Serial.print("Sent POLL @ "); Serial.println(timePollSent.getAsFloat());
     } else if(msgId == RANGE) {
       DW1000.getTransmitTimestamp(timeRangeSent);
-      Serial.print("Sent RANGE @ "); Serial.println(timeRangeSent.getAsFloat());
+      //Serial.print("Sent RANGE @ "); Serial.println(timeRangeSent.getAsFloat());
     }
-  } else if(receivedAck) {
+  }
+  if(receivedAck) {
     receivedAck = false;
     // get message and parse
     DW1000.getData(data, LEN_DATA);
@@ -137,7 +140,7 @@ void loop() {
     if(msgId != expectedMsgId) {
       // unexpected message, start over again
       Serial.print("Received wrong message # "); Serial.println(msgId);
-      delay(2000);
+      delay(100);
       expectedMsgId = POLL_ACK;
       transmitPoll();
       return;
@@ -145,19 +148,19 @@ void loop() {
     if(msgId == POLL_ACK) {
       DW1000.getReceiveTimestamp(timePollAckReceived);
       expectedMsgId = RANGE_REPORT;
-      Serial.print("Received POLL ACK @ "); Serial.println(timePollAckReceived.getAsFloat());
       transmitRange();
+      //Serial.print("Received POLL ACK @ "); Serial.println(timePollAckReceived.getAsFloat());
     } else if(msgId == RANGE_REPORT) {
       expectedMsgId = POLL_ACK;
       float curRange;
       memcpy(&curRange, data+1, 4);
-      Serial.print("Received RANGE REPORT = "); Serial.println(curRange);
-      delay(2000);
+      //Serial.print("Received RANGE REPORT = "); Serial.println(curRange);
+      delay(100);
       transmitPoll();
     } else if(msgId == RANGE_FAILED) {
       expectedMsgId = POLL_ACK;
       Serial.println("Received RANGE FAILED");
-      delay(2000);
+      delay(100);
       transmitPoll();
     }
   }

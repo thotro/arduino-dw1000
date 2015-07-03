@@ -23,7 +23,8 @@
 #define SENDER true
 #define RECEIVER false
 // toggle and message RX/TX
-// NOTE: the other Arduino needs to be configured with RECEIVER
+// NOTE: the other Arduino needs to be configured with RECEIVER 
+//       (or SENDER respectively)
 volatile boolean trxToggle = RECEIVER;
 volatile boolean trxAck = false;
 volatile boolean rxError = false;
@@ -54,6 +55,8 @@ void setup() {
   Serial.print("Unique ID: "); Serial.println(msgInfo);
   DW1000.getPrintableNetworkIdAndShortAddress(msgInfo);
   Serial.print("Network ID & Device Address: "); Serial.println(msgInfo);
+  DW1000.getPrintableDeviceMode(msg);
+  Serial.print("Device mode: "); Serial.println(msg);
   // attach callback for (successfully) sent and received messages
   DW1000.attachSentHandler(handleSent);
   DW1000.attachReceivedHandler(handleReceived);

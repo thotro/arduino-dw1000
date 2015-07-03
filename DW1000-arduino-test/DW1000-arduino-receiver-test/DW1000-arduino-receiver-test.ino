@@ -45,6 +45,8 @@ void setup() {
   Serial.print("Unique ID: "); Serial.println(msg);
   DW1000.getPrintableNetworkIdAndShortAddress(msg);
   Serial.print("Network ID & Device Address: "); Serial.println(msg);
+  DW1000.getPrintableDeviceMode(msg);
+  Serial.print("Device mode: "); Serial.println(msg);
   // attach callback for (successfully) received messages
   DW1000.attachReceivedHandler(handleReceived);
   DW1000.attachReceiveErrorHandler(handleReceiveError);

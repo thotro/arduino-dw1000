@@ -40,6 +40,8 @@ DW1000Time timePollAckSent;
 DW1000Time timePollAckReceived;
 DW1000Time timeRangeSent;
 DW1000Time timeRangeReceived;
+// last computed range/time
+DW1000Time timeComputedRange;
 // data buffer
 #define LEN_DATA 16
 byte data[LEN_DATA];
@@ -62,13 +64,15 @@ void setup() {
   DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
-  char msg[1024];
+  char msg[256];
   DW1000.getPrintableDeviceIdentifier(msg);
   Serial.print("Device ID: "); Serial.println(msg);
   DW1000.getPrintableExtendedUniqueIdentifier(msg);
   Serial.print("Unique ID: "); Serial.println(msg);
   DW1000.getPrintableNetworkIdAndShortAddress(msg);
   Serial.print("Network ID & Device Address: "); Serial.println(msg);
+  DW1000.getPrintableDeviceMode(msg);
+  Serial.print("Device mode: "); Serial.println(msg);
   // attach callback for (successfully) sent and received messages
   DW1000.attachSentHandler(handleSent);
   DW1000.attachReceivedHandler(handleReceived);
@@ -92,7 +96,6 @@ void transmitPollAck() {
   data[0] = POLL_ACK;
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
-  receiver();
 }
 
 void transmitRangeReport(float curRange) {
@@ -103,7 +106,6 @@ void transmitRangeReport(float curRange) {
   memcpy(data+1, &curRange, 4);
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
-  receiver();
 }
 
 void transmitRangeFailed() {
@@ -112,7 +114,6 @@ void transmitRangeFailed() {
   data[0] = RANGE_FAILED;
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
-  receiver();
 }
 
 void receiver() {
@@ -123,12 +124,16 @@ void receiver() {
   DW1000.startReceive();
 }
 
-DW1000Time getRange() {
+void computeRange() {
   // correct timestamps (in case system time counter wrap-arounds occured)
   // TODO
+  /*if(timePollAckReceived < timePollSent) {
+    timePollAckReceived += ...
+  }*/
   // two roundtrip times - each minus message preparation times / 4
-  return ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
-      (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived)) / 4;
+  DW1000Time tof = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
+      (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived)) * 0.25f;
+  timeComputedRange.setTimestamp(tof);
 }
 
 void loop() {
@@ -141,9 +146,10 @@ void loop() {
     byte msgId = data[0];
     if(msgId == POLL_ACK) {
       DW1000.getTransmitTimestamp(timePollAckSent);
-      Serial.print("Sent POLL ACK @ "); Serial.println(timePollAckSent.getAsFloat());
+      //Serial.print("Sent POLL ACK @ "); Serial.println(timePollAckSent.getAsFloat());
     }
-  } else if(receivedAck) {
+  }
+  if(receivedAck) {
     receivedAck = false;
     // get message and parse
     DW1000.getData(data, LEN_DATA);
@@ -157,8 +163,8 @@ void loop() {
       protocolFailed = false;
       DW1000.getReceiveTimestamp(timePollReceived);
       expectedMsgId = RANGE;
-      Serial.print("Received POLL @ "); Serial.println(timePollReceived.getAsFloat());
       transmitPollAck();
+      //Serial.print("Received POLL @ "); Serial.println(timePollReceived.getAsFloat());
     } else if(msgId == RANGE) {
       DW1000.getReceiveTimestamp(timeRangeReceived);
       expectedMsgId = POLL;
@@ -166,14 +172,15 @@ void loop() {
         timePollSent.setTimestamp(data+1);
         timePollAckReceived.setTimestamp(data+6);
         timeRangeSent.setTimestamp(data+11);
-        Serial.print("Received RANGE @ "); Serial.println(timeRangeReceived.getAsFloat());
+        // (re-)compute range as two-way ranging is done
+        computeRange();
+        transmitRangeReport(timeComputedRange.getAsFloat());
+        /*Serial.print("Received RANGE @ "); Serial.println(timeRangeReceived.getAsFloat());
         Serial.print("POLL sent @ "); Serial.println(timePollSent.getAsFloat());
         Serial.print("POLL ACK received @ "); Serial.println(timePollAckReceived.getAsFloat());
         Serial.print("RANGE sent @ "); Serial.println(timeRangeSent.getAsFloat());
-        DW1000Time curRange = getRange();
-        Serial.print("Range time is "); Serial.println(curRange.getAsFloat(), 4);
-        Serial.print("Range is "); Serial.println(curRange.getAsMeters());
-        transmitRangeReport(curRange.getAsFloat());
+        Serial.print("Range time is "); Serial.println(timeComputedRange.getAsFloat(), 4);*/
+        Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
       } else {
         transmitRangeFailed();
       }

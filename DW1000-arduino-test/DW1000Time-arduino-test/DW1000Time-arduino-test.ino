@@ -23,6 +23,7 @@ void loop() {
   // variables for the test
   DW1000Time time;
   DW1000Time time2;
+  DW1000Time time3;
   byte stamp[LEN_STAMP];
   // unit test
   Serial.print("Time is [us] ... "); Serial.println(time.getAsFloat(), 4);
@@ -40,6 +41,10 @@ void loop() {
   time2 = DW1000Time(stamp);
   Serial.print("Time2 is [us] ... "); Serial.println(time2.getAsFloat(), 4);
   Serial.print("Time2 range is [m] ... "); Serial.println(time2.getAsMeters(), 4);
+  time3 = DW1000Time(10, DW1000Time::SECONDS);
+  time3.getTimestamp(stamp);
+  time3.setTimestamp(stamp);
+  Serial.print("Time3 is [s] ... "); Serial.println(time3.getAsFloat() * 1.0e-6, 4);
   // keep calm
   delay(1000);
 }

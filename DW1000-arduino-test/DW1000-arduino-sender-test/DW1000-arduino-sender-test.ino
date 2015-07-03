@@ -46,6 +46,8 @@ void setup() {
   Serial.print("Unique ID: "); Serial.println(msg);
   DW1000.getPrintableNetworkIdAndShortAddress(msg);
   Serial.print("Network ID & Device Address: "); Serial.println(msg);
+  DW1000.getPrintableDeviceMode(msg);
+  Serial.print("Device mode: "); Serial.println(msg);
   // attach callback for (successfully) sent messages
   DW1000.attachSentHandler(handleSent);
   // start a transmission
@@ -65,7 +67,6 @@ void transmitter() {
   String msg = "Hello DW1000, it's #"; msg += sentNum;
   DW1000.setData(msg);
   // delay sending the message for the given amount
-  //DW1000Time deltaTime = DW1000Time(500, DW1000Time::MILLISECONDS);
   DW1000Time deltaTime = DW1000Time(10, DW1000Time::MILLISECONDS);
   DW1000.setDelay(deltaTime);
   DW1000.startTransmit();

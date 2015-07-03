@@ -47,18 +47,12 @@ boolean DW1000Class::_frameCheck = true;
 boolean DW1000Class::_permanentReceive = false;
 int DW1000Class::_deviceMode = IDLE_MODE;
 // modes of operation
-const byte DW1000Class::MODE_LOCATION_LONGRANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_LOCATION_SHORTRANGE_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
-const byte DW1000Class::MODE_LONGDATA_SHORTRANGE_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_LONGDATA_LONGRANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_SHORTDATA_SHORTRANGE_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
-const byte DW1000Class::MODE_SHORTDATA_LONGRANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_LOCATION_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_LOCATION_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
-const byte DW1000Class::MODE_LONGDATA_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_LONGDATA_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_SHORTDATA_SHORTRANGE_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
-const byte DW1000Class::MODE_SHORTDATA_LONGRANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LONGDATA_RANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_SHORTDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
+const byte DW1000Class::MODE_LONGDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_SHORTDATA_FAST_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
+const byte DW1000Class::MODE_LONGDATA_FAST_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LONGDATA_RANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
 // SPI settings
 const SPISettings DW1000Class::_fastSPI = SPISettings(16000000L, MSBFIRST, SPI_MODE0);
 const SPISettings DW1000Class::_slowSPI = SPISettings(2000000L, MSBFIRST, SPI_MODE0);
@@ -84,9 +78,12 @@ void DW1000Class::begin(int irq) {
 
 void DW1000Class::begin(int irq, int rst) {
 	// generous initial init/wake-up-idle delay
-	delay(10);
+	delay(5);
+	enableClock(AUTO_CLOCK);
+	delay(5);
 	// start SPI
  	SPI.begin(); 
+	SPI.usingInterrupt(irq);
 	// pin and basic member setup
 	_rst = rst;
 	_irq = irq;
@@ -191,9 +188,14 @@ void DW1000Class::enableMode(const byte mode[]) {
 	setDataRate(mode[0]);
 	setPulseFrequency(mode[1]);
 	setPreambleLength(mode[2]);
-	// TODO add channel and code to mode tuples
+	// TODO add channel and code to mode tuples 
+	// TODO add channel and code settings with checks (see Table 58)
 	setChannel(CHANNEL_5);
-	setPreambleCode(PREAMBLE_CODE_16MHZ_4);
+	if(mode[1] == TX_PULSE_FREQ_16MHZ) {
+		setPreambleCode(PREAMBLE_CODE_16MHZ_4);
+	} else {
+		setPreambleCode(PREAMBLE_CODE_64MHZ_10);
+	}
 }
 
 void DW1000Class::tune() {
@@ -227,7 +229,7 @@ void DW1000Class::tune() {
 	writeValueToBytes(agctune2, 0x2502A907L, LEN_AGC_TUNE2);
 	// AGC_TUNE3
 	writeValueToBytes(agctune3, 0x0035, LEN_AGC_TUNE3);
-	// DRX_TUNE0b
+	// DRX_TUNE0b (already optimized according to Table 20 of user manual)
 	if(_dataRate == TRX_RATE_110KBPS) {
 		writeValueToBytes(drxtune0b, 0x0016, LEN_DRX_TUNE0b);
 	} else if(_dataRate == TRX_RATE_850KBPS) {
@@ -510,7 +512,6 @@ void DW1000Class::tune() {
 	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
 	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
 	writeBytes(FS_CTRL, FS_PLLCFG_SUB, fspllcfg, LEN_FS_PLLCFG);
-	// TODO LDOTUNE, see 2.5.5, p. 21
 }
 
 /* ###########################################################################
@@ -532,21 +533,26 @@ void DW1000Class::handleInterrupt() {
 		(*_handleReceiveError)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
+			newReceive();
 			startReceive();
 		}
 	} else if(isReceiveTimeout() && _handleReceiveTimeout != 0) {
 		(*_handleReceiveTimeout)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
+			newReceive();
 			startReceive();
 		}
 	} else if(isReceiveDone() && _handleReceived != 0) {
 		(*_handleReceived)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
+			newReceive();
 			startReceive();
 		}
-	} 
+	}
+	// clear all status that is left
+	clearAllStatus();
 	// TODO impl other callbacks
 }
 
@@ -573,6 +579,46 @@ void DW1000Class::getPrintableNetworkIdAndShortAddress(char msgBuffer[]) {
 	readBytes(PANADR, NO_SUB, data, LEN_PANADR);
 	sprintf(msgBuffer, "PAN: %u, Short Address: %u",
 		(unsigned int)((data[3] << 8) | data[2]), (unsigned int)((data[1] << 8) | data[0]));
+}
+
+void DW1000Class::getPrintableDeviceMode(char msgBuffer[]) {
+	unsigned short prf;
+	unsigned int plen;
+	unsigned int dr;
+	unsigned short ch;
+	unsigned short pcode;
+	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+		prf = 16;
+	} else {
+		prf = 64;
+	}
+	if(_preambleLength == TX_PREAMBLE_LEN_64) {
+		plen = 64;
+	} else if(_preambleLength == TX_PREAMBLE_LEN_128) {
+		plen = 128;
+	} else if(_preambleLength == TX_PREAMBLE_LEN_256) {
+		plen = 256;
+	} else if(_preambleLength == TX_PREAMBLE_LEN_512) {
+		plen = 512;
+	} else if(_preambleLength == TX_PREAMBLE_LEN_1024) {
+		plen = 1024;
+	} else if(_preambleLength == TX_PREAMBLE_LEN_1536) {
+		plen = 1536;
+	} else if(_preambleLength == TX_PREAMBLE_LEN_2048) {
+		plen = 2048;
+	} else {
+		plen = 4096;
+	}
+	if(_dataRate == TRX_RATE_110KBPS) {
+		dr = 110;
+	} else if(_dataRate == TRX_RATE_850KBPS) {
+		dr = 850;
+	} else {
+		dr = 6800;
+	}
+	ch = (short)_channel;
+	pcode = (short)_preambleCode;
+	sprintf(msgBuffer, "Data rate: %u kb/s, PRF: %u MHz, Preamble: %u symbols (code #%u), Channel: #%u", dr, prf, plen, pcode, ch);
 }
 
 /* ###########################################################################
@@ -737,27 +783,28 @@ void DW1000Class::newConfiguration() {
 
 void DW1000Class::commitConfiguration() {
 	enableClock(XTI_CLOCK);
+	delay(5);
 	// TODO make configurable (if false disable LDE use)
 	// load LDE micro-code
 	loadLDE();
-	delay(10);
+	delay(5);
 	enableClock(AUTO_CLOCK);
+	delay(5);
 	// TODO clean up code + antenna delay/calibration API
-	byte antennaDelayBytes[LEN_STAMP];
 	// TODO setter + check not larger two bytes integer
-	writeValueToBytes(antennaDelayBytes, 16384, LEN_STAMP);
+	byte antennaDelayBytes[LEN_STAMP];
+	writeValueToBytes(antennaDelayBytes, 16300, LEN_STAMP); // 16384
 	_antennaDelay.setTimestamp(antennaDelayBytes);
 	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
     	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD); 
+	// tune according to configuration
+	tune();
 	// write all configurations back to device
 	writeNetworkIdAndDeviceAddress();
 	writeSystemConfigurationRegister();
 	writeChannelControlRegister();
 	writeTransmitFrameControlRegister();
 	writeSystemEventMaskRegister();
-	// tune according to configuration
-	tune();
-	delay(10);
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -792,7 +839,7 @@ DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 
 void DW1000Class::setDataRate(byte rate) {
 	rate &= 0x03;
-	_txfctrl[1] &= 0x9F;
+	_txfctrl[1] &= 0x83;
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
 	if(rate == TRX_RATE_110KBPS) {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, true);
@@ -871,8 +918,7 @@ void DW1000Class::setDefaults() {
 		setReceiverAutoReenable(true);
 		// default mode when powering up the chip
 		// still explicitly selected for later tuning
-		//enableMode(MODE_LOCATION_LONGRANGE_LOWPOWER);
-		enableMode(MODE_LOCATION_SHORTRANGE_LOWPOWER);
+		enableMode(MODE_LONGDATA_RANGE_LOWPOWER);
 	}
 }
 
@@ -899,7 +945,6 @@ void DW1000Class::setData(const String& data) {
 	data.getBytes(dataBytes, n);
 	setData(dataBytes, n);
 	free(dataBytes);
-	
 }
 
 unsigned int DW1000Class::getDataLength() {
@@ -1126,7 +1171,6 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 			headerLen+=2;
 		}
 	}
-	noInterrupts();
 	SPI.beginTransaction(*_currentSPI);
 	digitalWrite(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
@@ -1135,9 +1179,9 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 	for(i = 0; i < n; i++) {
 		data[i] = SPI.transfer(JUNK);
 	}
+	delay(1);
 	digitalWrite(_ss,HIGH);
 	SPI.endTransaction();
-	interrupts();
 }
 
 // always 4 bytes
@@ -1191,7 +1235,6 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 			headerLen+=2;
 		}
 	}
-	noInterrupts();
 	SPI.beginTransaction(*_currentSPI);
 	digitalWrite(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
@@ -1203,8 +1246,6 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 	delay(1);
 	digitalWrite(_ss,HIGH);
 	SPI.endTransaction();
-	interrupts();
-	delay(1);
 }
 
 void DW1000Class::getPrettyBytes(byte data[], char msgBuffer[], unsigned int n) {

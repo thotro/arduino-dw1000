@@ -253,6 +253,7 @@ public:
 	static void getPrintableDeviceIdentifier(char msgBuffer[]);
 	static void getPrintableExtendedUniqueIdentifier(char msgBuffer[]);
 	static void getPrintableNetworkIdAndShortAddress(char msgBuffer[]);
+	static void getPrintableDeviceMode(char msgBuffer[]);
 
 	/* device address management. */
 	static void setNetworkId(unsigned int val);
@@ -394,18 +395,12 @@ public:
 
 	/* pre-defined modes of operation (3 bytes for data rate, pulse frequency and 
 	preamble length). */
-	static const byte MODE_LOCATION_LONGRANGE_LOWPOWER[];
-	static const byte MODE_LOCATION_SHORTRANGE_LOWPOWER[];
-	static const byte MODE_LONGDATA_SHORTRANGE_LOWPOWER[];
-	static const byte MODE_LONGDATA_LONGRANGE_LOWPOWER[];
-	static const byte MODE_SHORTDATA_SHORTRANGE_LOWPOWER[];
-	static const byte MODE_SHORTDATA_LONGRANGE_LOWPOWER[];
-	static const byte MODE_LOCATION_LONGRANGE_ACCURACY[];
-	static const byte MODE_LOCATION_SHORTRANGE_ACCURACY[];
-	static const byte MODE_LONGDATA_SHORTRANGE_ACCURACY[];
-	static const byte MODE_LONGDATA_LONGRANGE_ACCURACY[];
-	static const byte MODE_SHORTDATA_SHORTRANGE_ACCURACY[];
-	static const byte MODE_SHORTDATA_LONGRANGE_ACCURACY[];
+	static const byte MODE_LONGDATA_RANGE_LOWPOWER[];
+	static const byte MODE_SHORTDATA_FAST_LOWPOWER[];
+	static const byte MODE_LONGDATA_FAST_LOWPOWER[];
+	static const byte MODE_SHORTDATA_FAST_ACCURACY[];
+	static const byte MODE_LONGDATA_FAST_ACCURACY[];
+	static const byte MODE_LONGDATA_RANGE_ACCURACY[];
 
 private:
 	/* chip select, reset and interrupt pins. */

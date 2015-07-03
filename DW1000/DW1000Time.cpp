@@ -22,22 +22,20 @@ DW1000Time::DW1000Time(float timeUs) {
 }
 
 DW1000Time::DW1000Time(const DW1000Time& copy) {
-	_timestamp = copy.getTimestamp();
+	setTimestamp(copy);
 }
 
-DW1000Time::DW1000Time(unsigned long value, float factorUs) {
-	float tsValue = value * factorUs;
-	tsValue = fmod(tsValue, TIME_OVERFLOW);
-	setTime(tsValue);
+DW1000Time::DW1000Time(long value, float factorUs) {
+	setTime(value, factorUs);
 }
 
 DW1000Time::~DW1000Time() {}
 
 void DW1000Time::setTime(float timeUs) {
-	_timestamp = (long long unsigned int)(timeUs * TIME_RES_INV);
+	_timestamp = (long long int)(timeUs * TIME_RES_INV);
 }
 
-void DW1000Time::setTime(unsigned long value, float factorUs) {
+void DW1000Time::setTime(long value, float factorUs) {
 	float tsValue = value * factorUs;
 	tsValue = fmod(tsValue, TIME_OVERFLOW);
 	setTime(tsValue);
@@ -46,11 +44,15 @@ void DW1000Time::setTime(unsigned long value, float factorUs) {
 void DW1000Time::setTimestamp(byte data[]) {
 	_timestamp = 0;
 	for(int i = 0; i < LEN_STAMP; i++) {
-	    _timestamp |= ((long long unsigned int)data[i] << (i*8));
+	    _timestamp |= ((long long int)data[i] << (i*8));
 	}
 }
 
-long long unsigned int DW1000Time::getTimestamp() const {
+void DW1000Time::setTimestamp(const DW1000Time& copy) {
+	_timestamp = copy.getTimestamp();
+}
+
+long long int DW1000Time::getTimestamp() const {
 	return _timestamp;
 }
 
@@ -62,11 +64,11 @@ void DW1000Time::getTimestamp(byte data[]) const {
 }
 
 float DW1000Time::getAsFloat() const {
-	return (float)_timestamp * TIME_RES;
+	return fmod((float)_timestamp, TIME_OVERFLOW) * TIME_RES;
 }
 
 float DW1000Time::getAsMeters() const {
-	return (float)_timestamp * DISTANCE_OF_RADIO;
+	return fmod((float)_timestamp, TIME_OVERFLOW) * DISTANCE_OF_RADIO;
 }
 
 DW1000Time& DW1000Time::operator=(const DW1000Time &assign) {
@@ -78,7 +80,7 @@ DW1000Time& DW1000Time::operator=(const DW1000Time &assign) {
 }
 
 DW1000Time& DW1000Time::operator+=(const DW1000Time &add) {
-	_timestamp = (_timestamp + add.getTimestamp()) % TIME_OVERFLOW;
+	_timestamp += add.getTimestamp();
 	return *this;
 }
 
@@ -87,12 +89,7 @@ const DW1000Time DW1000Time::operator+(const DW1000Time &add) const {
 }
 
 DW1000Time& DW1000Time::operator-=(const DW1000Time &sub) {
-	long long unsigned int subTS = sub.getTimestamp();
-	if(subTS > _timestamp) {
-		_timestamp = TIME_OVERFLOW - (subTS - _timestamp);
-	} else {
-		_timestamp = _timestamp - subTS;
-	}
+	_timestamp -= sub.getTimestamp();
 	return *this;
 }
 
@@ -102,8 +99,7 @@ const DW1000Time DW1000Time::operator-(const DW1000Time &sub) const {
 
 DW1000Time& DW1000Time::operator*=(float factor) {
 	float tsValue = (float)_timestamp * factor;
-	tsValue = fmod(tsValue, TIME_OVERFLOW);
-	_timestamp = (long long unsigned int)tsValue;
+	_timestamp = (long long int)tsValue;
 	return *this;
 }
 
