@@ -11,7 +11,7 @@ Project state
 
 **Subsequent milestone:** Frame filtering rules, nodes addressing and MAC data format
 
-**General notice:** A (pretty much) stable transmission of messages between two modules is possible at the momement. The code for device tuning currently has issues and is disabled. This may lead to a few percent increased rate of dropped messages (those not received at all or which did not pass the CRC check).
+**General notice:** Stable transmission of messages between two modules is possible. The code for device tuning is working as well, hence different modes of operation can be chosen. As frame filtering (i.e. via MAC conforming messages) is not implemented yet, internal features of the chip for node addressing and auto-acknowledgement of messages can not be used. This is part of a future milestone. For now, if acknowledgements are required, they have to be sent manually and node addresses have to be encoded in the message payload and processed by the host controller.
 
 Contents
 --------
@@ -20,6 +20,7 @@ Contents
  * [Features and design intentions](../../wiki/Features)
  * [Testbed and Adapter board](../../wiki/Testbed-and-Adapter-board)
  * [Benchmarks](../../wiki/Benchmarks)
+ * [API docs](https://cdn.rawgit.com/thotro/arduino-dw1000/master/DW1000/doc/html/index.html)
 
 Usage
 -----
@@ -47,6 +48,8 @@ DW1000.newConfiguration();
 DW1000.setDefaults();
 DW1000.setDeviceAddress(5);
 DW1000.setNetworkId(10);
+// modes that define data rate, frequency, etc.
+DW1000.enableMode(..);
 // ... and other stuff - finally upload to the module.
 DW1000.commitConfiguration();
 ...

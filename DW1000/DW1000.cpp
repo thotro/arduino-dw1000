@@ -161,12 +161,16 @@ void DW1000Class::enableClock(byte clock) {
 }
 
 void DW1000Class::reset() {
-	digitalWrite(_rst, LOW);
-	delay(10);
-	digitalWrite(_rst, HIGH);
-	delay(10);
-	// force into idle mode (although it should be already after reset)
-	idle();
+	if(_rst < 0) {
+		softReset();
+	} else {
+		digitalWrite(_rst, LOW);
+		delay(10);
+		digitalWrite(_rst, HIGH);
+		delay(10);
+		// force into idle mode (although it should be already after reset)
+		idle();
+	}
 }
 
 void DW1000Class::softReset() {

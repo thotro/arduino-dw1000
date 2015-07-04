@@ -225,45 +225,161 @@ public:
 	Initiates and starts a sessions with one or more DW1000.
 
 	@param[in] irq The interrupt line/pin that connects the Arduino.
-	@param[in] rst The reset line/pin for hard IC resets that connects the Arduino.
+	@param[in] rst The reset line/pin for hard resets of ICs that connect to the Arduino.
 	*/
 	static void begin(int irq, int rst);
 	
 	/** 
-	Initiates and starts a sessions with one or more DW1000. Soft resets (i.e. command 		triggered) are used and no reset line needs to be wired.
+	Initiates and starts a sessions with one or more DW1000. Soft resets (i.e. command
+	triggered) are used and it is assumed that no reset line is wired.
 
 	@param[in] irq The interrupt line/pin that connects the Arduino.
 	*/
 	static void begin(int irq);
 
 	/** 
-	Selects a specific DW1000 IC for communication. In case of a single DW1000 in use
+	Selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use
 	this call only needs to be done once at start up, but is still mandatory.
 
-	@param[in] ss The chip select line/pin that connects the to-be-select chip wit the
+	@param[in] ss The chip select line/pin that connects the to-be-selected chip with the
 	Arduino.
 	*/
 	static void select(int ss);
-	static void end();
-	static void reset();
-	static void softReset();
-	static void loadLDE();
 
-	/* ##### Print device id, address, etc ####################################### */
+	/** 
+	Tells the driver library that no communication to a DW1000 will be required anymore.
+	This basically just frees SPI and the previously used pins.
+	*/
+	static void end();
+
+	/** 
+	Resets all connected or the currently selected DW1000 chip. A hard reset of all chips
+	is preferred, although a soft reset of the currently selected one is executed if no 
+	reset pin has been specified (when using `begin(int)`, instead of `begin(int, int)`).
+	*/
+	static void reset();
+
+	/** 
+	Resets the currently selected DW1000 chip programmatically (via corresponding commands).
+	*/
+	static void softReset();
+
+	/* ##### Print device id, address, etc. ###################################### */
+	/** 
+	Generates a String representation of the device identifier of the chip. That usually 
+	are the letters "DECA" plus the	version and revision numbers of the chip.
+
+	@param[out] msgBuffer The String buffer to be filled with printable device information.
+		Provide 128 bytes, this should be sufficient.
+	*/
 	static void getPrintableDeviceIdentifier(char msgBuffer[]);
+
+	/** 
+	Generates a String representation of the extended unique identifier (EUI) of the chip.
+
+	@param[out] msgBuffer The String buffer to be filled with printable device information.
+		Provide 128 bytes, this should be sufficient.
+	*/
 	static void getPrintableExtendedUniqueIdentifier(char msgBuffer[]);
+
+	/** 
+	Generates a String representation of the short address and network identifier currently
+	defined for the respective chip.
+
+	@param[out] msgBuffer The String buffer to be filled with printable device information.
+		Provide 128 bytes, this should be sufficient.
+	*/
 	static void getPrintableNetworkIdAndShortAddress(char msgBuffer[]);
+
+	/** 
+	Generates a String representation of the main operational settings of the chip. This
+	includes data rate, pulse repetition frequency, preamble and channel settings.
+
+	@param[out] msgBuffer The String buffer to be filled with printable device information.
+		Provide 128 bytes, this should be sufficient.
+	*/
 	static void getPrintableDeviceMode(char msgBuffer[]);
 
-	/* device address management. */
+	/* ##### Device address management, filters ################################## */
+	/** 
+	(Re-)set the network identifier which the selected chip should be associated with. This
+	setting is important for certain MAC address filtering rules.
+
+	@param[in] val An arbitrary numeric network identifier.
+	*/
 	static void setNetworkId(unsigned int val);
+
+	/** 
+	(Re-)set the device address (i.e. short address) for the currently selected chip. This
+	setting is important for certain MAC address filtering rules.
+
+	@param[in] val An arbitrary numeric device address.
+	*/
 	static void setDeviceAddress(unsigned int val);
+	// TODO EUI, MAC and filters
 	
-	/* general device configuration. */
+	/* ##### General device configuration ######################################## */
+	/** 
+	Specifies whether the DW1000 chip should, again, turn on its receiver in case that the
+	last reception failed. 
+
+	This setting is enabled as part of `setDefaults()` if the device is
+	in idle mode.
+
+	@param[in] val `true` to enable, `false` to disable receiver auto-reenable.
+	*/
 	static void setReceiverAutoReenable(boolean val);
+	
+	/** 
+	Specifies the interrupt polarity of the DW1000 chip. 
+
+	As part of `setDefaults()` if the device is in idle mode, interrupt polarity is set to 
+	active high.
+
+	@param[in] val `true` for active high interrupts, `false` for active low interrupts.
+	*/
 	static void setInterruptPolarity(boolean val);
+
+	/** 
+	Specifies whether to suppress any frame check measures while sending or receiving messages.
+	If suppressed, no 2-byte checksum is appended to the message before sending and this 
+	checksum is also not expected at receiver side. Note that when suppressing frame checks, 
+	the error event handler	(attached via `attachReceiveErrorHandler()`) will not be triggered 
+	if received data is corrupted.
+
+	Frame checks are enabled as part of `setDefaults()` if the device is in idle mode.
+
+	@param[in] val `true` to suppress frame check on sender and receiver side, `false` otherwise.
+	*/
 	static void suppressFrameCheck(boolean val);
+
+	/** 
+	Specifies the data transmission rate of the DW1000 chip. One of the values
+	 * `TRX_RATE_110KBPS` (i.e. 110 kb/s)
+	 * `TRX_RATE_850KBPS` (i.e. 850 kb/s)
+	 * `TRX_RATE_6800KBPS` (i.e. 6.8 Mb/s)
+	has to be provided.
+
+	See `setDefaults()` and `enableMode()` for additional information on data rate settings.
+
+	@param[in] rate The data transmission rate, encoded by the above defined constants.
+	*/
 	static void setDataRate(byte rate);
+
+	/** 
+	Specifies the pulse repetition frequency (PRF) of data transmissions with the DW1000. Either
+	 * `TX_PULSE_FREQ_16MHZ` (i.e. 16 MHz)
+	 * `TX_PULSE_FREQ_64MHZ` (i.e. 64 MHz)
+	has to be chosen.
+
+	Note that the 16 MHz setting is more power efficient, while the 64 MHz setting requires more
+	power, but also delivers slightly better transmission performance (i.e. on communication range and 
+	timestamp accuracy) (see DWM1000 User Manual, section 9.3). 
+
+	See `setDefaults()` and `enableMode()` for additional information on PRF settings.
+
+	@param[in] freq The PRF, encoded by the above defined constants.
+	*/
 	static void setPulseFrequency(byte freq);
 	static void setPreambleLength(byte prealen);
 	static void setChannel(byte channel);
@@ -485,6 +601,9 @@ private:
 
 	/* clock management. */
 	static void enableClock(byte clock);
+
+	/* LDE micro-code management. */
+	static void loadLDE();
 
 	/* reading and writing bytes from and to DW1000 module. */
 	static void readBytes(byte cmd, word offset, byte data[], unsigned int n);
