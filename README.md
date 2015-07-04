@@ -20,7 +20,9 @@ Contents
  * [Features and design intentions](../../wiki/Features)
  * [Testbed and Adapter board](../../wiki/Testbed-and-Adapter-board)
  * [Benchmarks](../../wiki/Benchmarks)
- * [API docs](https://cdn.rawgit.com/thotro/arduino-dw1000/master/DW1000/doc/html/index.html)
+ * API docs
+   * [HTML](https://cdn.rawgit.com/thotro/arduino-dw1000/master/DW1000/doc/html/index.html)
+   * [PDF](https://cdn.rawgit.com/thotro/arduino-dw1000/master/DW1000/doc/DW1000_Arduino_API_doc.pdf)
 
 Usage
 -----

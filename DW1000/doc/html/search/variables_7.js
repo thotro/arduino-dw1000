@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['time_5foverflow',['TIME_OVERFLOW',['../classDW1000Time.html#af1e5b1c0f9628c3a9ae8da62e569a7f9',1,'DW1000Time']]],
+  ['time_5foverflow',['TIME_OVERFLOW',['../classDW1000Time.html#ad43137d4be02113b6f408d3c9aad5dbe',1,'DW1000Time']]],
   ['trx_5frate_5f110kbps',['TRX_RATE_110KBPS',['../classDW1000Class.html#a4a71878424437fe7618fbf8ab533660b',1,'DW1000Class']]],
   ['trx_5frate_5f6800kbps',['TRX_RATE_6800KBPS',['../classDW1000Class.html#a38d09396c64441fd399a91cf21c8bb48',1,'DW1000Class']]],
   ['trx_5frate_5f850kbps',['TRX_RATE_850KBPS',['../classDW1000Class.html#ade01ba9bcfa79589cb28229a799d95f7',1,'DW1000Class']]],

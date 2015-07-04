@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['tune',['tune',['../classDW1000Class.html#a1e996f1921f45efddef0c343e3a29b44',1,'DW1000Class']]]
+  ['_7edw1000time',['~DW1000Time',['../classDW1000Time.html#a1036123abf02ee429b9e5e5a557413c5',1,'DW1000Time']]]
 ];

@@ -1,9 +1,10 @@
 var searchData=
 [
-  ['lde_5fcfg',['LDE_CFG',['../DW1000_8h.html#a1b14f46fa5be8dec8c1d8d829ed142cd',1,'DW1000.h']]],
   ['lde_5fcfg1_5fsub',['LDE_CFG1_SUB',['../DW1000_8h.html#afce5846f6f67e53fbfb4845b211d371f',1,'DW1000.h']]],
   ['lde_5fcfg2_5fsub',['LDE_CFG2_SUB',['../DW1000_8h.html#a7c7f0b025eed8eeeb7ac81214e4036e4',1,'DW1000.h']]],
+  ['lde_5fif',['LDE_IF',['../DW1000_8h.html#afbb51abc00d1ff30523089c1fc724e30',1,'DW1000.h']]],
   ['lde_5frepc_5fsub',['LDE_REPC_SUB',['../DW1000_8h.html#a889d966479761666cd71ef528a42eeaa',1,'DW1000.h']]],
+  ['lde_5frxantd_5fsub',['LDE_RXANTD_SUB',['../DW1000_8h.html#a89cc50e0ac7ea755c76d5a2e6ed909d6',1,'DW1000.h']]],
   ['ldedone_5fbit',['LDEDONE_BIT',['../DW1000_8h.html#a1c9f7653d8d3229c8686413023f917e2',1,'DW1000.h']]],
   ['ldeerr_5fbit',['LDEERR_BIT',['../DW1000_8h.html#a5ba639facba633648f3860c63160d4a4',1,'DW1000.h']]],
   ['len_5fagc_5ftune1',['LEN_AGC_TUNE1',['../DW1000_8h.html#aeba2c4a4e473056b8d36c069258c5440',1,'DW1000.h']]],
@@ -24,6 +25,7 @@ var searchData=
   ['len_5flde_5fcfg1',['LEN_LDE_CFG1',['../DW1000_8h.html#affba1aa78cfd6931b47267765a26b603',1,'DW1000.h']]],
   ['len_5flde_5fcfg2',['LEN_LDE_CFG2',['../DW1000_8h.html#a683cc2d483eed8e8e0498bc095a72d3b',1,'DW1000.h']]],
   ['len_5flde_5frepc',['LEN_LDE_REPC',['../DW1000_8h.html#adb4a9116f7ed2e160a0603f65ac21a48',1,'DW1000.h']]],
+  ['len_5flde_5frxantd',['LEN_LDE_RXANTD',['../DW1000_8h.html#a2acbfb8f4ff81a748de5810d444dcc42',1,'DW1000.h']]],
   ['len_5fotp_5faddr',['LEN_OTP_ADDR',['../DW1000_8h.html#a8b0afee069ae5d4c0713565853a4de2e',1,'DW1000.h']]],
   ['len_5fotp_5fctrl',['LEN_OTP_CTRL',['../DW1000_8h.html#acb99e4ade59a4a7f6057f35918e106c3',1,'DW1000.h']]],
   ['len_5fotp_5frdat',['LEN_OTP_RDAT',['../DW1000_8h.html#a4df01718173d3353d24983de79783fa4',1,'DW1000.h']]],
