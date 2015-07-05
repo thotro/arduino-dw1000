@@ -47,6 +47,9 @@ DW1000Time timeComputedRange;
 byte data[LEN_DATA];
 // reset line to the chip
 int RST = 9;
+// watchdog and reset period
+unsigned long lastActivity;
+unsigned long resetPeriod = 250;
 
 void setup() {
   // DEBUG monitoring
@@ -78,6 +81,19 @@ void setup() {
   DW1000.attachReceivedHandler(handleReceived);
   // anchor starts in receiving mode, awaiting a ranging poll message
   receiver();
+  noteActivity();
+}
+
+void noteActivity() {
+  // update activity timestamp, so that we do not reach "resetPeriod"
+  lastActivity = millis();
+}
+
+void resetInactive() {
+  // anchor listens for POLL
+  expectedMsgId = POLL;
+  receiver();
+  noteActivity();
 }
 
 void handleSent() {
@@ -138,6 +154,10 @@ void computeRange() {
 
 void loop() {
   if(!sentAck && !receivedAck) {
+    // check if inactive
+    if(millis() - lastActivity > resetPeriod) {
+      resetInactive();
+    }
     return;
   }
   // continue on any success confirmation
@@ -146,7 +166,7 @@ void loop() {
     byte msgId = data[0];
     if(msgId == POLL_ACK) {
       DW1000.getTransmitTimestamp(timePollAckSent);
-      //Serial.print("Sent POLL ACK @ "); Serial.println(timePollAckSent.getAsFloat());
+      noteActivity();
     }
   }
   if(receivedAck) {
@@ -155,16 +175,16 @@ void loop() {
     DW1000.getData(data, LEN_DATA);
     byte msgId = data[0];
     if(msgId != expectedMsgId) {
-      // unexpected message, start over again
-      Serial.print("Received wrong message # "); Serial.println(msgId);
+      // unexpected message, start over again (except if already POLL)
       protocolFailed = true;
     }
     if(msgId == POLL) {
+      // on POLL we (re-)start, so no protocol failure
       protocolFailed = false;
       DW1000.getReceiveTimestamp(timePollReceived);
       expectedMsgId = RANGE;
       transmitPollAck();
-      //Serial.print("Received POLL @ "); Serial.println(timePollReceived.getAsFloat());
+      noteActivity();
     } else if(msgId == RANGE) {
       DW1000.getReceiveTimestamp(timeRangeReceived);
       expectedMsgId = POLL;
@@ -175,15 +195,11 @@ void loop() {
         // (re-)compute range as two-way ranging is done
         computeRange();
         transmitRangeReport(timeComputedRange.getAsFloat());
-        /*Serial.print("Received RANGE @ "); Serial.println(timeRangeReceived.getAsFloat());
-        Serial.print("POLL sent @ "); Serial.println(timePollSent.getAsFloat());
-        Serial.print("POLL ACK received @ "); Serial.println(timePollAckReceived.getAsFloat());
-        Serial.print("RANGE sent @ "); Serial.println(timeRangeSent.getAsFloat());
-        Serial.print("Range time is "); Serial.println(timeComputedRange.getAsFloat(), 4);*/
         Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
       } else {
         transmitRangeFailed();
       }
+      noteActivity();
     }
   }
 }

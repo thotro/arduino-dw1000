@@ -355,9 +355,9 @@ public:
 
 	/** 
 	Specifies the data transmission rate of the DW1000 chip. One of the values
-	 * `TRX_RATE_110KBPS` (i.e. 110 kb/s)
-	 * `TRX_RATE_850KBPS` (i.e. 850 kb/s)
-	 * `TRX_RATE_6800KBPS` (i.e. 6.8 Mb/s)
+	- `TRX_RATE_110KBPS` (i.e. 110 kb/s)
+	- `TRX_RATE_850KBPS` (i.e. 850 kb/s)
+	- `TRX_RATE_6800KBPS` (i.e. 6.8 Mb/s)
 	has to be provided.
 
 	See `setDefaults()` and `enableMode()` for additional information on data rate settings.
@@ -368,8 +368,8 @@ public:
 
 	/** 
 	Specifies the pulse repetition frequency (PRF) of data transmissions with the DW1000. Either
-	 * `TX_PULSE_FREQ_16MHZ` (i.e. 16 MHz)
-	 * `TX_PULSE_FREQ_64MHZ` (i.e. 64 MHz)
+	- `TX_PULSE_FREQ_16MHZ` (i.e. 16 MHz)
+	- `TX_PULSE_FREQ_64MHZ` (i.e. 64 MHz)
 	has to be chosen.
 
 	Note that the 16 MHz setting is more power efficient, while the 64 MHz setting requires more

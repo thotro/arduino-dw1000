@@ -41,6 +41,9 @@ DW1000Time timeRangeSent;
 byte data[LEN_DATA];
 // reset line to the chip
 int RST = 9;
+// watchdog and reset period
+unsigned long lastActivity;
+unsigned long resetPeriod = 250;
 
 void setup() {
   // DEBUG monitoring
@@ -73,6 +76,19 @@ void setup() {
   // anchor starts by transmitting a POLL message
   receiver();
   transmitPoll();
+  noteActivity();
+}
+
+void noteActivity() {
+  // update activity timestamp, so that we do not reach "resetPeriod"
+  lastActivity = millis();
+}
+
+void resetInactive() {
+  // tag sends POLL and listens for POLL_ACK
+  expectedMsgId = POLL_ACK;
+  transmitPoll();
+  noteActivity();
 }
 
 void handleSent() {
@@ -118,6 +134,10 @@ void receiver() {
 
 void loop() {
   if(!sentAck && !receivedAck) {
+    // check if inactive
+    if(millis() - lastActivity > resetPeriod) {
+      resetInactive();
+    }
     return;
   }
   // continue on any success confirmation
@@ -129,7 +149,7 @@ void loop() {
       //Serial.print("Sent POLL @ "); Serial.println(timePollSent.getAsFloat());
     } else if(msgId == RANGE) {
       DW1000.getTransmitTimestamp(timeRangeSent);
-      //Serial.print("Sent RANGE @ "); Serial.println(timeRangeSent.getAsFloat());
+      noteActivity();
     }
   }
   if(receivedAck) {
@@ -140,7 +160,6 @@ void loop() {
     if(msgId != expectedMsgId) {
       // unexpected message, start over again
       Serial.print("Received wrong message # "); Serial.println(msgId);
-      delay(100);
       expectedMsgId = POLL_ACK;
       transmitPoll();
       return;
@@ -149,19 +168,18 @@ void loop() {
       DW1000.getReceiveTimestamp(timePollAckReceived);
       expectedMsgId = RANGE_REPORT;
       transmitRange();
-      //Serial.print("Received POLL ACK @ "); Serial.println(timePollAckReceived.getAsFloat());
+      noteActivity();
     } else if(msgId == RANGE_REPORT) {
       expectedMsgId = POLL_ACK;
       float curRange;
       memcpy(&curRange, data+1, 4);
-      //Serial.print("Received RANGE REPORT = "); Serial.println(curRange);
-      delay(100);
       transmitPoll();
+      noteActivity();
     } else if(msgId == RANGE_FAILED) {
       expectedMsgId = POLL_ACK;
       Serial.println("Received RANGE FAILED");
-      delay(100);
       transmitPoll();
+      noteActivity();
     }
   }
 }
