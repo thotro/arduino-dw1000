@@ -90,8 +90,6 @@ void DW1000Class::begin(int irq) {
 void DW1000Class::begin(int irq, int rst) {
 	// generous initial init/wake-up-idle delay
 	delay(5);
-	enableClock(AUTO_CLOCK);
-	delay(5);
 	// start SPI
  	SPI.begin(); 
 	SPI.usingInterrupt(irq);
@@ -107,6 +105,9 @@ void DW1000Class::begin(int irq, int rst) {
 	} else {
 		reset();
 	}
+	// try locking clock at PLL speed
+	enableClock(AUTO_CLOCK);
+	delay(5);
 	// default network and node id
 	writeValueToBytes(_networkAndAddress, 0xFF, LEN_PANADR);
 	writeNetworkIdAndDeviceAddress();
