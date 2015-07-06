@@ -57,7 +57,7 @@
 #define LEN_SYS_CFG 4
 #define FFEN_BIT 0
 #define DIS_DRXB_BIT 12
-#define DIS_STXP 18
+#define DIS_STXP_BIT 18
 #define HIRQ_POL_BIT 9
 #define RXAUTR_BIT 29
 #define PHR_MODE_SUB 16
@@ -78,6 +78,7 @@
 // system event status register
 #define SYS_STATUS 0x0F
 #define LEN_SYS_STATUS 5
+#define CPLOCK_BIT 1
 #define AAT_BIT 3
 #define TXFRB_BIT 4
 #define TXPRS_BIT 5
@@ -91,6 +92,8 @@
 #define RXRFSL_BIT 16
 #define RXRFTO_BIT 17
 #define LDEERR_BIT 18
+#define RFPLL_LL_BIT 24
+#define CLKPLL_LL_BIT 25
 
 // system event mask register
 // NOTE: uses the bit definitions of SYS_STATUS (below 32)
@@ -104,8 +107,18 @@
 // RX timestamp register
 #define RX_TIME 0x15
 #define LEN_RX_TIME 14
-#define RX_STAMP_SUB 0
+#define RX_STAMP_SUB 0x00
+#define FP_AMPL1_SUB 0x07
 #define LEN_RX_STAMP LEN_STAMP
+#define LEN_FP_AMPL1 2
+
+// RX frame quality
+#define RX_FQUAL 0x12
+#define LEN_RX_FQUAL 8
+#define FP_AMPL2_SUB 0x02
+#define FP_AMPL3_SUB 0x04
+#define LEN_FP_AMPL2 2
+#define LEN_FP_AMPL3 2
 
 // TX timestamp register
 #define TX_TIME 0x17
@@ -409,23 +422,31 @@ public:
 	static void getReceiveTimestamp(byte data[]);
 	static void getSystemTimestamp(byte data[]);
 
+	/* receive quality information. */
+	static float getReceivePower();
+	static float getFirstPathPower();
+	static float getNoiseValue();
+
 	/* interrupt management. */
 	static void interruptOnSent(boolean val);
 	static void interruptOnReceived(boolean val);
-	static void interruptOnReceiveError(boolean val);
+	static void interruptOnReceiveFailed(boolean val);
 	static void interruptOnReceiveTimeout(boolean val);
 	static void interruptOnReceiveTimestampAvailable(boolean val);
 	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
 
 	/* callback handler management. */
+	static void attachErrorHandler(void (*handleError)(void)) {
+		_handleError = handleError;
+	}
 	static void attachSentHandler(void (*handleSent)(void)) {
 		_handleSent = handleSent;
 	}
 	static void attachReceivedHandler(void (*handleReceived)(void)) {
 		_handleReceived = handleReceived;
 	}
-	static void attachReceiveErrorHandler(void (*handleReceiveError)(void)) {
-		_handleReceiveError = handleReceiveError;
+	static void attachReceiveFailedHandler(void (*handleReceiveFailed)(void)) {
+		_handleReceiveFailed = handleReceiveFailed;
 	}
 	static void attachReceiveTimeoutHandler(void (*handleReceiveTimeout)(void)) {
 		_handleReceiveTimeout = handleReceiveTimeout;
@@ -451,8 +472,7 @@ public:
 	static void newTransmit();
 	static void startTransmit();
 
-	/* chip tuning and operating mode selection. */
-	static void tune();
+	/* operating mode selection. */
 	static void enableMode(const byte mode[]);
 
 	// use RX/TX specific and general default settings
@@ -534,9 +554,10 @@ private:
 	static unsigned int _irq;
 
 	/* callbacks. */
+	static void (*_handleError)(void);
 	static void (*_handleSent)(void);
 	static void (*_handleReceived)(void);
-	static void (*_handleReceiveError)(void);
+	static void (*_handleReceiveFailed)(void);
 	static void (*_handleReceiveTimeout)(void);
 	static void (*_handleReceiveTimestampAvailable)(void);
 
@@ -581,12 +602,16 @@ private:
 	// TODO is implemented, but needs testing	
 	static void waitForResponse(boolean val);
 
+	/* tuning according to mode. */
+	static void tune();
+
 	/* device status flags */
 	static boolean isReceiveTimestampAvailable();
 	static boolean isTransmitDone();
 	static boolean isReceiveDone();
-	static boolean isReceiveError();
+	static boolean isReceiveFailed();
 	static boolean isReceiveTimeout();
+	static boolean isClockProblem();
 
 	/* interrupt state handling */
 	static void clearInterrupts();

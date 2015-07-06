@@ -49,7 +49,8 @@ void setup() {
   Serial.print("Device mode: "); Serial.println(msg);
   // attach callback for (successfully) received messages
   DW1000.attachReceivedHandler(handleReceived);
-  DW1000.attachReceiveErrorHandler(handleReceiveError);
+  DW1000.attachReceiveFailedHandler(handleError);
+  DW1000.attachErrorHandler(handleError);
   // start reception
   receiver();
 }
@@ -59,7 +60,7 @@ void handleReceived() {
   received = true;
 }
 
-void handleReceiveError() {
+void handleError() {
   error = true;
 }
 
@@ -74,12 +75,12 @@ void receiver() {
 void loop() {
     // enter on confirmation of ISR status change (successfully received)
     if(received) {
-      uint64_t a = 0;
       numReceived++;
       // get data as string
       DW1000.getData(message);
       Serial.print("Received message ... #"); Serial.println(numReceived);
       Serial.print("Data is ... "); Serial.println(message);
+      Serial.print("FP power is [dBm] ... "); Serial.println(DW1000.getFirstPathPower());
       received = false;
     }
     if(error) {

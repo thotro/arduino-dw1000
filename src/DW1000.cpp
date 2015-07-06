@@ -33,8 +33,9 @@ unsigned int DW1000Class::_rst;
 unsigned int DW1000Class::_irq;
 // IRQ callbacks
 void (*DW1000Class::_handleSent)(void) = 0;
+void (*DW1000Class::_handleError)(void) = 0;
 void (*DW1000Class::_handleReceived)(void) = 0;
-void (*DW1000Class::_handleReceiveError)(void) = 0;
+void (*DW1000Class::_handleReceiveFailed)(void) = 0;
 void (*DW1000Class::_handleReceiveTimeout)(void) = 0;
 void (*DW1000Class::_handleReceiveTimestampAvailable)(void) = 0;
 // registers
@@ -105,7 +106,8 @@ void DW1000Class::begin(int irq, int rst) {
 	} else {
 		reset();
 	}
-	// try locking clock at PLL speed
+	// try locking clock at PLL speed (should be done already, 
+	// but just to be sure)
 	enableClock(AUTO_CLOCK);
 	delay(5);
 	// default network and node id
@@ -537,6 +539,9 @@ void DW1000Class::tune() {
 void DW1000Class::handleInterrupt() {
 	// read current status and handle via callbacks
 	readSystemEventStatusRegister();
+	if(isClockProblem() /* TODO and others */ && _handleError != 0) {
+		(*_handleError)();
+	}
 	if(isTransmitDone() &&_handleSent != 0) {
 		(*_handleSent)();
 		clearTransmitStatus();
@@ -545,8 +550,8 @@ void DW1000Class::handleInterrupt() {
 		(*_handleReceiveTimestampAvailable)();
 		clearReceiveTimestampAvailableStatus();
 	}
-	if(isReceiveError() && _handleReceiveError != 0) {
-		(*_handleReceiveError)();
+	if(isReceiveFailed() && _handleReceiveFailed != 0) {
+		(*_handleReceiveFailed)();
 		clearReceiveStatus();
 		if(_permanentReceive) {
 			newReceive();
@@ -569,7 +574,6 @@ void DW1000Class::handleInterrupt() {
 	}
 	// clear all status that is left
 	clearAllStatus();
-	// TODO impl other callbacks
 }
 
 /* ###########################################################################
@@ -724,7 +728,7 @@ void DW1000Class::interruptOnReceived(boolean val) {
 	setBit(_sysmask, LEN_SYS_MASK, RXFCG_BIT, val);
 }
 
-void DW1000Class::interruptOnReceiveError(boolean val) {
+void DW1000Class::interruptOnReceiveFailed(boolean val) {
 	setBit(_sysmask, LEN_SYS_STATUS, LDEERR_BIT, val);
 	setBit(_sysmask, LEN_SYS_STATUS, RXFCE_BIT, val);
 	setBit(_sysmask, LEN_SYS_STATUS, RXPHE_BIT, val);
@@ -798,29 +802,29 @@ void DW1000Class::newConfiguration() {
 }
 
 void DW1000Class::commitConfiguration() {
-	enableClock(XTI_CLOCK);
-	delay(5);
-	// TODO make configurable (if false disable LDE use)
-	// load LDE micro-code
-	loadLDE();
-	delay(5);
-	enableClock(AUTO_CLOCK);
-	delay(5);
-	// TODO clean up code + antenna delay/calibration API
-	// TODO setter + check not larger two bytes integer
-	byte antennaDelayBytes[LEN_STAMP];
-	writeValueToBytes(antennaDelayBytes, 16300, LEN_STAMP); // 16384
-	_antennaDelay.setTimestamp(antennaDelayBytes);
-	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
-    	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD); 
-	// tune according to configuration
-	tune();
 	// write all configurations back to device
 	writeNetworkIdAndDeviceAddress();
 	writeSystemConfigurationRegister();
 	writeChannelControlRegister();
 	writeTransmitFrameControlRegister();
 	writeSystemEventMaskRegister();
+	// tune according to configuration
+	tune();
+	// TODO clean up code + antenna delay/calibration API
+	// TODO setter + check not larger two bytes integer
+	byte antennaDelayBytes[LEN_STAMP];
+	writeValueToBytes(antennaDelayBytes, 16384, LEN_STAMP);
+	_antennaDelay.setTimestamp(antennaDelayBytes);
+	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
+    	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD); 
+	// TODO make configurable (if false disable LDE use)
+	enableClock(XTI_CLOCK);
+	delay(5);
+	// load LDE micro-code
+	loadLDE();
+	delay(5);
+	enableClock(AUTO_CLOCK);
+	delay(5);
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -863,9 +867,9 @@ void DW1000Class::setDataRate(byte rate) {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, false);
 	}
 	if(rate == TRX_RATE_6800KBPS) {
-		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP, false);
+		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP_BIT, false);
 	} else {
-		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP, true);
+		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP_BIT, true);
 	}
 	_dataRate = rate;
 }
@@ -934,7 +938,8 @@ void DW1000Class::setDefaults() {
 		setFrameFilter(false);
 		interruptOnSent(true);
 		interruptOnReceived(true);
-		interruptOnReceiveError(true);
+		interruptOnReceiveFailed(true);
+		interruptOnReceiveTimestampAvailable(false);
 		interruptOnAutomaticAcknowledgeTrigger(true);
 		setReceiverAutoReenable(true);
 		// default mode when powering up the chip
@@ -1055,7 +1060,7 @@ boolean DW1000Class::isReceiveDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT);
 }
 
-boolean DW1000Class::isReceiveError() {
+boolean DW1000Class::isReceiveFailed() {
 	boolean ldeErr, rxCRCErr, rxHeaderErr, rxDecodeErr;
 	ldeErr = getBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT);
 	rxCRCErr = getBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT);
@@ -1069,6 +1074,16 @@ boolean DW1000Class::isReceiveError() {
 
 boolean DW1000Class::isReceiveTimeout() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT);
+}
+
+boolean DW1000Class::isClockProblem() {
+	boolean clkllErr, rfllErr;
+	clkllErr = getBit(_sysstatus, LEN_SYS_STATUS, CLKPLL_LL_BIT);
+	rfllErr = getBit(_sysstatus, LEN_SYS_STATUS, RFPLL_LL_BIT);
+	if(clkllErr || rfllErr) {
+		return true;
+	}
+	return false;
 }
 
 void DW1000Class::clearAllStatus() {
@@ -1100,6 +1115,39 @@ void DW1000Class::clearTransmitStatus() {
 	setBit(_sysstatus, LEN_SYS_STATUS, TXPHS_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, TXFRS_BIT, true);
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
+}
+
+float DW1000Class::getReceivePower() {
+	// TODO
+	return -1;
+}
+
+float DW1000Class::getNoiseValue() {
+	// TODO
+	return -1;
+}
+
+float DW1000Class::getFirstPathPower() {
+	byte fpAmpl1Bytes[LEN_FP_AMPL1];
+	byte fpAmpl2Bytes[LEN_FP_AMPL2];
+	byte fpAmpl3Bytes[LEN_FP_AMPL3];
+	byte rxFrameInfo[LEN_RX_FINFO];
+	unsigned int f1, f2, f3, N;
+	float A;
+	readBytes(RX_TIME, FP_AMPL1_SUB, fpAmpl1Bytes, LEN_FP_AMPL1);
+	readBytes(RX_FQUAL, FP_AMPL2_SUB, fpAmpl2Bytes, LEN_FP_AMPL2);
+	readBytes(RX_FQUAL, FP_AMPL3_SUB, fpAmpl3Bytes, LEN_FP_AMPL3);
+	readBytes(RX_FINFO, NO_SUB, rxFrameInfo, LEN_RX_FINFO);
+	f1 = (unsigned int)fpAmpl1Bytes[0] | ((unsigned int)fpAmpl1Bytes[1] << 8);
+	f2 = (unsigned int)fpAmpl2Bytes[0] | ((unsigned int)fpAmpl2Bytes[1] << 8);
+	f3 = (unsigned int)fpAmpl3Bytes[0] | ((unsigned int)fpAmpl3Bytes[1] << 8);
+	N = (((unsigned int)rxFrameInfo[2] >> 4) & 0xFF) | ((unsigned int)rxFrameInfo[3] << 4);
+	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+		A = 115.72;
+	} else {
+		A = 121.74;
+	}
+	return 10.0 * log10(((float)f1 * (float)f1 + (float)f2 * (float)f2 + (float)f3 * (float)f3) / ((float)N * (float)N)) - A;
 }
 
 /* ###########################################################################

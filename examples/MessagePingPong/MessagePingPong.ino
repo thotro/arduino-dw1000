@@ -55,12 +55,12 @@ void setup() {
   Serial.print("Unique ID: "); Serial.println(msgInfo);
   DW1000.getPrintableNetworkIdAndShortAddress(msgInfo);
   Serial.print("Network ID & Device Address: "); Serial.println(msgInfo);
-  DW1000.getPrintableDeviceMode(msg);
+  DW1000.getPrintableDeviceMode(msgInfo);
   Serial.print("Device mode: "); Serial.println(msg);
   // attach callback for (successfully) sent and received messages
   DW1000.attachSentHandler(handleSent);
   DW1000.attachReceivedHandler(handleReceived);
-  DW1000.attachReceiveErrorHandler(handleReceiveError);
+  DW1000.attachReceiveFailedHandler(handleReceiveFailed);
   // sender starts by sending a PING message, receiver starts listening
   if(trxToggle == SENDER) {
     msg = "Ping ...";
@@ -82,7 +82,7 @@ void handleReceived() {
   trxAck = true;
 }
 
-void handleReceiveError() {
+void handleReceiveFailed() {
   // error flag
   rxError = true;
 }

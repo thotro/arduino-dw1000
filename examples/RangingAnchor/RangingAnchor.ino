@@ -50,6 +50,9 @@ int RST = 9;
 // watchdog and reset period
 unsigned long lastActivity;
 unsigned long resetPeriod = 250;
+// average range and range count
+DW1000Time timeRangeMean10;
+unsigned long rangeCount = 0;
 
 void setup() {
   // DEBUG monitoring
@@ -110,6 +113,9 @@ void transmitPollAck() {
   DW1000.newTransmit();
   DW1000.setDefaults();
   data[0] = POLL_ACK;
+  // delay the same amount as ranging tag
+  DW1000Time deltaTime = DW1000Time(10, DW1000Time::MILLISECONDS);
+  DW1000.setDelay(deltaTime);
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
 }
@@ -195,6 +201,14 @@ void loop() {
         // (re-)compute range as two-way ranging is done
         computeRange();
         transmitRangeReport(timeComputedRange.getAsFloat());
+        /*rangeCount++;
+        timeRangeMean10 += timeComputedRange;
+        if(rangeCount % 10 == 0) {
+          timeRangeMean10 /= rangeCount;
+          rangeCount = 0;
+          Serial.print("Range (10-mean) is [m] "); Serial.println(timeRangeMean10.getAsMeters());
+          timeRangeMean10 = DW1000Time();
+        }*/
         Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
       } else {
         transmitRangeFailed();

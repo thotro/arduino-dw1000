@@ -43,6 +43,8 @@ void loop() {
     Serial.print("Unique ID: "); Serial.println(msg);
     DW1000.getPrintableNetworkIdAndShortAddress(msg);
     Serial.print("Network ID & Device Address: "); Serial.println(msg);
+    DW1000.getPrintableDeviceMode(msg); 
+    Serial.print("Device mode: "); Serial.println(msg);
     // wait a bit
     delay(10000);
 }
