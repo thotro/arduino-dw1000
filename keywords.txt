@@ -1,0 +1,32 @@
+#######################################
+# Syntax Coloring Map For DW1000
+#######################################
+
+#######################################
+# Library (KEYWORD1)
+#######################################
+
+DW1000			KEYWORD1
+DW1000Time		KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin			KEYWORD2
+end			KEYWORD2
+select			KEYWORD2
+newConfiguration	KEYWORD2
+commitConfiguration	KEYWORD2
+newTransmit		KEYWORD2
+startTransmit		KEYWORD2
+newReceive		KEYWORD2
+startReceive		KEYWORD2
+setDefaults		KEYWORD2
+# TODO ...
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+# TODO ...

@@ -1,17 +1,25 @@
 # arduino-dw1000
-A library that offers functionality to use Decawave's DW1000 chips/modules with Arduino/AVR
+A library that offers functionality to use Decawave's DW1000 chips/modules with Arduino
 (see http://www.decawave.com/products/dwm1000-module).
 
 Project state
 -------------
 
-**Progress:** 80% (of a first fully configurable, tested and stable release)
+**Progress:** 85% (of a first fully configurable, tested and stable release)
 
 **Current milestone:** Tuning and testing (sender/receiver, ping-pong and two-way ranging)
 
 **Subsequent milestone:** Frame filtering rules, nodes addressing and MAC data format
 
 **General notice:** Stable transmission of messages between two modules is possible. The code for device tuning is working as well, hence different modes of operation can be chosen. As frame filtering (i.e. via MAC conforming messages) is not implemented yet, internal features of the chip for node addressing and auto-acknowledgement of messages can not be used. This is part of a future milestone. For now, if acknowledgements are required, they have to be sent manually and node addresses have to be encoded in the message payload and processed by the host controller.
+
+Installation
+------------
+
+ 1. Get a ZIP file of the master branch or the latest release and save somewhere on your machine.
+ 2. Open your Arduino IDE and goto _Sketch_ / _Include Library_ / _Add .ZIP Library..._
+ 3. Select the downloaded ZIP file of the DW1000 library
+ 4. You should now see the library in the list and have access to the examples in the dedicated section of the IDE
 
 Contents
 --------
@@ -27,14 +35,12 @@ Contents
 Usage
 -----
 
-General usage of the DW1000 library is depicted below. Please see the Arduino test example codes for more up-to-date and operational reference usage. 
+General usage of the DW1000 library is depicted below. Please see the Arduino test example codes (described in the [project structure](../../wiki/Project-structure)) for more up-to-date and operational reference usage. 
 
 At the moment the library contains two types:
  * **DW1000:** The statically accessible entity to work with your modules. Offers a variety of configuration options and manages module states and actions. 
  
- * **DW1000Time:** Container entities that handle DW1000 specific timing values. These are required to allow accurate timestamps and time based computations; they aid in avoiding potential precision and capacity problems of standard number formats in Arduino and basically are wrapper objects for 64-bit unsigned integer data types; most importantly they take care of all bit-to-time-and-distance (and vice versa) conversions.
-
-API docs for the library will shortly follow. 
+ * **DW1000Time:** Container entities that handle DW1000 specific timing values. These are required to allow accurate timestamps and time based computations; they aid in avoiding potential precision and capacity problems of standard number formats in Arduino and basically are wrapper objects for 64-bit signed integer data types; most importantly they take care of all bit-to-time-and-distance (and vice versa) conversions.
 
 ```Arduino
 #include <DW1000.h>
