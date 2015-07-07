@@ -5,9 +5,9 @@ A library that offers functionality to use Decawave's DW1000 chips/modules with 
 Project state
 -------------
 
-**Progress:** 85% (of a first fully configurable, tested and stable release)
+**Progress:** 85% (requires some minor optimizations and a lot more testing towards a v1.0 release)
 
-**Current milestone:** Tuning and testing (sender/receiver, ping-pong and two-way ranging)
+**Current milestone:** Tuning, automatic timestamp correction and testing (sender/receiver, two-way ranging)
 
 **Subsequent milestone:** Frame filtering rules, nodes addressing and MAC data format
 
@@ -21,6 +21,8 @@ Installation
  3. Select the downloaded ZIP file of the DW1000 library
  4. You should now see the library in the list and have access to the examples in the dedicated section of the IDE
 
+Note that in version 1.6.6 of your Arduino IDE you can get the library via the Arduino library manager.
+
 Contents
 --------
 
@@ -29,8 +31,8 @@ Contents
  * [Testbed and Adapter board](../../wiki/Testbed-and-Adapter-board)
  * [Benchmarks](../../wiki/Benchmarks)
  * API docs
-   * [HTML](https://cdn.rawgit.com/thotro/arduino-dw1000/master/DW1000/doc/html/index.html)
-   * [PDF](https://cdn.rawgit.com/thotro/arduino-dw1000/master/DW1000/doc/DW1000_Arduino_API_doc.pdf)
+   * [HTML](https://cdn.rawgit.com/thotro/arduino-dw1000/master/extras/doc/html/index.html)
+   * [PDF](https://cdn.rawgit.com/thotro/arduino-dw1000/master/extras/doc/DW1000_Arduino_API_doc.pdf)
 
 Usage
 -----
@@ -56,7 +58,7 @@ DW1000.newConfiguration();
 DW1000.setDefaults();
 DW1000.setDeviceAddress(5);
 DW1000.setNetworkId(10);
-// modes that define data rate, frequency, etc.
+// modes that define data rate, frequency, etc. (see API docs)
 DW1000.enableMode(..);
 // ... and other stuff - finally upload to the module.
 DW1000.commitConfiguration();
