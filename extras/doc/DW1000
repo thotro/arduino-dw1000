@@ -97,7 +97,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = ../
+INPUT                  = ../../src
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.h *.cpp
 RECURSIVE              = NO

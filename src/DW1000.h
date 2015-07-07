@@ -151,6 +151,7 @@
 // channel control
 #define CHAN_CTRL 0x1F
 #define LEN_CHAN_CTRL 4
+#define DWSFD_BIT 17
 
 // OTP control (for LDE micro code loading only)
 #define OTP_IF 0x2D
@@ -472,7 +473,28 @@ public:
 	static void newTransmit();
 	static void startTransmit();
 
-	/* operating mode selection. */
+	/* ##### Operation mode selection ############################################ */
+	/** 
+	Specifies the mode of operation for the DW1000. Modes of operation are pre-defined
+	combinations of data rate, pulse repetition frequency, preamble and channel settings
+	that properly go together. If you simply want the chips to work, choosing a mode is 
+	preferred over manual configuration.
+
+	The following modes are pre-configured and one of them needs to be chosen:
+	- `MODE_LONGDATA_RANGE_LOWPOWER` (basically this is 110 kb/s data rate, 16 MHz PRF and long preambles)
+	- `MODE_SHORTDATA_FAST_LOWPOWER` (basically this is 6.8 Mb/s data rate, 16 MHz PRF and short preambles)
+	- `MODE_LONGDATA_FAST_LOWPOWER` (basically this is 6.8 Mb/s data rate, 16 MHz PRF and long preambles)
+	- `MODE_SHORTDATA_FAST_ACCURACY` (basically this is 6.8 Mb/s data rate, 64 MHz PRF and short preambles)
+	- `MODE_LONGDATA_FAST_ACCURACY` (basically this is 6.8 Mb/s data rate, 64 MHz PRF and long preambles)
+	- `MODE_LONGDATA_RANGE_ACCURACY` (basically this is 110 kb/s data rate, 64 MHz PRF and long preambles)
+
+	Note that LOWPOWER and ACCURACY refers to the better power efficiency and improved transmission performance
+	of 16 MHZ and 64 MHZ PRF respectively (see `setPulseFrequency()`).
+
+	The default setting that is selected by `setDefaults()` is MODE_LONGDATA_RANGE_LOWPOWER.
+
+	@param[in] mode The mode of operation, encoded by the above defined constants.
+	*/
 	static void enableMode(const byte mode[]);
 
 	// use RX/TX specific and general default settings

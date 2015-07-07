@@ -863,13 +863,19 @@ void DW1000Class::setDataRate(byte rate) {
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
 	if(rate == TRX_RATE_110KBPS) {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, true);
+		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
 	} else {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, false);
 	}
 	if(rate == TRX_RATE_6800KBPS) {
 		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP_BIT, false);
+		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, false);
 	} else {
 		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP_BIT, true);
+	}
+	if(rate == TRX_RATE_850KBPS) {
+		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
+		// TODO set length to 8 or 16 in USR_SFD (0x21)
 	}
 	_dataRate = rate;
 }
@@ -922,8 +928,10 @@ void DW1000Class::setChannel(byte channel) {
 
 void DW1000Class::setPreambleCode(byte preacode) {
 	preacode &= 0x1F;
-	byte rxtxpcode2 = (((preacode << 3) | (preacode >> 2)) & 0xFF);
-	byte rxtxpcode1 = _chanctrl[2] | ((preacode << 6) & 0xFF);
+	_chanctrl[2] &= 0x3F;
+	_chanctrl[2] |= ((preacode << 6) & 0xFF);
+	_chanctrl[3] = 0x00;
+	_chanctrl[3] = ((((preacode >> 2) & 0x07) | (preacode << 3)) & 0xFF);
 	_preambleCode = preacode;
 }
 

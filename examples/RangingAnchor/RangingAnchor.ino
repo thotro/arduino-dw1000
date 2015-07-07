@@ -201,15 +201,15 @@ void loop() {
         // (re-)compute range as two-way ranging is done
         computeRange();
         transmitRangeReport(timeComputedRange.getAsFloat());
-        /*rangeCount++;
+        rangeCount++;
         timeRangeMean10 += timeComputedRange;
         if(rangeCount % 10 == 0) {
           timeRangeMean10 /= rangeCount;
           rangeCount = 0;
           Serial.print("Range (10-mean) is [m] "); Serial.println(timeRangeMean10.getAsMeters());
           timeRangeMean10 = DW1000Time();
-        }*/
-        Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
+        }
+        //Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
       } else {
         transmitRangeFailed();
       }

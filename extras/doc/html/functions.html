@@ -110,11 +110,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="textblock">Here is a list of all struct and union fields with links to the structures/unions they belong to:</div>
 
 <h3><a class="anchor" id="index_a"></a>- a -</h3><ul>
+<li>attachErrorHandler()
+: <a class="el" href="classDW1000Class.html#ab2bdeb8c3e665686511d20b3e98447ef">DW1000Class</a>
+</li>
 <li>attachReceivedHandler()
 : <a class="el" href="classDW1000Class.html#a114f68401a4e8832898817edc6a3c4d6">DW1000Class</a>
 </li>
-<li>attachReceiveErrorHandler()
-: <a class="el" href="classDW1000Class.html#ab4614902e22413a71d9c583fbb850d6f">DW1000Class</a>
+<li>attachReceiveFailedHandler()
+: <a class="el" href="classDW1000Class.html#a3917b58d7b8b16a3d6209c6243748911">DW1000Class</a>
 </li>
 <li>attachReceiveTimeoutHandler()
 : <a class="el" href="classDW1000Class.html#a7482aeede5b47b6e100c491e9356b2d4">DW1000Class</a>
@@ -203,6 +206,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>getDataLength()
 : <a class="el" href="classDW1000Class.html#a5813f32602209777a286436f2c0c639f">DW1000Class</a>
 </li>
+<li>getFirstPathPower()
+: <a class="el" href="classDW1000Class.html#a032e2ba1683e540bba8644583ccf7186">DW1000Class</a>
+</li>
+<li>getNoiseValue()
+: <a class="el" href="classDW1000Class.html#ac6919589c671213657da20a0eca6745e">DW1000Class</a>
+</li>
 <li>getPrettyBytes()
 : <a class="el" href="classDW1000Class.html#a001b5f2b11ef9540a162095232323a6d">DW1000Class</a>
 </li>
@@ -217,6 +226,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </li>
 <li>getPrintableNetworkIdAndShortAddress()
 : <a class="el" href="classDW1000Class.html#a960722efa3e20f61baeaf5ebee439282">DW1000Class</a>
+</li>
+<li>getReceivePower()
+: <a class="el" href="classDW1000Class.html#a0c0119a9b51ae925b68bc3c7d2168b4b">DW1000Class</a>
 </li>
 <li>getReceiveTimestamp()
 : <a class="el" href="classDW1000Class.html#ad0031f6b7304cbdc2c982220aed37c87">DW1000Class</a>
@@ -243,8 +255,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>interruptOnReceived()
 : <a class="el" href="classDW1000Class.html#acc5fc4e41a2ab337a70e95dbc215aebe">DW1000Class</a>
 </li>
-<li>interruptOnReceiveError()
-: <a class="el" href="classDW1000Class.html#af4192a90f76e090c51ee7ce557c9793a">DW1000Class</a>
+<li>interruptOnReceiveFailed()
+: <a class="el" href="classDW1000Class.html#a472093d784aa8416285ee765688ab773">DW1000Class</a>
 </li>
 <li>interruptOnReceiveTimeout()
 : <a class="el" href="classDW1000Class.html#aad08e4166cc8e2b2c5db8bd4bf6a4a99">DW1000Class</a>
@@ -490,9 +502,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>TRX_RATE_850KBPS
 : <a class="el" href="classDW1000Class.html#ade01ba9bcfa79589cb28229a799d95f7">DW1000Class</a>
 </li>
-<li>tune()
-: <a class="el" href="classDW1000Class.html#a1e996f1921f45efddef0c343e3a29b44">DW1000Class</a>
-</li>
 <li>TX_PREAMBLE_LEN_1024
 : <a class="el" href="classDW1000Class.html#a617725eda603a4a78e0aa06e22371807">DW1000Class</a>
 </li>
@@ -534,7 +543,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jul 5 2015 01:18:38 for Arduino driver library for Decawave DW1000 by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jul 8 2015 00:31:32 for Arduino driver library for Decawave DW1000 by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

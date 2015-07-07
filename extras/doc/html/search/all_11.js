@@ -8,7 +8,6 @@ var searchData=
   ['trx_5frate_5f6800kbps',['TRX_RATE_6800KBPS',['../classDW1000Class.html#a38d09396c64441fd399a91cf21c8bb48',1,'DW1000Class']]],
   ['trx_5frate_5f850kbps',['TRX_RATE_850KBPS',['../classDW1000Class.html#ade01ba9bcfa79589cb28229a799d95f7',1,'DW1000Class']]],
   ['trxoff_5fbit',['TRXOFF_BIT',['../DW1000_8h.html#ab813a8d02417b1aa19d3878e874a064b',1,'DW1000.h']]],
-  ['tune',['tune',['../classDW1000Class.html#a1e996f1921f45efddef0c343e3a29b44',1,'DW1000Class']]],
   ['tx_5fantd',['TX_ANTD',['../DW1000_8h.html#abe6a92e5e39bf700f2aebcd5adf5734a',1,'DW1000.h']]],
   ['tx_5fbuffer',['TX_BUFFER',['../DW1000_8h.html#afad9eb9956344c1b74f9cdd8b157c60d',1,'DW1000.h']]],
   ['tx_5fcal',['TX_CAL',['../DW1000_8h.html#acc6f1daaedefc39fec2946b095e45d5f',1,'DW1000.h']]],
