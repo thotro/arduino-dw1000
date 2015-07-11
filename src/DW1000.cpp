@@ -79,6 +79,38 @@ void DW1000Class::end() {
 }
 
 void DW1000Class::select(int ss) {
+	reselect(ss);
+	// try locking clock at PLL speed (should be done already, 
+	// but just to be sure)
+	enableClock(AUTO_CLOCK);
+	delay(5);
+	// reset chip (either soft or hard)
+	if(_rst > 0) {
+		pinMode(_rst, OUTPUT);
+		digitalWrite(_rst, HIGH);
+	}
+	reset();
+	// default network and node id
+	writeValueToBytes(_networkAndAddress, 0xFF, LEN_PANADR);
+	writeNetworkIdAndDeviceAddress();
+	// default system configuration
+	memset(_syscfg, 0, LEN_SYS_CFG);
+	setDoubleBuffering(false);
+	setInterruptPolarity(true);
+	writeSystemConfigurationRegister();
+	// default interrupt mask, i.e. no interrupts
+	clearInterrupts();
+	writeSystemEventMaskRegister();
+	// load LDE micro-code
+	enableClock(XTI_CLOCK);
+	delay(5);
+	loadLDE();
+	delay(5);
+	enableClock(AUTO_CLOCK);
+	delay(5);
+}
+
+void DW1000Class::reselect(int ss) {
 	_ss = ss;
 	pinMode(_ss, OUTPUT);
 	digitalWrite(_ss, HIGH);
@@ -98,29 +130,6 @@ void DW1000Class::begin(int irq, int rst) {
 	_rst = rst;
 	_irq = irq;
 	_deviceMode = IDLE_MODE;
-	pinMode(_rst, OUTPUT);
-	digitalWrite(_rst, HIGH);
-	// reset chip (either soft or hard)
-	if(_rst <= 0) {
-		softReset();
-	} else {
-		reset();
-	}
-	// try locking clock at PLL speed (should be done already, 
-	// but just to be sure)
-	enableClock(AUTO_CLOCK);
-	delay(5);
-	// default network and node id
-	writeValueToBytes(_networkAndAddress, 0xFF, LEN_PANADR);
-	writeNetworkIdAndDeviceAddress();
-	// default system configuration
-	memset(_syscfg, 0, LEN_SYS_CFG);
-	setDoubleBuffering(false);
-	setInterruptPolarity(true);
-	writeSystemConfigurationRegister();
-	// default interrupt mask, i.e. no interrupts
-	clearInterrupts();
-	writeSystemEventMaskRegister();
 	// attach interrupt
 	attachInterrupt(_irq, DW1000Class::handleInterrupt, RISING);
 }
@@ -133,6 +142,7 @@ void DW1000Class::loadLDE() {
 		// TODO tuning available, copy over to RAM: use OTP_LDO bit
 	}
 	// tell the chip to load the LDE microcode
+	// TODO remove clock-related code (PMSC_CTRL) as handled separately
 	byte pmscctrl0[LEN_PMSC_CTRL0];
 	byte otpctrl[LEN_OTP_CTRL];
 	memset(pmscctrl0, 0, LEN_PMSC_CTRL0);
@@ -817,14 +827,6 @@ void DW1000Class::commitConfiguration() {
 	_antennaDelay.setTimestamp(antennaDelayBytes);
 	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
     	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD); 
-	// TODO make configurable (if false disable LDE use)
-	enableClock(XTI_CLOCK);
-	delay(5);
-	// load LDE micro-code
-	loadLDE();
-	delay(5);
-	enableClock(AUTO_CLOCK);
-	delay(5);
 }
 
 void DW1000Class::waitForResponse(boolean val) {
@@ -863,7 +865,8 @@ void DW1000Class::setDataRate(byte rate) {
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
 	if(rate == TRX_RATE_110KBPS) {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, true);
-		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
+		// TODO first set TN/RNSSFD zero then set SFD length in USR_SDF then use
+		//setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
 	} else {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, false);
 	}
@@ -871,10 +874,11 @@ void DW1000Class::setDataRate(byte rate) {
 		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP_BIT, false);
 		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, false);
 	} else {
-		setBit(_syscfg, LEN_SYS_CFG, DIS_STXP_BIT, true);
+		// TODO for each channel reserve TX_POWER reference values (Table 19/20) then disable
+		// setBit(_syscfg, LEN_SYS_CFG, DIS_STXP_BIT, true);
 	}
 	if(rate == TRX_RATE_850KBPS) {
-		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
+		//setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
 		// TODO set length to 8 or 16 in USR_SFD (0x21)
 	}
 	_dataRate = rate;
@@ -907,8 +911,8 @@ void DW1000Class::setPreambleLength(byte prealen) {
 
 void DW1000Class::useExtendedFrameLength(boolean val) {
 	_extendedFrameLength = (val ? FRAME_LENGTH_EXTENDED : FRAME_LENGTH_NORMAL);
-	_syscfg[3] &= 0xFC;
-	_syscfg[3] |= _extendedFrameLength;
+	_syscfg[2] &= 0xFC;
+	_syscfg[2] |= _extendedFrameLength;
 }
 
 void DW1000Class::receivePermanently(boolean val) {

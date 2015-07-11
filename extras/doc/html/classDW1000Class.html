@@ -98,6 +98,8 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:a446578c8f0b3d54f7db2365c72d4b8c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd4d6c55e6006a06f22dfb56f0bfcec7"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDW1000Class.html#afd4d6c55e6006a06f22dfb56f0bfcec7">select</a> (int ss)</td></tr>
 <tr class="separator:afd4d6c55e6006a06f22dfb56f0bfcec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a519ecc544375547dd564fef04b630156"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDW1000Class.html#a519ecc544375547dd564fef04b630156">reselect</a> (int ss)</td></tr>
+<tr class="separator:a519ecc544375547dd564fef04b630156"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59588135a77c75863aeb96a9035c7618"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDW1000Class.html#a59588135a77c75863aeb96a9035c7618">end</a> ()</td></tr>
 <tr class="separator:a59588135a77c75863aeb96a9035c7618"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99f7a8f0fc4b4b20e96c2204518038a3"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDW1000Class.html#a99f7a8f0fc4b4b20e96c2204518038a3">reset</a> ()</td></tr>
@@ -1379,6 +1381,37 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a519ecc544375547dd564fef04b630156"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void DW1000Class::reselect </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ss</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>(Re-)selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use this call is not needed; only a call to <code><a class="el" href="classDW1000Class.html#afd4d6c55e6006a06f22dfb56f0bfcec7">select()</a></code> has to be performed once at start up. Other than a call to <code><a class="el" href="classDW1000Class.html#afd4d6c55e6006a06f22dfb56f0bfcec7">select()</a></code> this function does not perform an initial setup of the (again-)selected chips and assumes it to have a valid configuration loaded.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ss</td><td>The chip select line/pin that connects the to-be-selected chip with the Arduino. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a99f7a8f0fc4b4b20e96c2204518038a3"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1424,7 +1457,7 @@ Static Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use this call only needs to be done once at start up, but is still mandatory.</p>
+<p>Selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use this call only needs to be done once at start up, but is still mandatory. Other than a call to <code><a class="el" href="classDW1000Class.html#a519ecc544375547dd564fef04b630156">reselect()</a></code> this function performs an initial setup of the now-selected chip.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ss</td><td>The chip select line/pin that connects the to-be-selected chip with the Arduino. </td></tr>
@@ -2861,7 +2894,7 @@ Static Public Attributes</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 8 2015 00:31:32 for Arduino driver library for Decawave DW1000 by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 12 2015 00:36:00 for Arduino driver library for Decawave DW1000 by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

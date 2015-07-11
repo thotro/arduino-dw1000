@@ -262,12 +262,24 @@ public:
 
 	/** 
 	Selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use
-	this call only needs to be done once at start up, but is still mandatory.
+	this call only needs to be done once at start up, but is still mandatory. Other than a call
+	to `reselect()` this function performs an initial setup of the now-selected chip.
 
 	@param[in] ss The chip select line/pin that connects the to-be-selected chip with the
 	Arduino.
 	*/
 	static void select(int ss);
+
+	/** 
+	(Re-)selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use
+	this call is not needed; only a call to `select()` has to be performed once at start up. Other 
+	than a call to `select()` this function does not perform an initial setup of the (again-)selected 
+	chips and assumes it to have a valid configuration loaded.
+
+	@param[in] ss The chip select line/pin that connects the to-be-selected chip with the
+	Arduino.
+	*/
+	static void reselect(int ss);
 
 	/** 
 	Tells the driver library that no communication to a DW1000 will be required anymore.

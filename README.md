@@ -7,7 +7,7 @@ Project state
 
 **Progress:** 85% (requires some minor optimizations and a lot more testing towards a v1.0 release)
 
-**Current milestone:** Tuning, automatic timestamp correction and testing (sender/receiver, two-way ranging)
+**Current milestone:** Tuning, automatic timestamp correction (temperature, RX power levels, etc.) and testing (sender/receiver, two-way ranging)
 
 **Subsequent milestone:** Frame filtering rules, nodes addressing and MAC data format
 
@@ -59,7 +59,7 @@ DW1000.setDefaults();
 DW1000.setDeviceAddress(5);
 DW1000.setNetworkId(10);
 // modes that define data rate, frequency, etc. (see API docs)
-DW1000.enableMode(..);
+DW1000.enableMode(DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
 // ... and other stuff - finally upload to the module.
 DW1000.commitConfiguration();
 ...

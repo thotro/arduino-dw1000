@@ -1,6 +1,7 @@
 var searchData=
 [
   ['receivepermanently',['receivePermanently',['../classDW1000Class.html#a0d7b4fe610e946633d0bf7c1e4f1e27e',1,'DW1000Class']]],
+  ['reselect',['reselect',['../classDW1000Class.html#a519ecc544375547dd564fef04b630156',1,'DW1000Class']]],
   ['reset',['reset',['../classDW1000Class.html#a99f7a8f0fc4b4b20e96c2204518038a3',1,'DW1000Class']]],
   ['rf_5fconf',['RF_CONF',['../DW1000_8h.html#ab4a80b463ca686bdd88d33f130366a9a',1,'DW1000.h']]],
   ['rf_5frxctrlh_5fsub',['RF_RXCTRLH_SUB',['../DW1000_8h.html#a8b0a7cffcc2c42fe4702858849a2d0f5',1,'DW1000.h']]],

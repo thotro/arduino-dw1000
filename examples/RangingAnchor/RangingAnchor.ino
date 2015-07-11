@@ -50,9 +50,6 @@ int RST = 9;
 // watchdog and reset period
 unsigned long lastActivity;
 unsigned long resetPeriod = 250;
-// average range and range count
-DW1000Time timeRangeMean10;
-unsigned long rangeCount = 0;
 
 void setup() {
   // DEBUG monitoring
@@ -67,6 +64,7 @@ void setup() {
   DW1000.setDefaults();
   DW1000.setDeviceAddress(1);
   DW1000.setNetworkId(10);
+  DW1000.enableMode(DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
   DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
@@ -201,15 +199,7 @@ void loop() {
         // (re-)compute range as two-way ranging is done
         computeRange();
         transmitRangeReport(timeComputedRange.getAsFloat());
-        rangeCount++;
-        timeRangeMean10 += timeComputedRange;
-        if(rangeCount % 10 == 0) {
-          timeRangeMean10 /= rangeCount;
-          rangeCount = 0;
-          Serial.print("Range (10-mean) is [m] "); Serial.println(timeRangeMean10.getAsMeters());
-          timeRangeMean10 = DW1000Time();
-        }
-        //Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
+        Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
       } else {
         transmitRangeFailed();
       }
