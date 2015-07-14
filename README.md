@@ -51,6 +51,7 @@ At the moment the library contains two types:
 DW1000.begin(irq_pin[, rst_pin]);
 // select a specific chip via a chip select line
 DW1000.select(cs_pin);
+// or use DW1000.reselect(cs_pin) to switch to previously selected chip
 ...
 // open a device configuration sessions
 DW1000.newConfiguration();

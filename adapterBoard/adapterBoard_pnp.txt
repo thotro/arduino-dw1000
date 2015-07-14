@@ -1,0 +1,44 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=adapterBoard
+*Date=23:02:27
+*CreatedBy=Fritzing 0.9.1b.11.19.8d2d5970658f0bed09c661c9ea9a515b5f40f44c
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;;4.6482;-11.0829;0;Bottom;Copper Fill8
+2;;;19.812;-3.43751;0;Bottom;Copper Fill15
+3;;;23.0632;-21.8524;0;Bottom;Copper Fill5
+4;;;21.9964;-9.30491;0;Bottom;Copper Fill10
+5;;;13.7524;-28.0652;0;Bottom;TXT5
+6;;;20.4978;-5.97751;0;Bottom;Copper Fill13
+7;;;13.8938;-17.128;0;Bottom;Copper Fill4
+8;;;26.162;-22.5255;0;Bottom;Copper Fill3
+9;;;19.1516;-21.6619;0;Bottom;Copper Fill17
+10;;;19.3294;-9.57161;0;Bottom;Copper Fill18
+11;;;3.53977;-31.6432;0;Bottom;TXT1
+12;;;3.60541;-29.1154;0;Bottom;TXT2
+13;;;15.7336;-28.6196;0;Top;blkr1
+14;;;4.3688;-21.2174;0;Bottom;Copper Fill6
+15;;;5.5118;-8.51751;0;Bottom;Copper Fill11
+16;;;3.47951;-30.4071;0;Bottom;TXT3
+17;;;24.1046;-22.5255;0;Bottom;Copper Fill2
+18;;THT;25.2671;-12.323;0;Bottom;18
+19;;;-10.7315;16.7336;90;Bottom;Ruler1
+20;;23 mm x 13 mm x 2.9 mm 24-
+pin side castellation package;14.3919;-19.303;0;Top;DWM1k
+21;;;23.4442;-11.0575;0;Bottom;Copper Fill9
+22;;;14.5709;-28.5508;0;Bottom;blkr2
+23;;THT;2.40707;-12.323;0;Bottom;1
+24;;;13.8176;-11.9718;0;Bottom;Copper Fill1
+25;;;7.8994;-3.43751;0;Bottom;Copper Fill14
+26;;;26.162;-22.5255;0;Bottom;Copper Fill16
+27;;;4.6482;-14.8929;0;Bottom;Copper Fill7
+28;;;7.2136;-5.97751;0;Bottom;Copper Fill12
