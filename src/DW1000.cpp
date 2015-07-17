@@ -1129,11 +1129,6 @@ void DW1000Class::clearTransmitStatus() {
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
-float DW1000Class::getReceivePower() {
-	// TODO
-	return -1;
-}
-
 float DW1000Class::getNoiseValue() {
 	// TODO
 	return -1;
@@ -1145,7 +1140,7 @@ float DW1000Class::getFirstPathPower() {
 	byte fpAmpl3Bytes[LEN_FP_AMPL3];
 	byte rxFrameInfo[LEN_RX_FINFO];
 	unsigned int f1, f2, f3, N;
-	float A;
+	float A, corrFac;
 	readBytes(RX_TIME, FP_AMPL1_SUB, fpAmpl1Bytes, LEN_FP_AMPL1);
 	readBytes(RX_FQUAL, FP_AMPL2_SUB, fpAmpl2Bytes, LEN_FP_AMPL2);
 	readBytes(RX_FQUAL, FP_AMPL3_SUB, fpAmpl3Bytes, LEN_FP_AMPL3);
@@ -1156,10 +1151,46 @@ float DW1000Class::getFirstPathPower() {
 	N = (((unsigned int)rxFrameInfo[2] >> 4) & 0xFF) | ((unsigned int)rxFrameInfo[3] << 4);
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
 		A = 115.72;
+		corrFac = 2.3334;
 	} else {
 		A = 121.74;
+		corrFac = 1.1667;
 	}
-	return 10.0 * log10(((float)f1 * (float)f1 + (float)f2 * (float)f2 + (float)f3 * (float)f3) / ((float)N * (float)N)) - A;
+	float estFpPwr = 10.0 * log10(((float)f1 * (float)f1 + (float)f2 * (float)f2 + (float)f3 * (float)f3) / ((float)N * (float)N)) - A;
+	if(estFpPwr <= -88) {
+		return estFpPwr;
+	} else {
+		// approximation of Fig. 22 in user manual for dbm correction
+		estFpPwr += (estFpPwr + 88) * corrFac;
+	}
+	return estFpPwr;
+}
+
+float DW1000Class::getReceivePower() {
+	byte cirPwrBytes[LEN_CIR_PWR];
+	byte rxFrameInfo[LEN_RX_FINFO];
+	unsigned long twoPower17 = 131072;
+	unsigned int C, N;
+	float A, corrFac;
+	readBytes(RX_FQUAL, CIR_PWR_SUB, cirPwrBytes, LEN_CIR_PWR);
+	readBytes(RX_FINFO, NO_SUB, rxFrameInfo, LEN_RX_FINFO);
+	C = (unsigned int)cirPwrBytes[0] | ((unsigned int)cirPwrBytes[1] << 8);
+	N = (((unsigned int)rxFrameInfo[2] >> 4) & 0xFF) | ((unsigned int)rxFrameInfo[3] << 4);
+	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+		A = 115.72;
+		corrFac = 2.3334;
+	} else {
+		A = 121.74;
+		corrFac = 1.1667;
+	}
+	float estRxPwr = 10.0 * log10(((float)C * (float)twoPower17) / ((float)N * (float)N)) - A;
+	if(estRxPwr <= -88) {
+		return estRxPwr;
+	} else {
+		// approximation of Fig. 22 in user manual for dbm correction
+		estRxPwr += (estRxPwr + 88) * corrFac;
+	}
+	return estRxPwr;
 }
 
 /* ###########################################################################

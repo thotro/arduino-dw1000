@@ -117,8 +117,10 @@
 #define LEN_RX_FQUAL 8
 #define FP_AMPL2_SUB 0x02
 #define FP_AMPL3_SUB 0x04
+#define CIR_PWR_SUB 0x06
 #define LEN_FP_AMPL2 2
 #define LEN_FP_AMPL3 2
+#define LEN_CIR_PWR 2
 
 // TX timestamp register
 #define TX_TIME 0x17

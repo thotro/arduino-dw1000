@@ -81,6 +81,7 @@ void loop() {
       Serial.print("Received message ... #"); Serial.println(numReceived);
       Serial.print("Data is ... "); Serial.println(message);
       Serial.print("FP power is [dBm] ... "); Serial.println(DW1000.getFirstPathPower());
+      Serial.print("RX power is [dBm] ... "); Serial.println(DW1000.getReceivePower());
       received = false;
     }
     if(error) {
