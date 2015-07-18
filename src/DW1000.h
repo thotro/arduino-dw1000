@@ -421,6 +421,7 @@ public:
 	static void setPreambleLength(byte prealen);
 	static void setChannel(byte channel);
 	static void setPreambleCode(byte preacode);
+	static void useSmartPower(boolean smartPower);
 
 	/* transmit and receive configuration. */
 	static DW1000Time setDelay(const DW1000Time& delay);
@@ -609,6 +610,7 @@ private:
 	static byte _networkAndAddress[LEN_PANADR];
 
 	/* internal helper that guide tuning the chip. */
+	static boolean _smartPower;
 	static byte _extendedFrameLength;
 	static byte _preambleCode;
 	static byte _channel;
@@ -673,7 +675,7 @@ private:
 	static void enableClock(byte clock);
 
 	/* LDE micro-code management. */
-	static void loadLDE();
+	static void manageLDE();
 
 	/* reading and writing bytes from and to DW1000 module. */
 	static void readBytes(byte cmd, word offset, byte data[], unsigned int n);
