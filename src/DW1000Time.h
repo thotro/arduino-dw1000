@@ -63,9 +63,13 @@ public:
 	DW1000Time& operator-=(const DW1000Time &sub);
 	const DW1000Time operator-(const DW1000Time &sub) const;
 	DW1000Time& operator*=(float factor);
+	const DW1000Time operator*(const DW1000Time &factor) const;
+	DW1000Time& operator*=(const DW1000Time &factor);
 	const DW1000Time operator*(float factor) const;
 	DW1000Time& operator/=(float factor);
 	const DW1000Time operator/(float factor) const;
+	DW1000Time& operator/=(const DW1000Time &factor);
+	const DW1000Time operator/(const DW1000Time &factor) const;
 	boolean operator==(const DW1000Time &cmp) const;
 	boolean operator!=(const DW1000Time &cmp) const;
 

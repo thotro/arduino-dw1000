@@ -29,7 +29,9 @@
 #define RANGE 2
 #define RANGE_REPORT 3
 #define RANGE_FAILED 255
+// message flow state
 volatile byte expectedMsgId = POLL_ACK;
+// message sent/received state
 volatile boolean sentAck = false;
 volatile boolean receivedAck = false;
 // timestamps to remember
@@ -44,6 +46,8 @@ int RST = 9;
 // watchdog and reset period
 unsigned long lastActivity;
 unsigned long resetPeriod = 250;
+// reply times (same on both sides for symm. ranging)
+unsigned int replyDelayTimeMS = 10;
 
 void setup() {
   // DEBUG monitoring
@@ -115,7 +119,7 @@ void transmitRange() {
   DW1000.setDefaults();
   data[0] = RANGE;
   // delay sending the message and remember expected future sent timestamp
-  DW1000Time deltaTime = DW1000Time(10, DW1000Time::MILLISECONDS);
+  DW1000Time deltaTime = DW1000Time(replyDelayTimeMS, DW1000Time::MILLISECONDS);
   timeRangeSent = DW1000.setDelay(deltaTime);
   timePollSent.getTimestamp(data+1);
   timePollAckReceived.getTimestamp(data+6);

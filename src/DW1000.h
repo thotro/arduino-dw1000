@@ -154,6 +154,14 @@
 #define CHAN_CTRL 0x1F
 #define LEN_CHAN_CTRL 4
 #define DWSFD_BIT 17
+#define TNSSFD_BIT 20
+#define RNSSFD_BIT 21
+
+// user-defined SFD
+#define USR_SFD 0x21
+#define LEN_USR_SFD 41
+#define SFD_LENGTH_SUB 0x00
+#define LEN_SFD_LENGTH 1
 
 // OTP control (for LDE micro code loading only)
 #define OTP_IF 0x2D

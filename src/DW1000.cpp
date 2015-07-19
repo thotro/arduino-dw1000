@@ -909,20 +909,32 @@ void DW1000Class::setDataRate(byte rate) {
 	rate &= 0x03;
 	_txfctrl[1] &= 0x83;
 	_txfctrl[1] |= (byte)((rate << 5) & 0xFF);
+	// special 110kbps flag
 	if(rate == TRX_RATE_110KBPS) {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, true);
-		// TODO first set TN/RNSSFD zero then set SFD length in USR_SDF then use
-		//setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
 	} else {
 		setBit(_syscfg, LEN_SYS_CFG, RXM110K_BIT, false);
 	}
+	// SFD mode and type (non-configurable, as in Table )
 	if(rate == TRX_RATE_6800KBPS) {
 		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, false);
+		setBit(_chanctrl, LEN_CHAN_CTRL, TNSSFD_BIT, false);
+		setBit(_chanctrl, LEN_CHAN_CTRL, RNSSFD_BIT, false);
+	} else {
+		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
+		setBit(_chanctrl, LEN_CHAN_CTRL, TNSSFD_BIT, true);
+		setBit(_chanctrl, LEN_CHAN_CTRL, RNSSFD_BIT, true);	
+		
 	}
-	if(rate == TRX_RATE_850KBPS) {
-		//setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
-		// TODO set length to 8 or 16 in USR_SFD (0x21)
+	byte sfdLength;
+	if(rate == TRX_RATE_6800KBPS) {
+		sfdLength = 0x08;
+	} else if(rate == TRX_RATE_850KBPS) {
+		sfdLength = 0x10;
+	} else {
+		sfdLength = 0x40;
 	}
+	writeBytes(USR_SFD, SFD_LENGTH_SUB, &sfdLength, LEN_SFD_LENGTH);
 	_dataRate = rate;
 }
 

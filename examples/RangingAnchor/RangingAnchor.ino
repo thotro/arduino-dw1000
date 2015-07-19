@@ -29,9 +29,12 @@
 #define RANGE 2
 #define RANGE_REPORT 3
 #define RANGE_FAILED 255
+// message flow state
 volatile byte expectedMsgId = POLL;
+// message sent/received state
 volatile boolean sentAck = false;
 volatile boolean receivedAck = false;
+// protocol error state
 boolean protocolFailed = false;
 // timestamps to remember
 DW1000Time timePollSent;
@@ -50,6 +53,8 @@ int RST = 9;
 // watchdog and reset period
 unsigned long lastActivity;
 unsigned long resetPeriod = 250;
+// reply times (same on both sides for symm. ranging)
+unsigned int replyDelayTimeMS = 10;
 
 void setup() {
   // DEBUG monitoring
@@ -112,7 +117,7 @@ void transmitPollAck() {
   DW1000.setDefaults();
   data[0] = POLL_ACK;
   // delay the same amount as ranging tag
-  DW1000Time deltaTime = DW1000Time(10, DW1000Time::MILLISECONDS);
+  DW1000Time deltaTime = DW1000Time(replyDelayTimeMS, DW1000Time::MILLISECONDS);
   DW1000.setDelay(deltaTime);
   DW1000.setData(data, LEN_DATA);
   DW1000.startTransmit();
@@ -144,17 +149,47 @@ void receiver() {
   DW1000.startReceive();
 }
 
-void computeRange() {
+/*
+ * RANGING ALGORITHMS
+ * ------------------
+ * Either of the below functions can be used for range computation (see line "CHOSEN 
+ * RANGING ALGORITHM" in the code).
+ * - Asymmetric is more computation intense but least error prone
+ * - Symmetric is less computation intense but more error prone to clock drifts
+ * 
+ * The anchors and tags of this reference example use the same reply delay times, hence
+ * are capable of symmetric ranging (and of asymmetric ranging anyway).
+ */
+
+void computeRangeAsymmetric() {
   // correct timestamps (in case system time counter wrap-arounds occured)
   // TODO
   /*if(timePollAckReceived < timePollSent) {
     timePollAckReceived += ...
   }*/
-  // two roundtrip times - each minus message preparation times / 4
-  DW1000Time tof = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
-      (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived)) * 0.25f;
+  // 
+  // asymmetric two-way ranging (more computation intense, less error prone)
+  DW1000Time round1 = (timePollAckReceived-timePollSent);
+  DW1000Time reply1 = (timePollAckSent-timePollReceived);
+  DW1000Time round2 = (timeRangeReceived-timePollAckSent);
+  DW1000Time reply2 = (timeRangeSent-timePollAckReceived);
+  DW1000Time tof = (round1 * round2 - reply1 * reply2) / (round1 + round2 + reply1 + reply2);
+  // set tof timestamp
   timeComputedRange.setTimestamp(tof);
 }
+
+void computeRangeSymmetric() {
+  // symmetric two-way ranging (less computation intense, more error prone on clock drift)
+  DW1000Time tof = ((timePollAckReceived-timePollSent)-(timePollAckSent-timePollReceived) +
+    (timeRangeReceived-timePollAckSent)-(timeRangeSent-timePollAckReceived)) * 0.25f;
+  // set tof timestamp
+  timeComputedRange.setTimestamp(tof);
+}
+
+/*
+ * END RANGING ALGORITHMS
+ * ----------------------
+ */
 
 void loop() {
   if(!sentAck && !receivedAck) {
@@ -197,9 +232,11 @@ void loop() {
         timePollAckReceived.setTimestamp(data+6);
         timeRangeSent.setTimestamp(data+11);
         // (re-)compute range as two-way ranging is done
-        computeRange();
+        computeRangeAsymmetric(); // CHOSEN RANGING ALGORITHM
         transmitRangeReport(timeComputedRange.getAsFloat());
         Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
+        //Serial.print("FP power is [dBm] ... "); Serial.println(DW1000.getFirstPathPower());
+        //Serial.print("RX power is [dBm] ... "); Serial.println(DW1000.getReceivePower());
       } else {
         transmitRangeFailed();
       }

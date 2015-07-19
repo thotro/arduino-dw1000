@@ -119,11 +119,30 @@ const DW1000Time DW1000Time::operator*(float factor) const {
 	return DW1000Time(*this) *= factor;
 }
 
+DW1000Time& DW1000Time::operator*=(const DW1000Time &factor) {
+	_timestamp *= factor.getTimestamp();
+	return *this;
+}
+
+const DW1000Time DW1000Time::operator*(const DW1000Time &factor) const {
+	return DW1000Time(*this) *= factor;
+}
+
 DW1000Time& DW1000Time::operator/=(float factor) {
-	return *this *= (1.0f/factor);
+	_timestamp *= (1.0f/factor);
+	return *this;
 }
 
 const DW1000Time DW1000Time::operator/(float factor) const {
+	return DW1000Time(*this) /= factor;
+}
+
+DW1000Time& DW1000Time::operator/=(const DW1000Time &factor) {
+	_timestamp /= factor.getTimestamp(); 
+	return *this;
+}
+
+const DW1000Time DW1000Time::operator/(const DW1000Time &factor) const {
 	return DW1000Time(*this) /= factor;
 }
 
