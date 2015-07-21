@@ -237,6 +237,7 @@ void loop() {
         Serial.print("Range is [m] "); Serial.println(timeComputedRange.getAsMeters());
         //Serial.print("FP power is [dBm] ... "); Serial.println(DW1000.getFirstPathPower());
         //Serial.print("RX power is [dBm] ... "); Serial.println(DW1000.getReceivePower());
+        //Serial.print("Receive quality is ... "); Serial.println(DW1000.getReceiveQuality());
       } else {
         transmitRangeFailed();
       }

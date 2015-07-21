@@ -115,9 +115,11 @@
 // RX frame quality
 #define RX_FQUAL 0x12
 #define LEN_RX_FQUAL 8
+#define STD_NOISE_SUB 0x00
 #define FP_AMPL2_SUB 0x02
 #define FP_AMPL3_SUB 0x04
 #define CIR_PWR_SUB 0x06
+#define LEN_STD_NOISE 2
 #define LEN_FP_AMPL2 2
 #define LEN_FP_AMPL3 2
 #define LEN_CIR_PWR 2
@@ -225,8 +227,10 @@
 #define FS_CTRL 0x2B
 #define FS_PLLCFG_SUB 0x07
 #define FS_PLLTUNE_SUB 0x0B
+#define FS_XTALT_SUB 0x0E
 #define LEN_FS_PLLCFG 4
 #define LEN_FS_PLLTUNE 1
+#define LEN_FS_XTALT 1
 
 // PMSC
 #define PMSC 0x36
@@ -449,7 +453,7 @@ public:
 	/* receive quality information. */
 	static float getReceivePower();
 	static float getFirstPathPower();
-	static float getNoiseValue();
+	static float getReceiveQuality();
 
 	/* interrupt management. */
 	static void interruptOnSent(boolean val);

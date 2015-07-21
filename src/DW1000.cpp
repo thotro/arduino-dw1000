@@ -60,12 +60,12 @@ boolean DW1000Class::_frameCheck = true;
 boolean DW1000Class::_permanentReceive = false;
 int DW1000Class::_deviceMode = IDLE_MODE;
 // modes of operation
-const byte DW1000Class::MODE_LONGDATA_RANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LONGDATA_RANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_2048};
 const byte DW1000Class::MODE_SHORTDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
 const byte DW1000Class::MODE_LONGDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
 const byte DW1000Class::MODE_SHORTDATA_FAST_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
 const byte DW1000Class::MODE_LONGDATA_FAST_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
-const byte DW1000Class::MODE_LONGDATA_RANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+const byte DW1000Class::MODE_LONGDATA_RANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_2048};
 // SPI settings
 const SPISettings DW1000Class::_fastSPI = SPISettings(16000000L, MSBFIRST, SPI_MODE0);
 const SPISettings DW1000Class::_slowSPI = SPISettings(2000000L, MSBFIRST, SPI_MODE0);
@@ -246,6 +246,7 @@ void DW1000Class::tune() {
 	byte tcpgdelay[LEN_TC_PGDELAY];
 	byte fspllcfg[LEN_FS_PLLCFG];
 	byte fsplltune[LEN_FS_PLLTUNE];
+	byte fsxtalt[LEN_FS_XTALT];
 	// AGC_TUNE1
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
 		writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
@@ -563,6 +564,8 @@ void DW1000Class::tune() {
 	} else {
 		// TODO proper error/warning handling
 	}
+	// mid range XTAL trim (TODO here we assume no calibration data available in OTP)
+	//writeValueToBytes(fsxtalt, 0x60, LEN_FS_XTALT);
 	// write configuration back to chip
 	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
 	writeBytes(AGC_TUNE, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
@@ -581,6 +584,7 @@ void DW1000Class::tune() {
 	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
 	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
 	writeBytes(FS_CTRL, FS_PLLCFG_SUB, fspllcfg, LEN_FS_PLLCFG);
+	//writeBytes(FS_CTRL, FS_XTALT_SUB, fsxtalt, LEN_FS_XTALT);
 }
 
 /* ###########################################################################
@@ -901,6 +905,7 @@ DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 	delayBytes[1] &= 0xFE;
 	writeBytes(DX_TIME, NO_SUB, delayBytes, LEN_DX_TIME);
 	// adjust expected time with configured antenna delay
+	futureTime.setTimestamp(delayBytes);
 	futureTime += _antennaDelay;
 	return futureTime;
 }
@@ -1184,9 +1189,15 @@ void DW1000Class::clearTransmitStatus() {
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
-float DW1000Class::getNoiseValue() {
-	// TODO
-	return -1;
+float DW1000Class::getReceiveQuality() {
+	byte noiseBytes[LEN_STD_NOISE];
+	byte fpAmpl2Bytes[LEN_FP_AMPL2];
+	unsigned int noise, f2;
+	readBytes(RX_FQUAL, STD_NOISE_SUB, noiseBytes, LEN_STD_NOISE);
+	readBytes(RX_FQUAL, FP_AMPL2_SUB, fpAmpl2Bytes, LEN_FP_AMPL2);
+	noise = (unsigned int)noiseBytes[0] | ((unsigned int)noiseBytes[1] << 8);
+	f2 = (unsigned int)fpAmpl2Bytes[0] | ((unsigned int)fpAmpl2Bytes[1] << 8);
+	return (float)f2 / noise;
 }
 
 float DW1000Class::getFirstPathPower() {
