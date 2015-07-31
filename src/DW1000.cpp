@@ -18,6 +18,7 @@
  * Arduino driver library (source file) for the Decawave DW1000 UWB transceiver IC.
  */
 
+#include "digitalWriteFast.h"
 #include "pins_arduino.h"
 #include "DW1000.h"
 
@@ -889,7 +890,7 @@ void DW1000Class::useSmartPower(boolean smartPower) {
 
 DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 	if(_deviceMode == TX_MODE) {
-		setBit(_sysctrl, LEN_SYS_CTRL, TXDLYS_BIT, true);
+		setBit(_sysctrl, LEN_SYS_CTRL, TXDLYS_BIT, true); 
 	} else if(_deviceMode == RX_MODE) {
 		setBit(_sysctrl, LEN_SYS_CTRL, RXDLYS_BIT, true);
 	} else {
@@ -1350,15 +1351,15 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		}
 	}
 	SPI.beginTransaction(*_currentSPI);
-	digitalWrite(_ss, LOW);
+	digitalWriteFast(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
 	for(i = 0; i < n; i++) {
 		data[i] = SPI.transfer(JUNK);
 	}
-	delay(1);
-	digitalWrite(_ss,HIGH);
+	delayMicroseconds(5);
+	digitalWriteFast(_ss,HIGH);
 	SPI.endTransaction();
 }
 
@@ -1413,16 +1414,16 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 			headerLen+=2;
 		}
 	}
-	SPI.beginTransaction(*_currentSPI);
-	digitalWrite(_ss, LOW);
+	SPI.beginTransaction(*_currentSPI); 
+	digitalWriteFast(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
 	for(i = 0; i < n; i++) {
 		SPI.transfer(data[i]);
 	}
-	delay(1);
-	digitalWrite(_ss,HIGH);
+	delayMicroseconds(5);
+	digitalWriteFast(_ss,HIGH);
 	SPI.endTransaction();
 }
 
