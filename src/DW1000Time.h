@@ -57,19 +57,21 @@ public:
 	void setTimestamp(byte data[]);
 	void setTimestamp(const DW1000Time& copy);
 
+	DW1000Time& wrap();
+
 	DW1000Time& operator=(const DW1000Time &assign);
 	DW1000Time& operator+=(const DW1000Time &add);
-	const DW1000Time operator+(const DW1000Time &add) const;
+	DW1000Time operator+(const DW1000Time &add) const;
 	DW1000Time& operator-=(const DW1000Time &sub);
-	const DW1000Time operator-(const DW1000Time &sub) const;
+	DW1000Time operator-(const DW1000Time &sub) const;
 	DW1000Time& operator*=(float factor);
-	const DW1000Time operator*(const DW1000Time &factor) const;
+	DW1000Time operator*(const DW1000Time &factor) const;
 	DW1000Time& operator*=(const DW1000Time &factor);
-	const DW1000Time operator*(float factor) const;
+	DW1000Time operator*(float factor) const;
 	DW1000Time& operator/=(float factor);
-	const DW1000Time operator/(float factor) const;
+	DW1000Time operator/(float factor) const;
 	DW1000Time& operator/=(const DW1000Time &factor);
-	const DW1000Time operator/(const DW1000Time &factor) const;
+	DW1000Time operator/(const DW1000Time &factor) const;
 	boolean operator==(const DW1000Time &cmp) const;
 	boolean operator!=(const DW1000Time &cmp) const;
 

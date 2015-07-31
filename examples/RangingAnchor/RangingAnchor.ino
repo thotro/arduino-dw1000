@@ -62,15 +62,15 @@ unsigned long lastActivity;
 unsigned long resetPeriod = 250;
 // reply times (same on both sides for symm. ranging)
 unsigned int replyDelayTimeUS = 3000;
-
-long lastTime=0;
+// ranging counter (per second)
+unsigned int successRangingCount = 0;
+unsigned long rangingCountPeriod = 0;
 
 void setup() {
     // DEBUG monitoring
     Serial.begin(115200);
     delay(1000);
     Serial.println("### DW1000-arduino-ranging-anchor ###");
-    
     // initialize the driver
     DW1000.begin(0, RST);
     DW1000.select(SS);
@@ -80,7 +80,7 @@ void setup() {
     DW1000.setDefaults();
     DW1000.setDeviceAddress(1);
     DW1000.setNetworkId(10);
-    DW1000.enableMode(DW1000.MODE_LONGDATA_FAST_ACCURACY);
+    DW1000.enableMode(DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
     DW1000.commitConfiguration();
     Serial.println("Committed configuration ...");
     // DEBUG chip info and registers pretty printed
@@ -99,6 +99,8 @@ void setup() {
     // anchor starts in receiving mode, awaiting a ranging poll message
     receiver();
     noteActivity();
+    // for first time ranging frequency computation
+    rangingCountPeriod = millis();
 }
 
 void noteActivity() {
@@ -173,17 +175,11 @@ void receiver() {
  */
 
 void computeRangeAsymmetric() {
-    // correct timestamps (in case system time counter wrap-arounds occured)
-    // TODO
-    /*if(timePollAckReceived < timePollSent) {
-     timePollAckReceived += ...
-     }*/
-    //
     // asymmetric two-way ranging (more computation intense, less error prone)
-    DW1000Time round1 = (timePollAckReceived-timePollSent);
-    DW1000Time reply1 = (timePollAckSent-timePollReceived);
-    DW1000Time round2 = (timeRangeReceived-timePollAckSent);
-    DW1000Time reply2 = (timeRangeSent-timePollAckReceived);
+    DW1000Time round1 = (timePollAckReceived-timePollSent).wrap();
+    DW1000Time reply1 = (timePollAckSent-timePollReceived).wrap();
+    DW1000Time round2 = (timeRangeReceived-timePollAckSent).wrap();
+    DW1000Time reply2 = (timeRangeSent-timePollAckReceived).wrap();
     DW1000Time tof = (round1 * round2 - reply1 * reply2) / (round1 + round2 + reply1 + reply2);
     // set tof timestamp
     timeComputedRange.setTimestamp(tof);
@@ -203,9 +199,10 @@ void computeRangeSymmetric() {
  */
 
 void loop() {
+    long curMillis = millis();
     if(!sentAck && !receivedAck) {
         // check if inactive
-        if(millis() - lastActivity > resetPeriod) {
+        if(curMillis - lastActivity > resetPeriod) {
             resetInactive();
         }
         return;
@@ -235,8 +232,7 @@ void loop() {
             expectedMsgId = RANGE;
             transmitPollAck();
             noteActivity();
-        }
-        else if(msgId == RANGE) {
+        } else if(msgId == RANGE) {
             DW1000.getReceiveTimestamp(timeRangeReceived);
             expectedMsgId = POLL;
             if(!protocolFailed) {
@@ -248,14 +244,16 @@ void loop() {
                 computeRangeAsymmetric(); // CHOSEN RANGING ALGORITHM
                 transmitRangeReport(timeComputedRange.getAsFloat());
                 Serial.print("Ranging: "); Serial.print(timeComputedRange.getAsMeters()); Serial.println("m");
-                delay(10);        
-                
-                /*
-                 //Serial.print(";FP power is [dBm];"); Serial.print(DW1000.getFirstPathPower());
-                 //Serial.print(";RX power is [dBm];"); Serial.println(DW1000.getReceivePower());
-                 //Serial.print(";Receive quality;"); Serial.println(DW1000.getReceiveQuality()); */
-            } 
-            else {
+                 //Serial.print("FP power is [dBm]: "); Serial.print(DW1000.getFirstPathPower());
+                 //Serial.print("RX power is [dBm]: "); Serial.println(DW1000.getReceivePower());
+                 //Serial.print("Receive quality: "); Serial.println(DW1000.getReceiveQuality());
+                 successRangingCount++;
+                 if(curMillis - rangingCountPeriod > 1000) {
+                    Serial.print("Ranging frequency [Hz]: "); Serial.println((1000.0f * successRangingCount) / (curMillis - rangingCountPeriod)); 
+                    rangingCountPeriod = curMillis;
+                    successRangingCount = 0;
+                 }
+            } else {
                 transmitRangeFailed();
             }
             noteActivity();

@@ -68,6 +68,13 @@ long long int DW1000Time::getTimestamp() const {
 	return _timestamp;
 }
 
+DW1000Time& DW1000Time::wrap() {
+	if(_timestamp < 0) {
+		_timestamp += TIME_OVERFLOW;
+	}
+	return *this;
+}
+
 void DW1000Time::getTimestamp(byte data[]) const {
 	memset(data, 0, LEN_STAMP);
 	for(int i = 0; i < LEN_STAMP; i++) {
@@ -96,7 +103,7 @@ DW1000Time& DW1000Time::operator+=(const DW1000Time &add) {
 	return *this;
 }
 
-const DW1000Time DW1000Time::operator+(const DW1000Time &add) const {
+DW1000Time DW1000Time::operator+(const DW1000Time &add) const {
     return DW1000Time(*this) += add;
 }
 
@@ -105,7 +112,7 @@ DW1000Time& DW1000Time::operator-=(const DW1000Time &sub) {
 	return *this;
 }
 
-const DW1000Time DW1000Time::operator-(const DW1000Time &sub) const {
+DW1000Time DW1000Time::operator-(const DW1000Time &sub) const {
 	return DW1000Time(*this) -= sub;
 }
 
@@ -115,7 +122,7 @@ DW1000Time& DW1000Time::operator*=(float factor) {
 	return *this;
 }
 
-const DW1000Time DW1000Time::operator*(float factor) const {
+DW1000Time DW1000Time::operator*(float factor) const {
 	return DW1000Time(*this) *= factor;
 }
 
@@ -124,7 +131,7 @@ DW1000Time& DW1000Time::operator*=(const DW1000Time &factor) {
 	return *this;
 }
 
-const DW1000Time DW1000Time::operator*(const DW1000Time &factor) const {
+DW1000Time DW1000Time::operator*(const DW1000Time &factor) const {
 	return DW1000Time(*this) *= factor;
 }
 
@@ -133,7 +140,7 @@ DW1000Time& DW1000Time::operator/=(float factor) {
 	return *this;
 }
 
-const DW1000Time DW1000Time::operator/(float factor) const {
+DW1000Time DW1000Time::operator/(float factor) const {
 	return DW1000Time(*this) /= factor;
 }
 
@@ -142,7 +149,7 @@ DW1000Time& DW1000Time::operator/=(const DW1000Time &factor) {
 	return *this;
 }
 
-const DW1000Time DW1000Time::operator/(const DW1000Time &factor) const {
+DW1000Time DW1000Time::operator/(const DW1000Time &factor) const {
 	return DW1000Time(*this) /= factor;
 }
 
