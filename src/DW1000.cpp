@@ -953,6 +953,10 @@ void DW1000Class::setPulseFrequency(byte freq) {
 	_pulseFrequency = freq;
 }
 
+byte DW1000Class::getPulseFrequency(){
+    return _pulseFrequency;
+}
+
 void DW1000Class::setPreambleLength(byte prealen) {
 	prealen &= 0x0F;
 	_txfctrl[2] &= 0xC3;

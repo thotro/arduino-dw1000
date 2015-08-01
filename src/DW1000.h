@@ -430,6 +430,7 @@ public:
 	@param[in] freq The PRF, encoded by the above defined constants.
 	*/
 	static void setPulseFrequency(byte freq);
+    static byte getPulseFrequency();
 	static void setPreambleLength(byte prealen);
 	static void setChannel(byte channel);
 	static void setPreambleCode(byte preacode);
