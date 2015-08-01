@@ -232,7 +232,8 @@ void loop() {
             expectedMsgId = RANGE;
             transmitPollAck();
             noteActivity();
-        } else if(msgId == RANGE) {
+        }
+        else if(msgId == RANGE) {
             DW1000.getReceiveTimestamp(timeRangeReceived);
             expectedMsgId = POLL;
             if(!protocolFailed) {
@@ -243,20 +244,106 @@ void loop() {
                 // (re-)compute range as two-way ranging is done
                 computeRangeAsymmetric(); // CHOSEN RANGING ALGORITHM
                 transmitRangeReport(timeComputedRange.getAsFloat());
-                Serial.print("Ranging: "); Serial.print(timeComputedRange.getAsMeters()); Serial.println("m");
-                 //Serial.print("FP power is [dBm]: "); Serial.print(DW1000.getFirstPathPower());
-                 //Serial.print("RX power is [dBm]: "); Serial.println(DW1000.getReceivePower());
-                 //Serial.print("Receive quality: "); Serial.println(DW1000.getReceiveQuality());
+                float distance=timeComputedRange.getAsMeters();
+                Serial.print("Ranging: "); Serial.print(distance);
+                Serial.print("\t rx:"); Serial.print(DW1000.getReceivePower());
+                
+                float rangeBias=rangeRXCorrection(DW1000.getReceivePower());
+                
+                Serial.print("\t cor:"); Serial.print(rangeBias);
+                
+                Serial.print("\t final:"); Serial.print((distance-rangeBias));
+                Serial.println("m");
+                
+                //Serial.print("FP power is [dBm]: "); Serial.print(DW1000.getFirstPathPower());
+                //Serial.print("RX power is [dBm]: "); Serial.println(DW1000.getReceivePower());
+                //Serial.print("Receive quality: "); Serial.println(DW1000.getReceiveQuality());
+                
+                /*
                  successRangingCount++;
                  if(curMillis - rangingCountPeriod > 1000) {
-                    Serial.print("Ranging frequency [Hz]: "); Serial.println((1000.0f * successRangingCount) / (curMillis - rangingCountPeriod)); 
-                    rangingCountPeriod = curMillis;
-                    successRangingCount = 0;
+                 Serial.print("Ranging frequency [Hz]: "); Serial.println((1000.0f * successRangingCount) / (curMillis - rangingCountPeriod));
+                 rangingCountPeriod = curMillis;
+                 successRangingCount = 0;
                  }
-            } else {
+                 */
+            }
+            else {
                 transmitRangeFailed();
             }
+            
             noteActivity();
         }
     }
 }
+
+
+
+
+/*
+ * RANGING CORRECTIONS
+ * ------------------
+ * for 500Mhz bandwith
+ */
+
+
+// {RSL, PRF 16MHz, PRF 64 MHz}
+float bias[17][3]={
+    {-61, -19.8, -11.0},
+    {-63, -18.7, -10.5},
+    {-65, -17.9, -10.0},
+    {-67, -16.3, -9.3},
+    {-69, -14.3, -8.2},
+    {-71, -12.7, -6.9},
+    {-73, -10.9, -5.1},
+    {-75, -8.4,  -2.7},
+    {-77, -5.9,   0.0},
+    {-79, -3.1,   2.1},
+    {-81,  0.0,   3.5},
+    {-83,  3.6,   4.2},
+    {-85,  6.5,   4.9},
+    {-87,  8.4,   6.2},
+    {-89,  9.7,   7.1},
+    {-91,  10.6,  7.6},
+    {-93,  11.0,  8.1},
+};
+
+float rangeRXCorrection(float RXPower){
+    byte PRF=DW1000.getPulseFrequency();
+    float rangeBias=0;
+    if(PRF==DW1000.TX_PULSE_FREQ_16MHZ)
+    {
+        rangeBias=computeRangeBias(RXPower, 1);
+    }
+    else if(PRF==DW1000.TX_PULSE_FREQ_64MHZ)
+    {
+        rangeBias=computeRangeBias(RXPower, 2);
+    }
+    
+    return rangeBias;
+}
+
+
+float computeRangeBias(float RXPower, int prf)
+{
+    //We test first boundary
+    if(RXPower>=bias[0][0])
+        return bias[0][prf];
+    
+    //we test last boundary
+    if(RXPower<=bias[16][0])
+        return bias[16][prf];
+    
+    for(int i=1; i<17; i++){
+        //we search for the position we are. All is in negative !
+        if(RXPower<bias[i-1][0] && RXPower>bias[i][0]){
+            //we have our position i. We now need to calculate the line
+            float a=(bias[i-1][prf]-bias[i][prf])/(bias[i-1][0]-bias[i][0]);
+            float b=bias[i-1][prf] - a * bias[i-1][0];
+            //return our bias
+            return (a*RXPower + b)/100;
+        } 
+    }
+    
+}
+
