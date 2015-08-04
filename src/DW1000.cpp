@@ -951,6 +951,7 @@ void DW1000Class::setPulseFrequency(byte freq) {
 	_chanctrl[2] &= 0xF3;
 	_chanctrl[2] |= (byte)((freq << 2) & 0xFF);
 	_pulseFrequency = freq;
+    
 }
 
 byte DW1000Class::getPulseFrequency(){

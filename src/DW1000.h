@@ -246,7 +246,8 @@
 #include <string.h>
 #include <Arduino.h>
 #include "DW1000Time.h"
-#include "../SPI/SPI.h"
+#include <SPI.h>
+
 
 class DW1000Class {
 public:
