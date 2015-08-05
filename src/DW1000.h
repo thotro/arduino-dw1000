@@ -357,6 +357,8 @@ public:
 
 	@param[in] val An arbitrary numeric network identifier.
 	*/
+    
+    
 	static void setNetworkId(unsigned int val);
 
 	/** 
@@ -378,6 +380,12 @@ public:
 
 	@param[in] val `true` to enable, `false` to disable receiver auto-reenable.
 	*/
+    
+    
+    static void setEUI(char eui[]);
+    static void setEUI(byte eui[]);
+    
+    
 	static void setReceiverAutoReenable(boolean val);
 	
 	/** 
@@ -532,6 +540,10 @@ public:
 	/* debug pretty print registers. */
 	static void getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsigned int n);
 	static void getPrettyBytes(byte data[], char msgBuffer[], unsigned int n);
+    
+    //convert from char to 4 bits (hexadecimal)
+    static int nibbleFromChar(char c);
+    static void convertToByte(char string[], byte *eui_byte);
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
@@ -702,7 +714,9 @@ private:
 	/* internal helper for bit operations on multi-bytes. */
 	static boolean getBit(byte data[], unsigned int n, unsigned int bit);
 	static void setBit(byte data[], unsigned int n, unsigned int bit, boolean val);
-	
+    
+    
+    
 	/* Register is 6 bit, 7 = write, 6 = sub-adressing, 5-0 = register value
 	 * Total header with sub-adressing can be 15 bit. */
 	static const byte WRITE = 0x80; // regular write

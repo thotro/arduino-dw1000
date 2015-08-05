@@ -21,6 +21,7 @@
 
 #include "DW1000.h"
 #include "DW1000Time.h"
+#include "DW1000Device.h"
 
 // messages used in the ranging protocol
 #define POLL 0
@@ -30,6 +31,8 @@
 #define RANGE_FAILED 255
 
 #define LEN_DATA 16
+
+#define MAX_DEVICES 3
 
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
@@ -44,6 +47,7 @@
 //sketch type (anchor or tag)
 #define TAG 0
 #define ANCHOR 1
+ 
 
 //debug mode
 #ifndef DEBUG
@@ -59,22 +63,17 @@ class DW1000RangingClass {
     
     
     //initialisation
-    static void init(unsigned int RST=DEFAULT_RST_PIN, unsigned int SS=DEFAULT_SPI_SS_PIN);
-    static void configureNetwork(unsigned int deviceAddress, unsigned int networkId);
-    static void configureMode(const byte mode[]);
+    static void initCommunication(unsigned int RST=DEFAULT_RST_PIN, unsigned int SS=DEFAULT_SPI_SS_PIN);
+    static void configureNetwork(unsigned int deviceAddress, unsigned int networkId, const byte mode[]); 
     static void generalStart();
-    static void startAsAnchor();
-    static void startAsTag();
+    static void startAsAnchor(DW1000Device device, DW1000Device networkDevices[]);
+    static void startAsTag(DW1000Device device);
+    static void startAsTag(DW1000Device device, DW1000Device networkDevices[]);
     
     //setters
     static void setReplyTime(unsigned int replyDelayTimeUs);
     static void setResetPeriod(unsigned long resetPeriod);
-    
-    //getters
-    static float getRange();
-    static float getRXPower();
-    static float getFPPower();
-    static float getQuality(); 
+     
     
     
     //ranging functions
@@ -82,7 +81,7 @@ class DW1000RangingClass {
     
     
     //Handlers:
-    static void attachNewRange(void (*handleNewRange)(void)) {_handleNewRange = handleNewRange; }
+    static void attachNewRange(void (*handleNewRange)(void)) {_handleNewRange = handleNewRange; };
     
     
     //if new receiver is available
@@ -90,9 +89,15 @@ class DW1000RangingClass {
     //transmit a message
     //static void write();
     
+    static DW1000Device* getDistantDevice();
     
         
   private:
+    //our device configuration
+    static DW1000Device _currentDevice;
+    //other devices in the network
+    static DW1000Device _networkDevices[MAX_DEVICES];
+    
     //Handlers:
     static void (*_handleNewRange)(void);
     
@@ -104,16 +109,7 @@ class DW1000RangingClass {
     static volatile boolean _sentAck;
     static volatile boolean _receivedAck;
     // protocol error state
-    static boolean _protocolFailed;
-    // timestamps to remember
-    static DW1000Time _timePollSent;
-    static DW1000Time _timePollReceived;
-    static DW1000Time _timePollAckSent;
-    static DW1000Time _timePollAckReceived;
-    static DW1000Time _timeRangeSent;
-    static DW1000Time _timeRangeReceived;
-    // last computed range/time
-    static DW1000Time _timeComputedRange;
+    static boolean _protocolFailed; 
     // reset line to the chip
     static unsigned int _RST;
     static unsigned int _SS;
@@ -127,11 +123,6 @@ class DW1000RangingClass {
     static unsigned long _rangingCountPeriod;
     static float _bias[17][3];
 
-    //ranging variables
-    static float _distance;
-    static float _RXPower;
-    static float _FPPower;
-    static float _quality;
     
     
     //methods
@@ -145,17 +136,17 @@ class DW1000RangingClass {
     
     //for ranging protocole (ANCHOR)
     static void transmitPollAck();
-    static void transmitRangeReport();
+    static void transmitRangeReport(DW1000Device *myDistantDevice);
     static void transmitRangeFailed();
     static void receiver();
     
     //for ranging protocole (TAG)
     static void transmitPoll();
-    static void transmitRange();
+    static void transmitRange(DW1000Device *myDistantDevice);
     
     //methods for range computation
-    static void computeRangeAsymmetric();
-    static void computeRangeSymmetric();
+    static void computeRangeAsymmetric(DW1000Device *myDistantDevice);
+    //static void computeRangeSymmetric();
     static float rangeRXCorrection(float RXPower);
     static float computeRangeBias(float RXPower, int prf);
     

@@ -33,6 +33,16 @@
 // time stamp byte length
 #define LEN_STAMP 5
 
+
+// timer/counter overflow (40 bits)
+#define TIME_OVERFLOW 1099511627776
+
+// time factors (relative to [us]) for setting delayed transceive
+#define SECONDS 1e6
+#define MILLISECONDS 1e3
+#define MICROSECONDS 1
+#define NANOSECONDS 1e-3
+
 #include <Arduino.h>
 
 class DW1000Time {
@@ -75,15 +85,7 @@ public:
 	boolean operator==(const DW1000Time &cmp) const;
 	boolean operator!=(const DW1000Time &cmp) const;
 
-	// time factors (relative to [us]) for setting delayed transceive
-	static const float SECONDS = 1e6;
-	static const float MILLISECONDS = 1e3;
-	static const float MICROSECONDS = 1;
-	static const float NANOSECONDS = 1e-3;
-
-	// timer/counter overflow (40 bits)
-	static const long long unsigned int TIME_OVERFLOW = 1099511627776;
-
+	 
 private:
 	long long int _timestamp;
 };

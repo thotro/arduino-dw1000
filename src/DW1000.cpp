@@ -636,6 +636,7 @@ void DW1000Class::handleInterrupt() {
  * #### Pretty printed device information ####################################
  * ######################################################################### */
 
+
 void DW1000Class::getPrintableDeviceIdentifier(char msgBuffer[]) {
 	byte data[LEN_DEV_ID];
 	readBytes(DEV_ID, NO_SUB, data, LEN_DEV_ID);
@@ -646,7 +647,7 @@ void DW1000Class::getPrintableDeviceIdentifier(char msgBuffer[]) {
 void DW1000Class::getPrintableExtendedUniqueIdentifier(char msgBuffer[]) {
 	byte data[LEN_EUI];
 	readBytes(EUI, NO_SUB, data, LEN_EUI);
-	sprintf(msgBuffer, "EUI: %d:%d:%d:%d:%d, OUI: %d:%d:%d",
+	sprintf(msgBuffer, "EUI: %02X:%02X:%02X:%02X:%02X, OUI: %02X:%02X:%02X",
 		data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
 }
 
@@ -757,6 +758,36 @@ void DW1000Class::setNetworkId(unsigned int val) {
 void DW1000Class::setDeviceAddress(unsigned int val) {
 	_networkAndAddress[0] = (byte)(val & 0xFF);
 	_networkAndAddress[1] = (byte)((val >> 8) & 0xFF);
+}
+
+int DW1000Class::nibbleFromChar(char c)
+{
+    if(c >= '0' && c <= '9') return c - '0';
+    if(c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if(c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return 255;
+}
+
+void DW1000Class::convertToByte(char string[], byte *bytes){
+    byte eui_byte[LEN_EUI];
+    // we fill it with the char array under the form of "AA:FF:1C:...."
+    for(int i=0; i<LEN_EUI; i++)
+    {
+        eui_byte[i]=nibbleFromChar(string[i*3])*16 + nibbleFromChar(string[i*3+1]);
+    }
+    
+    memcpy(bytes,eui_byte,LEN_EUI);
+}
+
+void DW1000Class::setEUI(char eui[])
+{
+    byte eui_byte[LEN_EUI];
+    convertToByte(eui, eui_byte);
+    writeBytes(EUI, NO_SUB, eui_byte, LEN_EUI);
+}
+void DW1000Class::setEUI(byte eui[])
+{
+    writeBytes(EUI, NO_SUB, eui, LEN_EUI);
 }
 
 void DW1000Class::setFrameFilter(boolean val) {

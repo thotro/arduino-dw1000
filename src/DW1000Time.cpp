@@ -49,7 +49,7 @@ void DW1000Time::setTime(float timeUs) {
 
 void DW1000Time::setTime(long value, float factorUs) {
 	float tsValue = value * factorUs;
-	tsValue = fmod(tsValue, TIME_OVERFLOW);
+    tsValue = fmod(tsValue, TIME_OVERFLOW); 
 	setTime(tsValue);
 }
 
