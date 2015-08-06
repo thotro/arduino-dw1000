@@ -25,11 +25,10 @@
 
 DW1000RangingClass DW1000Ranging;
 
-
-//the current device we are using in this sketch
-DW1000Device DW1000RangingClass::_currentDevice;
+ 
 //other devices we are going to communicate with which are on our network:
 DW1000Device DW1000RangingClass::_networkDevices[MAX_DEVICES];
+byte DW1000RangingClass::_currentAddress[8];
 
 //module type (anchor or tag)
 int DW1000RangingClass::_type;
@@ -99,11 +98,11 @@ void DW1000RangingClass::generalStart(){
     
     if(DEBUG){
         // DEBUG monitoring
-        Serial.println("### DW1000-arduino-ranging-library ###");
+        Serial.println("DW1000-arduino");
         // initialize the driver
         
         
-        Serial.println("Committed configuration ...");
+        Serial.println("configuration..");
         // DEBUG chip info and registers pretty printed
         char msg[90];
         DW1000.getPrintableDeviceIdentifier(msg);
@@ -126,12 +125,14 @@ void DW1000RangingClass::generalStart(){
 
 
 void DW1000RangingClass::startAsAnchor(DW1000Device myDevice, DW1000Device networkDevices[]){
-    //we copy our network array into _networkDevices
- 
-    memcpy(_networkDevices, networkDevices, sizeof(DW1000Device));
+    //we copy our network array into _networkDevices 
+    memcpy(_networkDevices, networkDevices, sizeof(*networkDevices));
     //we set the address of our device:
     byte address[8];
     myDevice.getAddress(address);
+    
+    //we copy the address in an array
+    memcpy(_currentAddress, address, 8);
     
     DW1000.setEUI(address);
     
@@ -142,7 +143,7 @@ void DW1000RangingClass::startAsAnchor(DW1000Device myDevice, DW1000Device netwo
     _type=ANCHOR;
     
     if(DEBUG){
-        Serial.println("### START AS ANCHOR ###");
+        Serial.println("### ANCHOR ###");
     }
 }
 
@@ -160,7 +161,7 @@ void DW1000RangingClass::startAsTag(DW1000Device myDevice, DW1000Device networkD
     _type=TAG;
     
     if(DEBUG){
-        Serial.println("### START AS TAG ###");
+        Serial.println("### TAG ###");
     }
     //we can start to poll: (this is the TAG which start to poll)
     transmitPoll();
@@ -207,16 +208,16 @@ void DW1000RangingClass::loop(){
         //A msg was sent. We launch the ranging protocole when a message was sent
         if(_type==ANCHOR){
             if(data[0] == POLL_ACK) {
-                DW1000.getTransmitTimestamp((*myDistantDevice).timePollAckSent);
+                DW1000.getTransmitTimestamp(myDistantDevice->timePollAckSent);
                 noteActivity();
             }
         }
         else if(_type==TAG){
             if(data[0] == POLL) {
-                DW1000.getTransmitTimestamp((*myDistantDevice).timePollSent);
+                DW1000.getTransmitTimestamp(myDistantDevice->timePollSent);
                 //Serial.print("Sent POLL @ "); Serial.println(timePollSent.getAsFloat());
             } else if(data[0] == RANGE) {
-                DW1000.getTransmitTimestamp((*myDistantDevice).timeRangeSent);
+                DW1000.getTransmitTimestamp(myDistantDevice->timeRangeSent);
                 noteActivity();
             }
         }
@@ -243,29 +244,31 @@ void DW1000RangingClass::loop(){
             if(data[0] == POLL) {
                 // on POLL we (re-)start, so no protocol failure
                 _protocolFailed = false;
-                DW1000.getReceiveTimestamp((*myDistantDevice).timePollReceived);
+                DW1000.getReceiveTimestamp(myDistantDevice->timePollReceived);
                 _expectedMsgId = RANGE;
                 transmitPollAck();
                 noteActivity();
             }
             else if(data[0] == RANGE) {
-                DW1000.getReceiveTimestamp((*myDistantDevice).timeRangeReceived);
+                DW1000.getReceiveTimestamp(myDistantDevice->timeRangeReceived);
                 _expectedMsgId = POLL;
                 if(!_protocolFailed) {
-                    (*myDistantDevice).timePollSent.setTimestamp(data+1);
-                    (*myDistantDevice).timePollAckReceived.setTimestamp(data+6);
-                    (*myDistantDevice).timeRangeSent.setTimestamp(data+11);
+                    myDistantDevice->timePollSent.setTimestamp(data+1);
+                    myDistantDevice->timePollAckReceived.setTimestamp(data+6);
+                    myDistantDevice->timeRangeSent.setTimestamp(data+11);
                     
                     // (re-)compute range as two-way ranging is done
-                    computeRangeAsymmetric(myDistantDevice); // CHOSEN RANGING ALGORITHM
+                    DW1000Time myTOF;
+                    computeRangeAsymmetric(myDistantDevice, &myTOF); // CHOSEN RANGING ALGORITHM
                     
-                    float distance=(*myDistantDevice).timeComputedRange.getAsMeters();
-                    (*myDistantDevice).setRXPower(DW1000.getReceivePower());
-                    float rangeBias=rangeRXCorrection((*myDistantDevice).getRXPower());
-                    (*myDistantDevice).setRange(distance-rangeBias);
+                    float distance=myTOF.getAsMeters();
+                    
+                    myDistantDevice->setRXPower(DW1000.getReceivePower());
+                    float rangeBias=rangeRXCorrection(myDistantDevice->getRXPower());
+                    myDistantDevice->setRange(distance-rangeBias);
                      
-                    (*myDistantDevice).setFPPower(DW1000.getFirstPathPower());
-                    (*myDistantDevice).setQuality(DW1000.getReceiveQuality());
+                    myDistantDevice->setFPPower(DW1000.getFirstPathPower());
+                    myDistantDevice->setQuality(DW1000.getReceiveQuality());
                     
                     //we wend the range to TAG
                     transmitRangeReport(myDistantDevice);
@@ -298,7 +301,7 @@ void DW1000RangingClass::loop(){
                 return;
             }
             if(data[0] == POLL_ACK) {
-                DW1000.getReceiveTimestamp((*myDistantDevice).timePollAckReceived);
+                DW1000.getReceiveTimestamp(myDistantDevice->timePollAckReceived);
                 _expectedMsgId = RANGE_REPORT;
                 transmitRange(myDistantDevice);
                 noteActivity();
@@ -310,8 +313,8 @@ void DW1000RangingClass::loop(){
                 float curRXPower;
                 memcpy(&curRXPower, data+5, 4);
                 //we have a new range to save !
-                (*myDistantDevice).setRange(curRange);
-                (*myDistantDevice).setRXPower(curRXPower);
+                myDistantDevice->setRange(curRange);
+                myDistantDevice->setRXPower(curRXPower);
                 
                 //We can call our handler !
                 if(_handleNewRange != 0){
@@ -375,6 +378,7 @@ void DW1000RangingClass::noteActivity() {
 
 void DW1000RangingClass::resetInactive() {
     //if inactive
+    Serial.println("---- RESET INACTIVE ---");
     if(_type==ANCHOR){
         _expectedMsgId = POLL;
         receiver();
@@ -409,8 +413,8 @@ void DW1000RangingClass::transmitRangeReport(DW1000Device *myDistantDevice) {
     DW1000.setDefaults();
     data[0] = RANGE_REPORT;
     // write final ranging result
-    float curRange=(*myDistantDevice).getRange();
-    float curRXPower=(*myDistantDevice).getRXPower();
+    float curRange=myDistantDevice->getRange();
+    float curRXPower=myDistantDevice->getRXPower();
     //We add the Range and then the RXPower
     memcpy(data+1, &curRange, 4);
     memcpy(data+5, &curRXPower, 4);
@@ -460,10 +464,10 @@ void DW1000RangingClass::transmitRange(DW1000Device *myDistantDevice) {
     // delay sending the message and remember expected future sent timestamp
     DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, MICROSECONDS);
     //we get the device which correspond to the message which was sent (need to be filtered by MAC address)
-    (*myDistantDevice).timeRangeSent = DW1000.setDelay(deltaTime);
-    (*myDistantDevice).timePollSent.getTimestamp(data+1);
-    (*myDistantDevice).timePollAckReceived.getTimestamp(data+6);
-    (*myDistantDevice).timeRangeSent.getTimestamp(data+11);
+    myDistantDevice->timeRangeSent = DW1000.setDelay(deltaTime);
+    myDistantDevice->timePollSent.getTimestamp(data+1);
+    myDistantDevice->timePollAckReceived.getTimestamp(data+6);
+    myDistantDevice->timeRangeSent.getTimestamp(data+11);
     DW1000.setData(data, LEN_DATA);
     DW1000.startTransmit();
     //Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
@@ -481,15 +485,13 @@ void DW1000RangingClass::transmitRange(DW1000Device *myDistantDevice) {
  * ######################################################################### */
 
 
-void DW1000RangingClass::computeRangeAsymmetric(DW1000Device *myDistantDevice) {
+void DW1000RangingClass::computeRangeAsymmetric(DW1000Device *myDistantDevice, DW1000Time *myTOF) {
     // asymmetric two-way ranging (more computation intense, less error prone)
-    DW1000Time round1 = ((*myDistantDevice).timePollAckReceived-(*myDistantDevice).timePollSent).wrap();
-    DW1000Time reply1 = ((*myDistantDevice).timePollAckSent-(*myDistantDevice).timePollReceived).wrap();
-    DW1000Time round2 = ((*myDistantDevice).timeRangeReceived-(*myDistantDevice).timePollAckSent).wrap();
-    DW1000Time reply2 = ((*myDistantDevice).timeRangeSent-(*myDistantDevice).timePollAckReceived).wrap();
-    DW1000Time tof = (round1 * round2 - reply1 * reply2) / (round1 + round2 + reply1 + reply2);
-    // set tof timestamp
-    (*myDistantDevice).timeComputedRange.setTimestamp(tof);
+    DW1000Time round1 = (myDistantDevice->timePollAckReceived-myDistantDevice->timePollSent).wrap();
+    DW1000Time reply1 = (myDistantDevice->timePollAckSent-myDistantDevice->timePollReceived).wrap();
+    DW1000Time round2 = (myDistantDevice->timeRangeReceived-myDistantDevice->timePollAckSent).wrap();
+    DW1000Time reply2 = (myDistantDevice->timeRangeSent-myDistantDevice->timePollAckReceived).wrap();
+    myTOF->setTimestamp((round1 * round2 - reply1 * reply2) / (round1 + round2 + reply1 + reply2));
 }
 
 
@@ -500,66 +502,86 @@ void DW1000RangingClass::computeRangeAsymmetric(DW1000Device *myDistantDevice) {
 
 
 // {RSL, PRF 16MHz, PRF 64 MHz}
+//all is pass in int to optimize SRAM memory !
+//In order to keep the dot, we multiply all by 10 and we will dividide
+//by 10 after !
+//17 bytes in SRAM
+char DW1000RangingClass::_bias_RSL[17]={-61,-63,-65,-67,-69,-71,-73,-75,-77,-79,-81,-83,-85,-87,-89,-91,-93};
+//17*2=34 bytes in SRAM
+short DW1000RangingClass::_bias_PRF_16[17]={-198,-187,-179,-163,-143,-127,-109,-84,-59,-31,0,36,65,84,97,106,110};
+//17 bytes in SRAM
+char DW1000RangingClass::_bias_PRF_64[17]={-110,-105,-100,-93,-82,-69,-51,-27,0,21,35,42,49,62,71,76,81};
+// => total of 68 bytes !
 
-float DW1000RangingClass::_bias[17][3]={
-    {-61, -19.8, -11.0},
-    {-63, -18.7, -10.5},
-    {-65, -17.9, -10.0},
-    {-67, -16.3, -9.3},
-    {-69, -14.3, -8.2},
-    {-71, -12.7, -6.9},
-    {-73, -10.9, -5.1},
-    {-75, -8.4,  -2.7},
-    {-77, -5.9,   0.0},
-    {-79, -3.1,   2.1},
-    {-81,  0.0,   3.5},
-    {-83,  3.6,   4.2},
-    {-85,  6.5,   4.9},
-    {-87,  8.4,   6.2},
-    {-89,  9.7,   7.1},
-    {-91,  10.6,  7.6},
-    {-93,  11.0,  8.1},
-};
+
 
 float DW1000RangingClass::rangeRXCorrection(float RXPower){
     byte PRF=DW1000.getPulseFrequency();
     float rangeBias=0;
     if(PRF==DW1000.TX_PULSE_FREQ_16MHZ)
     {
-        Serial.println("16Mhz");
-        rangeBias=computeRangeBias(RXPower, 1);
+        rangeBias=computeRangeBias_16(RXPower);
     }
     else if(PRF==DW1000.TX_PULSE_FREQ_64MHZ)
     {
-        rangeBias=computeRangeBias(RXPower, 2);
-    }
+        rangeBias=computeRangeBias_64(RXPower);
+    } 
     
-    return rangeBias;
 }
 
 
-float DW1000RangingClass::computeRangeBias(float RXPower, int prf)
+float DW1000RangingClass::computeRangeBias_16(float RXPower)
 {
     //We test first boundary
-    if(RXPower>=_bias[0][0])
-        return _bias[0][prf];
+    if(RXPower>=_bias_RSL[0])
+        return float(_bias_PRF_16[0])/1000.0f;
     
     //we test last boundary
-    if(RXPower<=_bias[16][0])
-        return _bias[16][prf];
+    if(RXPower<=_bias_RSL[16])
+        return float(_bias_PRF_16[16])/1000.0f;
+
     
     for(int i=1; i<17; i++){
         //we search for the position we are. All is in negative !
-        if(RXPower<_bias[i-1][0] && RXPower>_bias[i][0]){
+        if(RXPower<_bias_RSL[i-1] && RXPower>_bias_RSL[i]){
             //we have our position i. We now need to calculate the line
-            float a=(_bias[i-1][prf]-_bias[i][prf])/(_bias[i-1][0]-_bias[i][0]);
-            float b=_bias[i-1][prf] - a * _bias[i-1][0];
+            float a=float(_bias_PRF_16[i-1]/10.0f-_bias_PRF_16[i]/10.0f)/float(_bias_RSL[i-1]-_bias_RSL[i]);
+            float b=_bias_PRF_16[i-1]/10.0f - a * _bias_RSL[i-1];
             //return our bias
-            return (a*RXPower + b)/100;
+            return (a*RXPower + b)/100.0f;
         }
     }
-    
 }
+
+float DW1000RangingClass::computeRangeBias_64(float RXPower)
+{
+    //We test first boundary
+    if(RXPower>=_bias_RSL[0])
+    {
+        Serial.println("return first boundary");
+        return float(_bias_PRF_64[0]/1000.0f);
+    }
+    
+    //we test last boundary
+    if(RXPower<=_bias_RSL[16])
+    {
+        Serial.println("Return last boundary");
+        return float(_bias_PRF_64[16]/1000.0f);
+    }
+    
+    
+    for(int i=1; i<17; i++){
+        //we search for the position we are. All is in negative !
+        if(RXPower<_bias_RSL[i-1] && RXPower>_bias_RSL[i]){
+            //we have our position i. We now need to calculate the line
+            float a=float(_bias_PRF_64[i-1]/10.0f-_bias_PRF_64[i]/10.0f)/float(_bias_RSL[i-1]-_bias_RSL[i]);
+            float b=_bias_PRF_64[i-1]/10.0f - a * _bias_RSL[i-1];
+            //return our bias
+            return (a*RXPower + b)/100.0f;
+        }
+    }
+}
+
 
 
 

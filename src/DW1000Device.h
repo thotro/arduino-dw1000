@@ -20,6 +20,7 @@
  */
 
 #include <DW1000Time.h>
+#include <DW1000Mac.h>
 
 
 #ifndef _DW1000Device_H_INCLUDED
@@ -56,9 +57,11 @@ class DW1000Device {
         DW1000Time timePollAckSent;
         DW1000Time timePollAckReceived;
         DW1000Time timeRangeSent;
-        DW1000Time timeRangeReceived;
-        // last computed range/time
-        DW1000Time timeComputedRange;
+        DW1000Time timeRangeReceived;  
+    
+    
+        //DW1000Mac address
+        DW1000Mac mac;
     
     
     private:
@@ -67,10 +70,10 @@ class DW1000Device {
     
         unsigned int _replyDelayTimeUS;
     
-        float _range;
-        float _RXPower;
-        float _FPPower;
-        float _quality;
+        int _range;
+        int _RXPower;
+        int _FPPower;
+        int _quality;
  
 };
 

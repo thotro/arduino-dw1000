@@ -22,8 +22,9 @@
 #include "DW1000Device.h"
 #include "DW1000.h"
 
+
 //Constructor and destructor
-DW1000Device::DW1000Device(){_ownAddress[0]=2;}
+DW1000Device::DW1000Device(){}
 DW1000Device::DW1000Device(char deviceAddress[]){
     setAddress(deviceAddress);
 }
@@ -35,10 +36,10 @@ DW1000Device::~DW1000Device(){
 void DW1000Device::setReplyTime(unsigned int replyDelayTimeUs){ _replyDelayTimeUS=replyDelayTimeUs; }
 void DW1000Device::setAddress(char deviceAddress[]){ DW1000.convertToByte(deviceAddress, _ownAddress); }
 
-void DW1000Device::setRange(float range){ _range=range;}
-void DW1000Device::setRXPower(float RXPower){ _RXPower=RXPower; }
-void DW1000Device::setFPPower(float FPPower){ _FPPower=FPPower; }
-void DW1000Device::setQuality(float quality){ _quality=quality; }
+void DW1000Device::setRange(float range){ _range=round(range*100);}
+void DW1000Device::setRXPower(float RXPower){ _RXPower=round(RXPower*100); }
+void DW1000Device::setFPPower(float FPPower){ _FPPower=round(FPPower*100); }
+void DW1000Device::setQuality(float quality){ _quality=round(quality*100); }
 
 
 //getters
@@ -53,8 +54,8 @@ String DW1000Device::getAddress(){
     return String(string);
 }
 
-float DW1000Device::getRange(){ return _range; }
-float DW1000Device::getRXPower(){ return _RXPower; }
-float DW1000Device::getFPPower(){ return _FPPower; }
-float DW1000Device::getQuality(){ return _quality; }
+float DW1000Device::getRange(){ return float(_range)/100.0f; }
+float DW1000Device::getRXPower(){ return float(_RXPower)/100.0f; }
+float DW1000Device::getFPPower(){ return float(_FPPower)/100.0f; }
+float DW1000Device::getQuality(){ return float(_quality)/100.0f; }
 
