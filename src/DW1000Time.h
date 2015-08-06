@@ -29,6 +29,7 @@
 
 // Speed of radio waves [m/s] * timestamp resolution [~15.65ps] of DW1000
 #define DISTANCE_OF_RADIO 0.0046917639786159f
+#define DISTANCE_OF_RADIO_INV 213.139451293f
 
 // time stamp byte length
 #define LEN_STAMP 5
@@ -66,6 +67,7 @@ public:
 	long long int getTimestamp() const;
 	void setTimestamp(byte data[]);
 	void setTimestamp(const DW1000Time& copy);
+	void setTimestamp(int value);
 
 	DW1000Time& wrap();
 

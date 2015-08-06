@@ -67,6 +67,12 @@ const byte DW1000Class::MODE_LONGDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_P
 const byte DW1000Class::MODE_SHORTDATA_FAST_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
 const byte DW1000Class::MODE_LONGDATA_FAST_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
 const byte DW1000Class::MODE_LONGDATA_RANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_2048};
+// range bias tables
+const byte DW1000Class::BIAS_500_16[] = {198, 187, 179, 163, 143, 127, 109, 84, 59, 31,   0,  36,  65,  84,  97, 106, 110, 112};
+const byte DW1000Class::BIAS_500_64[] = {110, 105, 100,  93,  82,  69,  51, 27,  0, 21,  35,  42,  49,  62,  71,  76,  81,  86};
+const byte DW1000Class::BIAS_900_16[] = {275, 244, 210, 176, 138,  95,  51,  0, 42, 97, 158, 210, 254, 294, 321, 339, 356, 394};
+const byte DW1000Class::BIAS_900_64[] = {295, 266, 235, 199, 150, 100,  58,  0, 49, 91, 127, 153, 175, 197, 233, 245, 264, 284};
+
 // SPI settings
 const SPISettings DW1000Class::_fastSPI = SPISettings(16000000L, MSBFIRST, SPI_MODE0);
 const SPISettings DW1000Class::_slowSPI = SPISettings(2000000L, MSBFIRST, SPI_MODE0);
@@ -1137,12 +1143,58 @@ void DW1000Class::getReceiveTimestamp(DW1000Time& time) {
 	readBytes(RX_TIME, RX_STAMP_SUB, rxTimeBytes, LEN_RX_STAMP);
 	time.setTimestamp(rxTimeBytes);
 	// correct timestamp (i.e. consider range bias)
-	correctTimestamp(time);
+	// FIXME disabled, needs testing: correctTimestamp(time);
 }
 
 void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
-	float rxPower = getReceivePower();
-
+	byte *biasTable;
+	byte biasTableZero;
+	// base line dBm, which is -61
+	float rxPowerBase = getReceivePower() + 61;
+	int rxPowerBaseLow = (int)rxPowerBase;
+	int rxPowerBaseHigh = rxPowerBaseLow+1;
+	if(rxPowerBase < 0) {
+		rxPowerBase = 0;
+		rxPowerBaseLow = 0;
+		rxPowerBaseHigh = 0;
+	} else if(rxPowerBase > 17) {
+		rxPowerBase = 17;
+		rxPowerBaseLow = 17;
+		rxPowerBaseHigh = 17;
+	}
+	// select corresponding range bias table
+	if(_channel == CHANNEL_4 || _channel == CHANNEL_7) {
+		// 900 MHz receiver bandwidth
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			biasTable = (byte*)BIAS_900_16;
+			biasTableZero = BIAS_900_16_ZERO;
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			biasTable = (byte*)BIAS_900_64;
+			biasTableZero = BIAS_900_64_ZERO;			
+		} else {
+			// TODO proper error handling
+		}
+	} else {
+		// 500 MHz receiver bandwidth
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			biasTable = (byte*)BIAS_500_16;
+			biasTableZero = BIAS_500_16_ZERO;
+		} else if(_pulseFrequency == TX_PULSE_FREQ_64MHZ) {
+			biasTable = (byte*)BIAS_500_64;
+			biasTableZero = BIAS_500_64_ZERO;			
+		} else {
+			// TODO proper error handling
+		}
+	}
+	// linear interpolation of bias values
+	int rangeBiasHigh = (rxPowerBaseHigh < biasTableZero ? -biasTable[rxPowerBaseHigh] : biasTable[rxPowerBaseHigh]);
+	int rangeBiasLow = (rxPowerBaseLow < biasTableZero ? -biasTable[rxPowerBaseLow] : biasTable[rxPowerBaseLow]);
+	float rangeBias = rangeBiasLow + (rxPowerBase - rxPowerBaseLow) * 2.0f * (rangeBiasHigh - rangeBiasLow);
+	// range bias [mm] to timestamp modification value conversion
+	DW1000Time adjustmentTime;
+	adjustmentTime.setTimestamp((int)(rangeBias * DISTANCE_OF_RADIO_INV * 0.001f));
+	// apply correction
+	timestamp += adjustmentTime;
 }
 
 void DW1000Class::getSystemTimestamp(DW1000Time& time) {

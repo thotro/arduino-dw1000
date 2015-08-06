@@ -49,7 +49,7 @@ void DW1000Time::setTime(float timeUs) {
 
 void DW1000Time::setTime(long value, float factorUs) {
 	float tsValue = value * factorUs;
-    tsValue = fmod(tsValue, TIME_OVERFLOW); 
+   	tsValue = fmod(tsValue, TIME_OVERFLOW); 
 	setTime(tsValue);
 }
 
@@ -62,6 +62,10 @@ void DW1000Time::setTimestamp(byte data[]) {
 
 void DW1000Time::setTimestamp(const DW1000Time& copy) {
 	_timestamp = copy.getTimestamp();
+}
+
+void DW1000Time::setTimestamp(int value) {
+	_timestamp = value;
 }
 
 long long int DW1000Time::getTimestamp() const {

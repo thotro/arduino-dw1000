@@ -248,7 +248,6 @@
 #include "DW1000Time.h"
 #include <SPI.h>
 
-
 class DW1000Class {
 public:
 	/* TODO impl: later
@@ -486,8 +485,7 @@ public:
 	static void attachReceiveTimeoutHandler(void (*handleReceiveTimeout)(void)) {
 		_handleReceiveTimeout = handleReceiveTimeout;
 	}
-	static void attachReceiveTimestampAvailableHandler(
-			void (*handleReceiveTimestampAvailable)(void)) {
+	static void attachReceiveTimestampAvailableHandler(void (*handleReceiveTimestampAvailable)(void)) {
 		_handleReceiveTimestampAvailable = handleReceiveTimestampAvailable;
 	}
 
@@ -732,8 +730,15 @@ private:
 	static const SPISettings _slowSPI;
 	static const SPISettings* _currentSPI;
 
-	/* range bias tables (500/900 MHz band, 16/64 MHz PRF). */
-	static const
+	/* range bias tables (500/900 MHz band, 16/64 MHz PRF), -61 to -95 dBm. */
+	static const byte BIAS_500_16_ZERO = 10;
+	static const byte BIAS_500_16[];
+	static const byte BIAS_500_64_ZERO = 8;
+	static const byte BIAS_500_64[];
+	static const byte BIAS_900_16_ZERO = 7;
+	static const byte BIAS_900_16[];
+	static const byte BIAS_900_64_ZERO = 7;
+	static const byte BIAS_900_64[];
 };
 
 extern DW1000Class DW1000;
