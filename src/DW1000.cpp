@@ -647,7 +647,7 @@ void DW1000Class::getPrintableDeviceIdentifier(char msgBuffer[]) {
 void DW1000Class::getPrintableExtendedUniqueIdentifier(char msgBuffer[]) {
 	byte data[LEN_EUI];
 	readBytes(EUI, NO_SUB, data, LEN_EUI);
-	sprintf(msgBuffer, "EUI: %02X:%02X:%02X:%02X:%02X, OUI: %02X:%02X:%02X",
+	sprintf(msgBuffer, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
 		data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
 }
 

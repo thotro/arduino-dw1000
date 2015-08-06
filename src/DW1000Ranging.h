@@ -21,7 +21,7 @@
 
 #include "DW1000.h"
 #include "DW1000Time.h"
-#include "DW1000Device.h"
+#include "DW1000Device.h" 
 
 // messages used in the ranging protocol
 #define POLL 0
@@ -32,7 +32,8 @@
 
 #define LEN_DATA 16
 
-#define MAX_DEVICES 3
+//Max devices we put in the networkDevices array ! Each DW1000Device is 74 Bytes in SRAM memory for now.
+#define MAX_DEVICES 7
 
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
@@ -92,11 +93,10 @@ class DW1000RangingClass {
     static DW1000Device* getDistantDevice();
     
         
-  private:
-    //our device configuration
-    static DW1000Device _currentDevice;
+  private: 
     //other devices in the network
     static DW1000Device _networkDevices[MAX_DEVICES];
+    static byte _currentAddress[8];
     
     //Handlers:
     static void (*_handleNewRange)(void);
@@ -121,7 +121,13 @@ class DW1000RangingClass {
     // ranging counter (per second)
     static unsigned int _successRangingCount;
     static unsigned long _rangingCountPeriod;
-    static float _bias[17][3];
+    
+    //_bias correction
+    static char _bias_RSL[17];
+    //17*2=34 bytes in SRAM
+    static short _bias_PRF_16[17];
+    //17 bytes in SRAM
+    static char _bias_PRF_64[17];
 
     
     
@@ -145,10 +151,11 @@ class DW1000RangingClass {
     static void transmitRange(DW1000Device *myDistantDevice);
     
     //methods for range computation
-    static void computeRangeAsymmetric(DW1000Device *myDistantDevice);
+    static void computeRangeAsymmetric(DW1000Device *myDistantDevice, DW1000Time *myTOF);
     //static void computeRangeSymmetric();
     static float rangeRXCorrection(float RXPower);
-    static float computeRangeBias(float RXPower, int prf);
+    static float computeRangeBias_16(float RXPower);
+    static float computeRangeBias_64(float RXPower);
     
  
 
