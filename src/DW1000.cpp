@@ -628,7 +628,7 @@ void DW1000Class::handleInterrupt() {
 			startReceive();
 		}
 	}
-	// clear all status that is left
+	// clear all status that is left unhandled
 	clearAllStatus();
 }
 
@@ -760,33 +760,35 @@ void DW1000Class::setDeviceAddress(unsigned int val) {
 	_networkAndAddress[1] = (byte)((val >> 8) & 0xFF);
 }
 
-int DW1000Class::nibbleFromChar(char c)
-{
-    if(c >= '0' && c <= '9') return c - '0';
-    if(c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if(c >= 'A' && c <= 'F') return c - 'A' + 10;
+int DW1000Class::nibbleFromChar(char c) {
+	if(c >= '0' && c <= '9') {
+		return c - '0';
+	}
+    if(c >= 'a' && c <= 'f') {
+		return c - 'a' + 10;
+	}
+    if(c >= 'A' && c <= 'F') {
+		return c - 'A' + 10;
+	}
     return 255;
 }
 
 void DW1000Class::convertToByte(char string[], byte *bytes){
     byte eui_byte[LEN_EUI];
     // we fill it with the char array under the form of "AA:FF:1C:...."
-    for(int i=0; i<LEN_EUI; i++)
-    {
-        eui_byte[i]=nibbleFromChar(string[i*3])*16 + nibbleFromChar(string[i*3+1]);
+    for(int i = 0; i < LEN_EUI; i++) {
+        eui_byte[i] = (nibbleFromChar(string[i*3]) << 4) + nibbleFromChar(string[i*3+1]);
     }
-    
-    memcpy(bytes,eui_byte,LEN_EUI);
+    memcpy(bytes, eui_byte,LEN_EUI);
 }
 
-void DW1000Class::setEUI(char eui[])
-{
+void DW1000Class::setEUI(char eui[]) {
     byte eui_byte[LEN_EUI];
     convertToByte(eui, eui_byte);
     writeBytes(EUI, NO_SUB, eui_byte, LEN_EUI);
 }
-void DW1000Class::setEUI(byte eui[])
-{
+
+void DW1000Class::setEUI(byte eui[]) {
     writeBytes(EUI, NO_SUB, eui, LEN_EUI);
 }
 
@@ -985,7 +987,7 @@ void DW1000Class::setPulseFrequency(byte freq) {
     
 }
 
-byte DW1000Class::getPulseFrequency(){
+byte DW1000Class::getPulseFrequency() {
     return _pulseFrequency;
 }
 
@@ -1134,6 +1136,13 @@ void DW1000Class::getReceiveTimestamp(DW1000Time& time) {
 	byte rxTimeBytes[LEN_RX_STAMP];
 	readBytes(RX_TIME, RX_STAMP_SUB, rxTimeBytes, LEN_RX_STAMP);
 	time.setTimestamp(rxTimeBytes);
+	// correct timestamp (i.e. consider range bias)
+	correctTimestamp(time);
+}
+
+void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
+	float rxPower = getReceivePower();
+
 }
 
 void DW1000Class::getSystemTimestamp(DW1000Time& time) {

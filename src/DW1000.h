@@ -368,7 +368,10 @@ public:
 	@param[in] val An arbitrary numeric device address.
 	*/
 	static void setDeviceAddress(unsigned int val);
-	// TODO EUI, MAC and filters
+	// TODO MAC and filters
+
+	static void setEUI(char eui[]);
+    	static void setEUI(byte eui[]);
 	
 	/* ##### General device configuration ######################################## */
 	/** 
@@ -380,12 +383,6 @@ public:
 
 	@param[in] val `true` to enable, `false` to disable receiver auto-reenable.
 	*/
-    
-    
-    static void setEUI(char eui[]);
-    static void setEUI(byte eui[]);
-    
-    
 	static void setReceiverAutoReenable(boolean val);
 	
 	/** 
@@ -439,7 +436,7 @@ public:
 	@param[in] freq The PRF, encoded by the above defined constants.
 	*/
 	static void setPulseFrequency(byte freq);
-    static byte getPulseFrequency();
+    	static byte getPulseFrequency();
 	static void setPreambleLength(byte prealen);
 	static void setChannel(byte channel);
 	static void setPreambleCode(byte preacode);
@@ -541,9 +538,9 @@ public:
 	static void getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsigned int n);
 	static void getPrettyBytes(byte data[], char msgBuffer[], unsigned int n);
     
-    //convert from char to 4 bits (hexadecimal)
-    static int nibbleFromChar(char c);
-    static void convertToByte(char string[], byte *eui_byte);
+	//convert from char to 4 bits (hexadecimal)
+	static int nibbleFromChar(char c);
+	static void convertToByte(char string[], byte *eui_byte);
 
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS = 0x00;
@@ -703,6 +700,9 @@ private:
 	/* LDE micro-code management. */
 	static void manageLDE();
 
+	/* timestamp correction. */
+	static void correctTimestamp(DW1000Time& timestamp);
+
 	/* reading and writing bytes from and to DW1000 module. */
 	static void readBytes(byte cmd, word offset, byte data[], unsigned int n);
 	static void readBytesOTP(word address, byte data[]);
@@ -714,8 +714,6 @@ private:
 	/* internal helper for bit operations on multi-bytes. */
 	static boolean getBit(byte data[], unsigned int n, unsigned int bit);
 	static void setBit(byte data[], unsigned int n, unsigned int bit, boolean val);
-    
-    
     
 	/* Register is 6 bit, 7 = write, 6 = sub-adressing, 5-0 = register value
 	 * Total header with sub-adressing can be 15 bit. */
@@ -733,6 +731,9 @@ private:
 	static const SPISettings _fastSPI;
 	static const SPISettings _slowSPI;
 	static const SPISettings* _currentSPI;
+
+	/* range bias tables (500/900 MHz band, 16/64 MHz PRF). */
+	static const
 };
 
 extern DW1000Class DW1000;
