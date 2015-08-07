@@ -19,12 +19,16 @@
  * for the Decawave DW1000 UWB transceiver IC.
  */
 
-#include <DW1000Time.h>
-#include <DW1000Mac.h>
+
 
 
 #ifndef _DW1000Device_H_INCLUDED
 #define _DW1000Device_H_INCLUDED
+
+#include <DW1000Time.h>
+#include "DW1000Mac.h"
+
+class DW1000Mac;
 
 class DW1000Device {
     public:
@@ -44,6 +48,8 @@ class DW1000Device {
         //getters
         unsigned int getReplyTime();
         void getAddress(byte address[]);
+        void getShortAddress(byte address[]);
+    
         String getAddress();
         float getRange();
         float getRXPower();
@@ -61,12 +67,13 @@ class DW1000Device {
     
     
         //DW1000Mac address
-        DW1000Mac mac;
+        DW1000Mac *mac;
     
     
     private:
         //device ID
         byte _ownAddress[8];
+        byte _shortAddress[2];
     
         unsigned int _replyDelayTimeUS;
     
@@ -76,6 +83,8 @@ class DW1000Device {
         int _quality;
  
 };
+
+
 
 #endif
 
