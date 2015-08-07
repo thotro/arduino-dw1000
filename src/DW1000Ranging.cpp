@@ -171,8 +171,24 @@ void DW1000RangingClass::startAsTag(DW1000Device myDevice, DW1000Device networkD
  * #### Setters and Getters ##################################################
  * ######################################################################### */
 
+//setters
 void DW1000RangingClass::setReplyTime(unsigned int replyDelayTimeUs){ _replyDelayTimeUS=replyDelayTimeUs;}
 void DW1000RangingClass::setResetPeriod(unsigned long resetPeriod){ _resetPeriod=resetPeriod;}
+
+
+//getters
+void DW1000RangingClass::getCurrentAddress(byte Address[]){
+    memcpy(Address, _currentAddress, 8);
+}
+void DW1000RangingClass::getCurrentShortAddress(byte Address[]){
+    memcpy(Address, _currentShortAddress, 2);
+}
+
+
+DW1000Device* DW1000RangingClass::getDistantDevice(){
+    //we get the device which correspond to the message which was sent (need to be filtered by MAC address)
+    return &_networkDevices[0];
+}
 
 
 
@@ -192,7 +208,16 @@ void DW1000RangingClass::checkForReset(){
     }
 }
 
-
+byte DW1000RangingClass::detectMessageType(byte data[]){
+    if(data[0]==0xC5)
+    {
+        return BLINK;
+    }
+    else if(data[0]==FC_1 && data[1]==FC_2 && data[LONG_MAC_LEN]==RANGING_INIT)
+    {
+        return RANGING_INIT;
+    }
+}
 
 void DW1000RangingClass::loop(){
     //we check if needed to reset !
@@ -227,6 +252,7 @@ void DW1000RangingClass::loop(){
     //check for new received message
     if(_receivedAck){
         _receivedAck=false;
+         
         
         //we get the device which correspond to the message which was sent (need to be filtered by MAC address)
         DW1000Device *myDistantDevice=&_networkDevices[0];
@@ -338,10 +364,7 @@ void DW1000RangingClass::loop(){
 
 
 
-DW1000Device* DW1000RangingClass::getDistantDevice(){
-    //we get the device which correspond to the message which was sent (need to be filtered by MAC address)
-    return &_networkDevices[0];
-}
+
 
 
 
@@ -393,24 +416,61 @@ void DW1000RangingClass::resetInactive() {
 
 
 /* ###########################################################################
- * #### Methods for ranging protocole (anchor) ###############################
+ * #### Methods for ranging protocole   ######################################
  * ######################################################################### */
 
-void DW1000RangingClass::transmitPollAck() {
+
+
+void DW1000RangingClass::transmit(byte data[]){
     DW1000.newTransmit();
     DW1000.setDefaults();
-    data[0] = POLL_ACK;
-    // delay the same amount as ranging tag
-    DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, MICROSECONDS);
-    DW1000.setDelay(deltaTime);
     DW1000.setData(data, LEN_DATA);
-    //DW1000.setDest();
     DW1000.startTransmit();
 }
 
-void DW1000RangingClass::transmitRangeReport(DW1000Device *myDistantDevice) {
+
+void DW1000RangingClass::transmit(byte data[], DW1000Time time){
     DW1000.newTransmit();
     DW1000.setDefaults();
+    DW1000.setDelay(time);
+    DW1000.setData(data, LEN_DATA);
+    DW1000.startTransmit();
+}
+
+void DW1000RangingClass::transmitBlink(){
+    DW1000Mac mac;
+    mac.generateBlinkFrame(data);
+    transmit(data);
+}
+
+void DW1000RangingClass::transmitPoll() {
+    data[0] = POLL;
+    transmit(data);
+}
+
+
+void DW1000RangingClass::transmitPollAck() {
+    data[0] = POLL_ACK;
+    // delay the same amount as ranging tag
+    DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, DW_MICROSECONDS);
+    transmit(data, deltaTime);
+}
+
+void DW1000RangingClass::transmitRange(DW1000Device *myDistantDevice) {
+    data[0] = RANGE;
+    // delay sending the message and remember expected future sent timestamp
+    DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, DW_MICROSECONDS);
+    //we get the device which correspond to the message which was sent (need to be filtered by MAC address)
+    myDistantDevice->timeRangeSent = DW1000.setDelay(deltaTime);
+    myDistantDevice->timePollSent.getTimestamp(data+1);
+    myDistantDevice->timePollAckReceived.getTimestamp(data+6);
+    myDistantDevice->timeRangeSent.getTimestamp(data+11);
+    transmit(data);
+    //Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
+}
+
+
+void DW1000RangingClass::transmitRangeReport(DW1000Device *myDistantDevice) {
     data[0] = RANGE_REPORT;
     // write final ranging result
     float curRange=myDistantDevice->getRange();
@@ -418,17 +478,12 @@ void DW1000RangingClass::transmitRangeReport(DW1000Device *myDistantDevice) {
     //We add the Range and then the RXPower
     memcpy(data+1, &curRange, 4);
     memcpy(data+5, &curRXPower, 4);
-    
-    DW1000.setData(data, LEN_DATA);
-    DW1000.startTransmit();
+    transmit(data);
 }
 
 void DW1000RangingClass::transmitRangeFailed() {
-    DW1000.newTransmit();
-    DW1000.setDefaults();
     data[0] = RANGE_FAILED;
-    DW1000.setData(data, LEN_DATA);
-    DW1000.startTransmit();
+    transmit(data);
 }
 
 void DW1000RangingClass::receiver() {
@@ -439,39 +494,6 @@ void DW1000RangingClass::receiver() {
     DW1000.startReceive();
 }
 
-
-
-
-
-/* ###########################################################################
- * #### Methods for ranging protocole (TAG) #################################
- * ######################################################################### */
-
-
-void DW1000RangingClass::transmitPoll() {
-    DW1000.newTransmit();
-    DW1000.setDefaults();
-    data[0] = POLL;
-    DW1000.setData(data, LEN_DATA);
-    DW1000.startTransmit();
-}
-
-
-void DW1000RangingClass::transmitRange(DW1000Device *myDistantDevice) {
-    DW1000.newTransmit();
-    DW1000.setDefaults();
-    data[0] = RANGE;
-    // delay sending the message and remember expected future sent timestamp
-    DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, MICROSECONDS);
-    //we get the device which correspond to the message which was sent (need to be filtered by MAC address)
-    myDistantDevice->timeRangeSent = DW1000.setDelay(deltaTime);
-    myDistantDevice->timePollSent.getTimestamp(data+1);
-    myDistantDevice->timePollAckReceived.getTimestamp(data+6);
-    myDistantDevice->timeRangeSent.getTimestamp(data+11);
-    DW1000.setData(data, LEN_DATA);
-    DW1000.startTransmit();
-    //Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
-}
 
 
 

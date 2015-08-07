@@ -21,22 +21,29 @@
  */
 
 #define FC_1 0x41
+#define FC_1_BLINK 0xC5
 #define FC_2 0x8C
 #define FC_2_SHORT 0x88
 
 #define PAN_ID_1 0xCA
 #define PAN_ID_2 0xDE
 
+#define SHORT_MAC_LEN 9
+#define LONG_MAC_LEN 15
+
+
+#ifndef _DW1000MAC_H_INCLUDED
+#define _DW1000MAC_H_INCLUDED
+
 #include <Arduino.h>
+#include "DW1000Device.h"
 
-
-
-#ifndef _DW1000Mac_H_INCLUDED
-#define _DW1000Mac_H_INCLUDED
+class DW1000Device;
 
 class DW1000Mac {
     public:
         //Constructor and destructor
+        DW1000Mac(DW1000Device *parent);
         DW1000Mac();
         ~DW1000Mac();
     
@@ -49,20 +56,30 @@ class DW1000Mac {
     
     
         //for poll message we use just 2 bytes address
-        void generatePollMessage(byte data[]);
+        //total=12 bytes
+        void generateBlinkFrame(byte data[]);
+    
+        //the short fram usually for Resp, Final, or Report
+        //2 bytes for Desination Address and 2 bytes for Source Address
+        //total=9 bytes
+        void generateShortMACFrame(byte data[]);
+    
+        //the long frame for Ranging init
+        //8 bytes for Destination Address and 2 bytes for Source Address
+        //total of
+        void generateLongMACFrame(byte data[]);
+
     
         void incrementSeqNumber();
     
     
     private:
-        byte* _destinationAddress;
-        byte* _destinationAddressShort;
-        byte* _sourceAddress;
-        byte* _sourceAddressShort;
-        byte* _seqNumber;
+        DW1000Device* _parentDevice; 
+        byte _seqNumber;
     
  
 };
+
 
 #endif
 

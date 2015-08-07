@@ -29,6 +29,8 @@
 #define RANGE 2
 #define RANGE_REPORT 3
 #define RANGE_FAILED 255
+#define BLINK 4
+#define RANGING_INIT 5
 
 #define LEN_DATA 16
 
@@ -74,10 +76,13 @@ class DW1000RangingClass {
     //setters
     static void setReplyTime(unsigned int replyDelayTimeUs);
     static void setResetPeriod(unsigned long resetPeriod);
-     
     
+    //getters
+    static void getCurrentAddress(byte address[]);
+    static void getCurrentShortAddress(byte address[]);
     
     //ranging functions
+    static byte detectMessageType(byte data[]);
     static void loop();
     
     
@@ -97,6 +102,7 @@ class DW1000RangingClass {
     //other devices in the network
     static DW1000Device _networkDevices[MAX_DEVICES];
     static byte _currentAddress[8];
+    static byte _currentShortAddress[2];
     
     //Handlers:
     static void (*_handleNewRange)(void);
@@ -141,6 +147,9 @@ class DW1000RangingClass {
     static void checkForReset();
     
     //for ranging protocole (ANCHOR)
+    static void transmit(byte data[]);
+    static void transmit(byte data[], DW1000Time time);
+    static void transmitBlink();
     static void transmitPollAck();
     static void transmitRangeReport(DW1000Device *myDistantDevice);
     static void transmitRangeFailed();

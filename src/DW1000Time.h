@@ -39,10 +39,10 @@
 #define TIME_OVERFLOW 1099511627776
 
 // time factors (relative to [us]) for setting delayed transceive
-#define SECONDS 1e6
-#define MILLISECONDS 1e3
-#define MICROSECONDS 1
-#define NANOSECONDS 1e-3
+#define DW_SECONDS 1e6
+#define DW_MILLISECONDS 1e3
+#define DW_MICROSECONDS 1
+#define DW_NANOSECONDS 1e-3
 
 #include <Arduino.h>
 

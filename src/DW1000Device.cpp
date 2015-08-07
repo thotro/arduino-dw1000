@@ -23,13 +23,16 @@
 #include "DW1000.h"
 
 
+
 //Constructor and destructor
 DW1000Device::DW1000Device(){}
 DW1000Device::DW1000Device(char deviceAddress[]){
     setAddress(deviceAddress);
+    mac = new DW1000Mac(this);
 }
 DW1000Device::~DW1000Device(){
-    
+    //we destruct our mac object
+    delete mac;
 }
 
 //setters:
@@ -47,6 +50,10 @@ unsigned int DW1000Device::getReplyTime(){ return _replyDelayTimeUS; }
 void DW1000Device::getAddress(byte address[]){
     memcpy(address, _ownAddress, sizeof(_ownAddress));
 }
+void DW1000Device::getShortAddress(byte address[]){
+    memcpy(address, _shortAddress, sizeof(_ownAddress));
+}
+
 String DW1000Device::getAddress(){
     char string[25];
     sprintf(string, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
