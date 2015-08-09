@@ -55,7 +55,7 @@
 
 //debug mode
 #ifndef DEBUG
-#define DEBUG true
+#define DEBUG false
 #endif
 
 
@@ -79,10 +79,8 @@ class DW1000RangingClass {
     static void setReplyTime(unsigned int replyDelayTimeUs);
     static void setResetPeriod(unsigned long resetPeriod);
     
-    //getters
-    static void getCurrentAddress(byte address[]);
+    //getters 
     static byte* getCurrentAddress(){return _currentAddress; };
-    static void getCurrentShortAddress(byte address[]);
     static byte* getCurrentShortAddress(){return _currentShortAddress; };
     
     //ranging functions
@@ -94,15 +92,11 @@ class DW1000RangingClass {
     static void attachNewRange(void (*handleNewRange)(void)) {_handleNewRange = handleNewRange; };
     
     
-    //if new receiver is available
-    //static boolean available();
-    //transmit a message
-    //static void write();
-    
     static DW1000Device* getDistantDevice();
     static DW1000Device* searchDistantDevice(byte shortAddress[]);
     
-    static void visualizeDatas(byte datas[]);
+    //FOR DEBUGGING
+    //static void visualizeDatas(byte datas[]);
     
         
   private: 
@@ -175,7 +169,7 @@ class DW1000RangingClass {
     
     //methods for range computation
     static void computeRangeAsymmetric(DW1000Device *myDistantDevice, DW1000Time *myTOF);
-    //static void computeRangeSymmetric();
+    
      
 
 };

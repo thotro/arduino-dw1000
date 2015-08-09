@@ -28,11 +28,7 @@
 DW1000Device::DW1000Device(){
     randomShortAddress();
 }
-DW1000Device::DW1000Device(char deviceAddress[]){
-    //we have a 8 bytes address
-    setAddress(deviceAddress);
-    randomShortAddress();
-}
+
 DW1000Device::DW1000Device(byte deviceAddress[], boolean shortOne){
     if(!shortOne){
         //we have a 8 bytes address
@@ -76,35 +72,38 @@ void DW1000Device::setQuality(float quality){ _quality=round(quality*100); }
 
 //getters
 unsigned int DW1000Device::getReplyTime(){ return _replyDelayTimeUS; }
-void DW1000Device::getAddress(byte address[]){
-    memcpy(address, _ownAddress, 8);
-}
+
 byte* DW1000Device::getByteAddress(){
     return _ownAddress;
 }
+/*
 String DW1000Device::getAddress(){
     char string[25];
     sprintf(string, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
             _ownAddress[0], _ownAddress[1], _ownAddress[2], _ownAddress[3], _ownAddress[4], _ownAddress[5], _ownAddress[6], _ownAddress[7]);
     return String(string);
-}
-void DW1000Device::getShortAddress(byte address[]){
-    memcpy(address, _shortAddress, 8);
-}
+}*/
+
 byte* DW1000Device::getByteShortAddress(){
     return _shortAddress;
 }
+
+/*
 String DW1000Device::getShortAddress(){
     char string[6];
     sprintf(string, "%02X:%02X",
             _shortAddress[0], _shortAddress[1]);
     return String(string);
 }
+*/
 
+unsigned int DW1000Device::getShortAddress(){
+    return _shortAddress[1]*256 + _shortAddress[0];
+}
 
 
 boolean DW1000Device::isAddressEqual(DW1000Device *device){
-    if(this->getAddress()==device->getAddress())
+    if(memcmp(this->getByteAddress(),device->getByteAddress(), 8)==0)
     {
         return true;
     }
@@ -114,7 +113,7 @@ boolean DW1000Device::isAddressEqual(DW1000Device *device){
 }
 
 boolean DW1000Device::isShortAddressEqual(DW1000Device *device){
-    if(this->getShortAddress()==device->getShortAddress())
+    if(memcmp(this->getByteShortAddress(),device->getByteShortAddress(), 2)==0)
     {
         return true;
     }

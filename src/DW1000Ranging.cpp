@@ -139,6 +139,8 @@ void DW1000RangingClass::startAsAnchor(char address[]){
     DW1000.convertToByte(address, _currentAddress);
     //write the address on the DW1000 chip
     DW1000.setEUI(address);
+    Serial.print("device address: ");
+    Serial.println(address);
     //we need to define a random short address:
     randomSeed(analogRead(0));
     _currentShortAddress[0]=random(0,256);
@@ -150,9 +152,8 @@ void DW1000RangingClass::startAsAnchor(char address[]){
     //defined type as anchor
     _type=ANCHOR;
     
-    if(DEBUG){
-        Serial.println("### ANCHOR ###");
-    }
+    Serial.println("### ANCHOR ###");
+    
 }
 
 void DW1000RangingClass::startAsTag(char address[]){
@@ -160,6 +161,8 @@ void DW1000RangingClass::startAsTag(char address[]){
     DW1000.convertToByte(address, _currentAddress);
     //write the address on the DW1000 chip
     DW1000.setEUI(address);
+    Serial.print("device address: ");
+    Serial.println(address);
     //we need to define a random short address:
     randomSeed(analogRead(0));
     _currentShortAddress[0]=random(0,256);
@@ -169,9 +172,7 @@ void DW1000RangingClass::startAsTag(char address[]){
     //defined type as anchor
     _type=TAG;
     
-    if(DEBUG){
-        Serial.println("### TAG ###");
-    }
+    Serial.println("### TAG ###");
     //we can start to blink
     transmitBlink();
 }
@@ -239,15 +240,7 @@ boolean DW1000RangingClass::addNetworkDevices(DW1000Device *device)
 //setters
 void DW1000RangingClass::setReplyTime(unsigned int replyDelayTimeUs){ _replyDelayTimeUS=replyDelayTimeUs;}
 void DW1000RangingClass::setResetPeriod(unsigned long resetPeriod){ _resetPeriod=resetPeriod;}
-
-
-//getters
-void DW1000RangingClass::getCurrentAddress(byte Address[]){
-    memcpy(Address, _currentAddress, 8);
-}
-void DW1000RangingClass::getCurrentShortAddress(byte Address[]){
-    memcpy(Address, _currentShortAddress, 2);
-}
+ 
 
 
 DW1000Device* DW1000RangingClass::searchDistantDevice(byte shortAddress[]){
@@ -373,17 +366,19 @@ void DW1000RangingClass::loop(){
             //we crate a new device with th tag
             DW1000Device myTag(address, shortAddress);
             
-            Serial.println(myTag.getAddress());
+            //Serial.println(myTag.getAddress());
             
             
             if(addNetworkDevices(&myTag))
             {
+                /*
                 Serial.print("blink; 1 device added ! -> ");
                 Serial.print(myTag.getAddress());
                 Serial.print(" short:");
                 Serial.println(myTag.getShortAddress());
                 Serial.print("Number devices:");
                 Serial.println(_networkDevicesNumber);
+                 */
             }
             
             
@@ -397,23 +392,21 @@ void DW1000RangingClass::loop(){
                 //we crate a new device with the anchor
                 DW1000Device myAnchor(address, true);
                 
-                Serial.println(myAnchor.getShortAddress());
+                //Serial.println(myAnchor.getShortAddress());
                 
                 if(addNetworkDevices(&myAnchor, true))
                 {
+                    /*
                     Serial.print("ranging init; 1 device added ! -> ");
                     Serial.print(" short:");
                     Serial.println(myAnchor.getShortAddress());
                     Serial.print("Number devices:");
                     Serial.println(_networkDevicesNumber);
-                    
+                    */
                     //we relpy by the transmit ranging init message
                     transmitPoll(&myAnchor);
                     noteActivity();
                 }
-            }
-            else{
-                Serial.println("ranging init not for me");
             }
         }
         else
@@ -423,7 +416,7 @@ void DW1000RangingClass::loop(){
             if(!_globalMac.decodeShortMACFrame(data, address))
             {
                 //the frame is not for this module. return
-                Serial.println("Short mac frame not for me");
+                //Serial.println("Short mac frame not for me");
                 return;
             }
             
@@ -435,10 +428,12 @@ void DW1000RangingClass::loop(){
             if(myDistantDevice==0)
             {
                 //we don't have the short address of the device in memory
+                /*
                 Serial.print("unknown: ");
                 Serial.print(address[0], HEX);
                 Serial.print(":");
                 Serial.println(address[1], HEX);
+                 */
                 return;
             }
             
@@ -743,14 +738,14 @@ void DW1000RangingClass::computeRangeAsymmetric(DW1000Device *myDistantDevice, D
 }
 
 
-
+/* FOR DEBUGGING
 void DW1000RangingClass::visualizeDatas(byte datas[]){
     char string[60];
     sprintf(string, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
             datas[0], datas[1], datas[2], datas[3], datas[4], datas[5], datas[6], datas[7],datas[8],datas[9],datas[10],datas[11],datas[12],datas[13],datas[14],datas[15]);
     Serial.println(string);
 }
-
+*/
 
 
 

@@ -33,8 +33,7 @@ class DW1000Mac;
 class DW1000Device {
     public:
         //Constructor and destructor
-        DW1000Device();
-        DW1000Device(char address[]);
+        DW1000Device(); 
         DW1000Device(byte address[], byte shortAddress[]);
         DW1000Device(byte address[], boolean shortOne=false);
         ~DW1000Device();
@@ -51,12 +50,11 @@ class DW1000Device {
         void setQuality(float quality);
         //getters
         unsigned int getReplyTime();
-        void getAddress(byte address[]);
         byte* getByteAddress();
-        String getAddress();
-        void getShortAddress(byte address[]);
+        //String getAddress();
         byte* getByteShortAddress();
-        String getShortAddress();
+        unsigned int getShortAddress();
+        //String getShortAddress();
     
         float getRange();
         float getRXPower();
@@ -74,10 +72,6 @@ class DW1000Device {
         DW1000Time timePollAckReceived;
         DW1000Time timeRangeSent;
         DW1000Time timeRangeReceived;  
-    
-    
-        //DW1000Mac address
-        //DW1000Mac *mac;
     
     
     private:
