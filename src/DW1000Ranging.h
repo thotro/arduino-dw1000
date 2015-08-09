@@ -36,7 +36,7 @@
 #define LEN_DATA 40
 
 //Max devices we put in the networkDevices array ! Each DW1000Device is 74 Bytes in SRAM memory for now.
-#define MAX_DEVICES 2
+#define MAX_DEVICES 4
 
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
@@ -44,9 +44,9 @@
 
 //Default value
 //in ms
-#define DEFAULT_RESET_PERIOD 1000
+#define DEFAULT_RESET_PERIOD 200
 //in us
-#define DEFAULT_REPLY_DELAY_TIME 10000
+#define DEFAULT_REPLY_DELAY_TIME 4000
 
 //sketch type (anchor or tag)
 #define TAG 0
@@ -159,6 +159,7 @@ class DW1000RangingClass {
     static void copyShortAddress(byte address1[],byte address2[]);
     
     //for ranging protocole (ANCHOR)
+    static void transmitInit();
     static void transmit(byte datas[]);
     static void transmit(byte datas[], DW1000Time time);
     static void transmitBlink();
