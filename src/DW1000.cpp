@@ -1190,6 +1190,7 @@ void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
 	}
 	// linear interpolation of bias values
 	float rangeBias = rangeBiasLow + (rxPowerBase - rxPowerBaseLow) / (rxPowerBaseHigh - rxPowerBaseLow) * (rangeBiasHigh - rangeBiasLow);
+ 
 	// range bias [mm] to timestamp modification value conversion
 	DW1000Time adjustmentTime;
 	adjustmentTime.setTimestamp((int)(rangeBias * DISTANCE_OF_RADIO_INV * 0.001f));
