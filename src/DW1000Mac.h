@@ -36,9 +36,9 @@
 #define _DW1000MAC_H_INCLUDED
 
 #include <Arduino.h>
-#include "DW1000Device.h"
+#include "DW1000Device.h" 
 
-class DW1000Device;
+class DW1000Device; 
 
 class DW1000Mac {
     public:
@@ -57,25 +57,28 @@ class DW1000Mac {
     
         //for poll message we use just 2 bytes address
         //total=12 bytes
-        void generateBlinkFrame(byte data[]);
+        void generateBlinkFrame(byte frame[], byte sourceAddress[], byte sourceShortAddress[]);
     
         //the short fram usually for Resp, Final, or Report
         //2 bytes for Desination Address and 2 bytes for Source Address
         //total=9 bytes
-        void generateShortMACFrame(byte data[]);
+        void generateShortMACFrame(byte frame[], byte sourceShortAddress[], byte destinationShortAddress[]);
     
         //the long frame for Ranging init
         //8 bytes for Destination Address and 2 bytes for Source Address
         //total of
-        void generateLongMACFrame(byte data[]);
+        void generateLongMACFrame(byte frame[],  byte sourceShortAddress[], byte destinationAddress[]);
 
+        //in order to decode the frame and save source Address!
+        void decodeBlinkFrame(byte frame[], byte address[], byte shortAddress[]);
+        boolean decodeShortMACFrame(byte frame[], byte address[]);
+        boolean decodeLongMACFrame(byte frame[], byte address[]);
     
         void incrementSeqNumber();
     
     
-    private:
-        DW1000Device* _parentDevice; 
-        byte _seqNumber;
+    private: 
+        int _seqNumber;
     
  
 };
