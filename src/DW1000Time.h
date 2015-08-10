@@ -67,7 +67,7 @@ public:
 	long long int getTimestamp() const;
 	void setTimestamp(byte data[]);
 	void setTimestamp(const DW1000Time& copy);
-	void setTimestamp(int value);
+	void setTimestamp(int value); 
 
 	DW1000Time& wrap();
 

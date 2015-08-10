@@ -33,13 +33,16 @@ class DW1000Mac;
 class DW1000Device {
     public:
         //Constructor and destructor
-        DW1000Device();
-        DW1000Device(char address[]);
+        DW1000Device(); 
+        DW1000Device(byte address[], byte shortAddress[]);
+        DW1000Device(byte address[], boolean shortOne=false);
         ~DW1000Device();
     
         //setters:
         void setReplyTime(unsigned int replyDelayTimeUs);
         void setAddress(char address[]);
+        void setAddress(byte *address);
+        void setShortAddress(byte address[]);
     
         void setRange(float range);
         void setRXPower(float power);
@@ -47,14 +50,19 @@ class DW1000Device {
         void setQuality(float quality);
         //getters
         unsigned int getReplyTime();
-        void getAddress(byte address[]);
-        void getShortAddress(byte address[]);
+        byte* getByteAddress();
+        //String getAddress();
+        byte* getByteShortAddress();
+        unsigned int getShortAddress();
+        //String getShortAddress();
     
-        String getAddress();
         float getRange();
         float getRXPower();
         float getFPPower();
         float getQuality();
+    
+        boolean isAddressEqual(DW1000Device *device);
+        boolean isShortAddressEqual(DW1000Device *device);
     
         //functions which contains the date: (easier to put as public)
         // timestamps to remember
@@ -64,10 +72,6 @@ class DW1000Device {
         DW1000Time timePollAckReceived;
         DW1000Time timeRangeSent;
         DW1000Time timeRangeReceived;  
-    
-    
-        //DW1000Mac address
-        DW1000Mac *mac;
     
     
     private:
@@ -81,6 +85,8 @@ class DW1000Device {
         int _RXPower;
         int _FPPower;
         int _quality;
+    
+        void randomShortAddress();
  
 };
 

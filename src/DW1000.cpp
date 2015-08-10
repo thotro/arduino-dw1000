@@ -1193,7 +1193,6 @@ void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
 	// range bias [mm] to timestamp modification value conversion
 	DW1000Time adjustmentTime;
 	adjustmentTime.setTimestamp((int)(rangeBias * DISTANCE_OF_RADIO_INV * 0.001f));
-	Serial.print(getReceivePower()); Serial.print(" --> "); Serial.println(adjustmentTime.getAsMeters());
 	// apply correction
 	timestamp += adjustmentTime;
 }

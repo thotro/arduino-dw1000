@@ -22,6 +22,7 @@
 #include "DW1000.h"
 #include "DW1000Time.h"
 #include "DW1000Device.h" 
+#include "DW1000Mac.h"
 
 // messages used in the ranging protocol
 #define POLL 0
@@ -32,10 +33,10 @@
 #define BLINK 4
 #define RANGING_INIT 5
 
-#define LEN_DATA 16
+#define LEN_DATA 40
 
 //Max devices we put in the networkDevices array ! Each DW1000Device is 74 Bytes in SRAM memory for now.
-#define MAX_DEVICES 7
+#define MAX_DEVICES 4
 
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
@@ -43,9 +44,9 @@
 
 //Default value
 //in ms
-#define DEFAULT_RESET_PERIOD 250
+#define DEFAULT_RESET_PERIOD 200
 //in us
-#define DEFAULT_REPLY_DELAY_TIME 3000
+#define DEFAULT_REPLY_DELAY_TIME 4000
 
 //sketch type (anchor or tag)
 #define TAG 0
@@ -54,7 +55,7 @@
 
 //debug mode
 #ifndef DEBUG
-#define DEBUG true
+#define DEBUG false
 #endif
 
 
@@ -69,20 +70,21 @@ class DW1000RangingClass {
     static void initCommunication(unsigned int RST=DEFAULT_RST_PIN, unsigned int SS=DEFAULT_SPI_SS_PIN);
     static void configureNetwork(unsigned int deviceAddress, unsigned int networkId, const byte mode[]); 
     static void generalStart();
-    static void startAsAnchor(DW1000Device device, DW1000Device networkDevices[]);
-    static void startAsTag(DW1000Device device);
-    static void startAsTag(DW1000Device device, DW1000Device networkDevices[]);
+    static void startAsAnchor(char address[]);
+    static void startAsTag(char address[]);
+    static boolean addNetworkDevices(DW1000Device *device, boolean shortAddress);
+    static boolean addNetworkDevices(DW1000Device *device);
     
     //setters
     static void setReplyTime(unsigned int replyDelayTimeUs);
     static void setResetPeriod(unsigned long resetPeriod);
     
-    //getters
-    static void getCurrentAddress(byte address[]);
-    static void getCurrentShortAddress(byte address[]);
+    //getters 
+    static byte* getCurrentAddress(){return _currentAddress; };
+    static byte* getCurrentShortAddress(){return _currentShortAddress; };
     
     //ranging functions
-    static byte detectMessageType(byte data[]);
+    static short detectMessageType(byte datas[]);
     static void loop();
     
     
@@ -90,19 +92,22 @@ class DW1000RangingClass {
     static void attachNewRange(void (*handleNewRange)(void)) {_handleNewRange = handleNewRange; };
     
     
-    //if new receiver is available
-    //static boolean available();
-    //transmit a message
-    //static void write();
-    
     static DW1000Device* getDistantDevice();
+    static DW1000Device* searchDistantDevice(byte shortAddress[]);
+    
+    //FOR DEBUGGING
+    //static void visualizeDatas(byte datas[]);
     
         
   private: 
     //other devices in the network
     static DW1000Device _networkDevices[MAX_DEVICES];
+    static short _networkDevicesNumber;
+    static short _lastDistantDevice;
     static byte _currentAddress[8];
     static byte _currentShortAddress[2];
+    static byte _lastSentToShortAddress[2];
+    static DW1000Mac _globalMac;
     
     //Handlers:
     static void (*_handleNewRange)(void);
@@ -145,28 +150,27 @@ class DW1000RangingClass {
     
     //global functions:
     static void checkForReset();
+    static void copyShortAddress(byte address1[],byte address2[]);
     
     //for ranging protocole (ANCHOR)
-    static void transmit(byte data[]);
-    static void transmit(byte data[], DW1000Time time);
+    static void transmitInit();
+    static void transmit(byte datas[]);
+    static void transmit(byte datas[], DW1000Time time);
     static void transmitBlink();
-    static void transmitPollAck();
+    static void transmitRangingInit(DW1000Device *myDistantDevice);
+    static void transmitPollAck(DW1000Device *myDistantDevice);
     static void transmitRangeReport(DW1000Device *myDistantDevice);
-    static void transmitRangeFailed();
+    static void transmitRangeFailed(DW1000Device *myDistantDevice);
     static void receiver();
     
     //for ranging protocole (TAG)
-    static void transmitPoll();
+    static void transmitPoll(DW1000Device *myDistantDevice);
     static void transmitRange(DW1000Device *myDistantDevice);
     
     //methods for range computation
     static void computeRangeAsymmetric(DW1000Device *myDistantDevice, DW1000Time *myTOF);
-    //static void computeRangeSymmetric();
-    static float rangeRXCorrection(float RXPower);
-    static float computeRangeBias_16(float RXPower);
-    static float computeRangeBias_64(float RXPower);
     
- 
+     
 
 };
 

@@ -24,10 +24,6 @@
 #include "DW1000Ranging.h"
 
 //Constructor and destructor
-DW1000Mac::DW1000Mac(DW1000Device *parent){
-    _parentDevice=parent;
-    _seqNumber=0;
-}
 
 DW1000Mac::DW1000Mac(){
     _seqNumber=0;
@@ -35,69 +31,97 @@ DW1000Mac::DW1000Mac(){
 
 
 DW1000Mac::~DW1000Mac(){
-    
 }
 
 //for poll message we use just 2 bytes address
 //total=12 bytes
-void DW1000Mac::generateBlinkFrame(byte data[]){
+void DW1000Mac::generateBlinkFrame(byte frame[], byte sourceAddress[], byte sourceShortAddress[]){
     //Frame Control
-    *data=FC_1_BLINK;
+    *frame=FC_1_BLINK;
     //sequence number
-    *(data+1)=_seqNumber;
-    //tag 64 bit ID
-    byte sourceAddress[8];
-    DW1000Ranging.getCurrentAddress(sourceAddress);
+    *(frame+1)=_seqNumber;
+    //tag 64 bit ID (8 bytes address)
+    memcpy(frame+2, sourceAddress, 8);
+    //tag 2bytes address:
+    memcpy(frame+10, sourceShortAddress, 2);
     
-    memcpy(data+2, sourceAddress, sizeof(*sourceAddress));
+    //we increment seqNumber
+    incrementSeqNumber();
 }
 
 //the short fram usually for Resp, Final, or Report
 //2 bytes for Desination Address and 2 bytes for Source Address
 //total=9 bytes
-void DW1000Mac::generateShortMACFrame(byte data[]){
+void DW1000Mac::generateShortMACFrame(byte frame[], byte sourceShortAddress[], byte destinationShortAddress[]){
     //Frame controle
-    *data=FC_1;
-    *(data+1)=FC_2_SHORT;
+    *frame=FC_1;
+    *(frame+1)=FC_2_SHORT;
     //sequence number
-    *(data+2)=_seqNumber;
+    *(frame+2)=_seqNumber;
     //PAN ID
-    *(data+3)=0xCA;
-    *(data+4)=0xDE;
+    *(frame+3)=0xCA;
+    *(frame+4)=0xDE;
     
     //destination address (2 bytes)
-    byte destinationAddress[2];
-    _parentDevice->getShortAddress(destinationAddress);
-    memcpy(data+5, destinationAddress, sizeof(*destinationAddress));
+    memcpy(frame+5, destinationShortAddress, 2);
     //source address (2 bytes)
-    byte sourceAddress[2];
-    DW1000Ranging.getCurrentShortAddress(sourceAddress);
-    memcpy(data+7, sourceAddress, sizeof(*sourceAddress));
+    memcpy(frame+7, sourceShortAddress, 2);
+    
+    //we increment seqNumber
+    incrementSeqNumber();
 }
 
 //the long frame for Ranging init
 //8 bytes for Destination Address and 2 bytes for Source Address
 //total=15
-void DW1000Mac::generateLongMACFrame(byte data[]){
+void DW1000Mac::generateLongMACFrame(byte frame[], byte sourceShortAddress[], byte destinationAddress[]){
     //Frame controle
-    *data=FC_1;
-    *(data+1)=FC_2;
+    *frame=FC_1;
+    *(frame+1)=FC_2;
     //sequence number
-    *(data+2)=_seqNumber;
+    *(frame+2)=_seqNumber;
     //PAN ID
-    *(data+3)=0xCA;
-    *(data+4)=0xDE;
+    *(frame+3)=0xCA;
+    *(frame+4)=0xDE;
     
     //destination address (8 bytes)
-    byte destinationAddress[8];
-    _parentDevice->getAddress(destinationAddress);
-    memcpy(data+5, destinationAddress, sizeof(*destinationAddress));
+    memcpy(frame+5, destinationAddress, 8);
     //source address (2 bytes)
-    byte sourceAddress[2];
-    DW1000Ranging.getCurrentShortAddress(sourceAddress);
-    memcpy(data+13, sourceAddress, sizeof(*sourceAddress));
+    memcpy(frame+13, sourceShortAddress, 2);
+    
+    //we increment seqNumber
+    incrementSeqNumber();
 }
 
+
+
+void DW1000Mac::decodeBlinkFrame(byte frame[], byte address[], byte shortAddress[]){
+    //we save the long address of the sender into the device.
+    memcpy(address, frame+2, 8);
+    memcpy(shortAddress, frame+10, 2);
+} 
+boolean DW1000Mac::decodeShortMACFrame(byte frame[], byte address[]){
+    memcpy(address, frame+7, 2);
+    //we grab the destination address for the mac frame
+    byte destinationAddress[2];
+    memcpy(destinationAddress, frame+5, 2);
+    //if it's not the same, the message is not for us !
+    if(memcmp(destinationAddress, DW1000Ranging.getCurrentShortAddress(), 2)==0)
+        return true;
+    else
+        return false;
+}
+boolean DW1000Mac::decodeLongMACFrame(byte frame[], byte address[]){
+    memcpy(address, frame+13, 2);
+    //we grab the destination address for the mac frame
+    byte destinationAddress[8];
+    memcpy(destinationAddress, frame+5, 8);
+    //if it's not the same, the message is not for us !
+    if(memcmp(destinationAddress, DW1000Ranging.getCurrentAddress(), 8)==0)
+        return true;
+    else
+        return false;
+}
 
 
 void DW1000Mac::incrementSeqNumber()
