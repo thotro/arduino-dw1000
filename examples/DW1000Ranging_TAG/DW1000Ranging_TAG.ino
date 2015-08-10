@@ -9,13 +9,11 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   //init the configuration
-  DW1000Ranging.initCommunication(9, 10); //Reset and CS pin 
-  //network
-  DW1000Ranging.configureNetwork(2, 10, DW1000.MODE_LONGDATA_RANGE_ACCURACY); //device Address, network ID and frequency
+  DW1000Ranging.initCommunication(9, 10); //Reset and CS pin  
   //define the sketch as anchor. It will be great to dynamically change the type of module
   DW1000Ranging.attachNewRange(newRange);
   //we start the module as a tag
-  DW1000Ranging.startAsTag("7D:00:22:EA:82:60:3B:9C");
+  DW1000Ranging.startAsTag("7D:00:22:EA:82:60:3B:9C", DW1000.MODE_LONGDATA_RANGE_ACCURACY);
    
 }
 

@@ -654,13 +654,13 @@ void DW1000Class::getPrintableExtendedUniqueIdentifier(char msgBuffer[]) {
 	byte data[LEN_EUI];
 	readBytes(EUI, NO_SUB, data, LEN_EUI);
 	sprintf(msgBuffer, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-		data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+		data[7], data[6], data[5], data[4], data[3], data[2], data[1], data[0]);
 }
 
 void DW1000Class::getPrintableNetworkIdAndShortAddress(char msgBuffer[]) {
 	byte data[LEN_PANADR];
 	readBytes(PANADR, NO_SUB, data, LEN_PANADR);
-	sprintf(msgBuffer, "PAN: %u, Short Address: %u",
+	sprintf(msgBuffer, "PAN: %02X, Short Address: %02X",
 		(unsigned int)((data[3] << 8) | data[2]), (unsigned int)((data[1] << 8) | data[0]));
 }
 
@@ -791,16 +791,51 @@ void DW1000Class::convertToByte(char string[], byte *bytes){
 void DW1000Class::setEUI(char eui[]) {
     byte eui_byte[LEN_EUI];
     convertToByte(eui, eui_byte);
-    writeBytes(EUI, NO_SUB, eui_byte, LEN_EUI);
+    setEUI(eui_byte);
 }
 
 void DW1000Class::setEUI(byte eui[]) {
-    writeBytes(EUI, NO_SUB, eui, LEN_EUI);
+    //we reverse the address->
+    byte reverseEUI[8];
+    int size=8;
+    for(int i=0; i<size; i++){
+        *(reverseEUI+i)=*(eui+size-i-1);
+    }
+    writeBytes(EUI, NO_SUB, reverseEUI, LEN_EUI);
 }
 
+
+//Frame Filtering BIT in the SYS_CFG register
 void DW1000Class::setFrameFilter(boolean val) {
 	setBit(_syscfg, LEN_SYS_CFG, FFEN_BIT, val);
 }
+
+void DW1000Class::setFrameFilterBehaveCoordinator(boolean val) {
+    setBit(_syscfg, LEN_SYS_CFG, FFBC_BIT, val);
+}
+
+void DW1000Class::setFrameFilterAllowBeacon(boolean val) {
+    setBit(_syscfg, LEN_SYS_CFG, FFAB_BIT, val);
+}
+
+void DW1000Class::setFrameFilterAllowData(boolean val) {
+    setBit(_syscfg, LEN_SYS_CFG, FFAD_BIT, val);
+}
+
+void DW1000Class::setFrameFilterAllowAcknowledgement(boolean val) {
+    setBit(_syscfg, LEN_SYS_CFG, FFAA_BIT, val);
+}
+
+void DW1000Class::setFrameFilterAllowMAC(boolean val) {
+    setBit(_syscfg, LEN_SYS_CFG, FFAM_BIT, val);
+}
+
+void DW1000Class::setFrameFilterAllowReserved(boolean val) {
+    setBit(_syscfg, LEN_SYS_CFG, FFAR_BIT, val);
+}
+
+
+
 
 void DW1000Class::setDoubleBuffering(boolean val) {
 	setBit(_syscfg, LEN_SYS_CFG, DIS_DRXB_BIT, !val);
@@ -949,6 +984,8 @@ DW1000Time DW1000Class::setDelay(const DW1000Time& delay) {
 	futureTime += _antennaDelay;
 	return futureTime;
 }
+
+
 
 void DW1000Class::setDataRate(byte rate) {
 	rate &= 0x03;

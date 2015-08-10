@@ -56,6 +56,12 @@
 #define SYS_CFG 0x04
 #define LEN_SYS_CFG 4
 #define FFEN_BIT 0
+#define FFBC_BIT 1
+#define FFAB_BIT 2
+#define FFAD_BIT 3
+#define FFAA_BIT 4
+#define FFAM_BIT 5
+#define FFAR_BIT 6
 #define DIS_DRXB_BIT 12
 #define DIS_STXP_BIT 18
 #define HIRQ_POL_BIT 9
@@ -651,9 +657,18 @@ private:
 	/* Arduino interrupt handler */
 	static void handleInterrupt();
 
-	/* not yet implemented/considered settings - hence private. */
-	// TODO implement MAC, addressing and auto-acknowledge
+	/* Allow MAC frame filtering . */
+	// TODO auto-acknowledge
 	static void setFrameFilter(boolean val);
+    static void setFrameFilterBehaveCoordinator(boolean val);
+    static void setFrameFilterAllowBeacon(boolean val);
+    //data type is used in the FC_1 0x41
+    static void setFrameFilterAllowData(boolean val);
+    static void setFrameFilterAllowAcknowledgement(boolean val);
+    static void setFrameFilterAllowMAC(boolean val);
+    //Reserved is used for the Blink message
+    static void setFrameFilterAllowReserved(boolean val);
+    
 	// note: not sure if going to be implemented for now
 	static void setDoubleBuffering(boolean val);
 	// TODO is implemented, but needs testing

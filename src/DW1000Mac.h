@@ -79,6 +79,7 @@ class DW1000Mac {
     
     private: 
         int _seqNumber;
+        void reverseArray(byte to[], byte from[], int size);
     
  
 };

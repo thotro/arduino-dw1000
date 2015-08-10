@@ -40,10 +40,15 @@ void DW1000Mac::generateBlinkFrame(byte frame[], byte sourceAddress[], byte sour
     *frame=FC_1_BLINK;
     //sequence number
     *(frame+1)=_seqNumber;
-    //tag 64 bit ID (8 bytes address)
-    memcpy(frame+2, sourceAddress, 8);
+    //tag 64 bit ID (8 bytes address) -- reverse
+    byte sourceAddressReverse[8];
+    reverseArray(sourceAddressReverse, sourceAddress,8);
+    memcpy(frame+2, sourceAddressReverse, 8);
+    
     //tag 2bytes address:
-    memcpy(frame+10, sourceShortAddress, 2);
+    byte sourceShortAddressReverse[2];
+    reverseArray(sourceShortAddressReverse, sourceShortAddress,2);
+    memcpy(frame+10, sourceShortAddressReverse, 2);
     
     //we increment seqNumber
     incrementSeqNumber();
@@ -62,10 +67,17 @@ void DW1000Mac::generateShortMACFrame(byte frame[], byte sourceShortAddress[], b
     *(frame+3)=0xCA;
     *(frame+4)=0xDE;
     
+    
     //destination address (2 bytes)
-    memcpy(frame+5, destinationShortAddress, 2);
+    byte destinationShortAddressReverse[2];
+    reverseArray(destinationShortAddressReverse, destinationShortAddress, 2);
+    memcpy(frame+5, destinationShortAddressReverse, 2);
+    
     //source address (2 bytes)
-    memcpy(frame+7, sourceShortAddress, 2);
+    byte sourceShortAddressReverse[2];
+    reverseArray(sourceShortAddressReverse, sourceShortAddress, 2);
+    memcpy(frame+7, sourceShortAddressReverse, 2);
+    
     
     //we increment seqNumber
     incrementSeqNumber();
@@ -80,14 +92,19 @@ void DW1000Mac::generateLongMACFrame(byte frame[], byte sourceShortAddress[], by
     *(frame+1)=FC_2;
     //sequence number
     *(frame+2)=_seqNumber;
-    //PAN ID
+    //PAN ID (0xDECA)
     *(frame+3)=0xCA;
     *(frame+4)=0xDE;
     
-    //destination address (8 bytes)
-    memcpy(frame+5, destinationAddress, 8);
+    //destination address (8 bytes) - we need to reverse the byte array
+    byte destinationAddressReverse[8];
+    reverseArray(destinationAddressReverse, destinationAddress, 8);
+    memcpy(frame+5, destinationAddressReverse, 8);
+    
     //source address (2 bytes)
-    memcpy(frame+13, sourceShortAddress, 2);
+    byte sourceShortAddressReverse[2];
+    reverseArray(sourceShortAddressReverse, sourceShortAddress, 2);
+    memcpy(frame+13, sourceShortAddressReverse, 2);
     
     //we increment seqNumber
     incrementSeqNumber();
@@ -96,31 +113,30 @@ void DW1000Mac::generateLongMACFrame(byte frame[], byte sourceShortAddress[], by
 
 
 void DW1000Mac::decodeBlinkFrame(byte frame[], byte address[], byte shortAddress[]){
-    //we save the long address of the sender into the device.
-    memcpy(address, frame+2, 8);
-    memcpy(shortAddress, frame+10, 2);
+    //we save the long address of the sender into the device. -- reverse direction
+    byte reverseAddress[8];
+    memcpy(reverseAddress, frame+2, 8);
+    reverseArray(address, reverseAddress, 8);
+    
+    byte reverseShortAddress[2];
+    memcpy(reverseShortAddress, frame+10, 2);
+    reverseArray(shortAddress, reverseShortAddress, 2);
 } 
 boolean DW1000Mac::decodeShortMACFrame(byte frame[], byte address[]){
-    memcpy(address, frame+7, 2);
+    byte reverseAddress[2];
+    memcpy(reverseAddress, frame+7, 2);
+    reverseArray(address, reverseAddress,2);
     //we grab the destination address for the mac frame
-    byte destinationAddress[2];
-    memcpy(destinationAddress, frame+5, 2);
-    //if it's not the same, the message is not for us !
-    if(memcmp(destinationAddress, DW1000Ranging.getCurrentShortAddress(), 2)==0)
-        return true;
-    else
-        return false;
+    //byte destinationAddress[2];
+    //memcpy(destinationAddress, frame+5, 2);
 }
 boolean DW1000Mac::decodeLongMACFrame(byte frame[], byte address[]){
-    memcpy(address, frame+13, 2);
+    byte reverseAddress[2];
+    memcpy(reverseAddress, frame+13, 2);
+    reverseArray(address, reverseAddress,2);
     //we grab the destination address for the mac frame
-    byte destinationAddress[8];
-    memcpy(destinationAddress, frame+5, 8);
-    //if it's not the same, the message is not for us !
-    if(memcmp(destinationAddress, DW1000Ranging.getCurrentAddress(), 8)==0)
-        return true;
-    else
-        return false;
+    //byte destinationAddress[8];
+    //memcpy(destinationAddress, frame+5, 8);
 }
 
 
@@ -129,4 +145,12 @@ void DW1000Mac::incrementSeqNumber()
     _seqNumber++;
     if(_seqNumber>255)
         _seqNumber=0;
+}
+
+void DW1000Mac::reverseArray(byte to[], byte from[], int size)
+{
+    for(int i=0; i<size; i++){
+        *(to+i)=*(from+size-i-1);
+    }
+    
 }

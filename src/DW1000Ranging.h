@@ -36,7 +36,7 @@
 #define LEN_DATA 40
 
 //Max devices we put in the networkDevices array ! Each DW1000Device is 74 Bytes in SRAM memory for now.
-#define MAX_DEVICES 4
+#define MAX_DEVICES 3
 
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
@@ -46,7 +46,7 @@
 //in ms
 #define DEFAULT_RESET_PERIOD 200
 //in us
-#define DEFAULT_REPLY_DELAY_TIME 4000
+#define DEFAULT_REPLY_DELAY_TIME 9000
 
 //sketch type (anchor or tag)
 #define TAG 0
@@ -55,7 +55,7 @@
 
 //debug mode
 #ifndef DEBUG
-#define DEBUG false
+#define DEBUG true
 #endif
 
 
@@ -70,8 +70,8 @@ class DW1000RangingClass {
     static void initCommunication(unsigned int RST=DEFAULT_RST_PIN, unsigned int SS=DEFAULT_SPI_SS_PIN);
     static void configureNetwork(unsigned int deviceAddress, unsigned int networkId, const byte mode[]); 
     static void generalStart();
-    static void startAsAnchor(char address[]);
-    static void startAsTag(char address[]);
+    static void startAsAnchor(char address[], const byte mode[]);
+    static void startAsTag(char address[], const byte mode[]);
     static boolean addNetworkDevices(DW1000Device *device, boolean shortAddress);
     static boolean addNetworkDevices(DW1000Device *device);
     
@@ -96,7 +96,7 @@ class DW1000RangingClass {
     static DW1000Device* searchDistantDevice(byte shortAddress[]);
     
     //FOR DEBUGGING
-    //static void visualizeDatas(byte datas[]);
+    static void visualizeDatas(byte datas[]);
     
         
   private: 

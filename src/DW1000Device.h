@@ -79,6 +79,8 @@ class DW1000Device {
         byte _ownAddress[8];
         byte _shortAddress[2];
     
+        long _inactivity;
+    
         unsigned int _replyDelayTimeUS;
     
         int _range;
