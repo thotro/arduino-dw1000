@@ -1147,7 +1147,7 @@ void DW1000Class::getReceiveTimestamp(DW1000Time& time) {
 }
 
 void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
-	// base line dBm, which is -61, 2 dBm steps, total 18 data points
+	// base line dBm, which is -61, 2 dBm steps, total 18 data points (down to -95 dBm)
 	float rxPowerBase = -(getReceivePower() + 61.0f) * 0.5f;
 	int rxPowerBaseLow = (int)rxPowerBase;
 	int rxPowerBaseHigh = rxPowerBaseLow + 1;
@@ -1189,10 +1189,11 @@ void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
 		}
 	}
 	// linear interpolation of bias values
-	float rangeBias = rangeBiasLow + (rxPowerBase - rxPowerBaseLow) / (rxPowerBaseHigh - rxPowerBaseLow) * (rangeBiasHigh - rangeBiasLow);
+	float rangeBias = rangeBiasLow + (rxPowerBase - rxPowerBaseLow) * (rangeBiasHigh - rangeBiasLow);
 	// range bias [mm] to timestamp modification value conversion
 	DW1000Time adjustmentTime;
 	adjustmentTime.setTimestamp((int)(rangeBias * DISTANCE_OF_RADIO_INV * 0.001f));
+	Serial.print(getReceivePower()); Serial.print(" --> "); Serial.println(adjustmentTime.getAsMeters());
 	// apply correction
 	timestamp += adjustmentTime;
 }

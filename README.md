@@ -5,11 +5,11 @@ A library that offers functionality to use Decawave's DW1000 chips/modules with 
 Project state
 -------------
 
-**Progress:** 85% (requires some minor optimizations and a lot more testing towards a v1.0 release)
+**Progress:** 90% (requires some minor optimizations and a lot more testing towards a v1.0 release)
 
-**Current milestone:** Tuning, automatic timestamp correction (temperature, RX power levels, etc.) and testing (sender/receiver, two-way ranging)
+**Current milestone:** MAC and frame filtering, error handling
 
-**Subsequent milestone:** Frame filtering rules, nodes addressing and MAC data format
+**Subsequent milestone:** Sleep/power optimizations
 
 **General notice:** Stable transmission of messages between two modules is possible. The code for device tuning is working as well, hence different modes of operation can be chosen. As frame filtering (i.e. via MAC conforming messages) is not implemented yet, internal features of the chip for node addressing and auto-acknowledgement of messages can not be used. This is part of a future milestone. For now, if acknowledgements are required, they have to be sent manually and node addresses have to be encoded in the message payload and processed by the host controller.
 

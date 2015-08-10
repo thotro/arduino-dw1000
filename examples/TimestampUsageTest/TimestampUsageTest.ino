@@ -35,21 +35,21 @@ void loop() {
   byte stamp[LEN_STAMP];
   // unit test
   Serial.print("Time is [us] ... "); Serial.println(time.getAsFloat(), 4);
-  time += DW1000Time(10, DW1000Time::MICROSECONDS);
+  time += DW1000Time(10, DW_MICROSECONDS);
   Serial.print("Time is [us] ... "); Serial.println(time.getAsFloat(), 4);
-  time -= DW1000Time(500, DW1000Time::NANOSECONDS);
+  time -= DW1000Time(500, DW_NANOSECONDS);
   Serial.print("Time is [us] ... "); Serial.println(time.getAsFloat(), 4);
   time2 = time;
   time2 += DW1000Time(10.0f);
   Serial.print("Time2 == Time1 ... "); Serial.println(time == time2 ? "YES" : "NO");
-  time += DW1000Time(10000, DW1000Time::NANOSECONDS);
+  time += DW1000Time(10000, DW_NANOSECONDS);
   Serial.print("Time2 == Time1 ... "); Serial.println(time == time2 ? "YES" : "NO");
   memset(stamp, 0, LEN_STAMP);
   stamp[1] = 0x02; // = 512
   time2 = DW1000Time(stamp);
   Serial.print("Time2 is [us] ... "); Serial.println(time2.getAsFloat(), 4);
   Serial.print("Time2 range is [m] ... "); Serial.println(time2.getAsMeters(), 4);
-  time3 = DW1000Time(10, DW1000Time::SECONDS);
+  time3 = DW1000Time(10, DW_SECONDS);
   time3.getTimestamp(stamp);
   time3.setTimestamp(stamp);
   Serial.print("Time3 is [s] ... "); Serial.println(time3.getAsFloat() * 1.0e-6, 4);
