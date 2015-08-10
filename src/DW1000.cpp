@@ -1089,7 +1089,15 @@ void DW1000Class::setDefaults() {
 		useExtendedFrameLength(false);
 		useSmartPower(false);
 		suppressFrameCheck(false);
-		setFrameFilter(false);
+        //for global frame filtering
+		setFrameFilter(true);
+        //for data frame (poll, poll_ack, range, range report, range failed) filtering
+        setFrameFilterAllowData(true);
+        //for reserved (blink) frame filtering
+        setFrameFilterAllowReserved(true);
+        //setFrameFilterAllowMAC(true);
+        //setFrameFilterAllowBeacon(true);
+        //setFrameFilterAllowAcknowledgement(true);
 		interruptOnSent(true);
 		interruptOnReceived(true);
 		interruptOnReceiveFailed(true);
