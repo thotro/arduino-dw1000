@@ -36,7 +36,7 @@
 #define LEN_DATA 40
 
 //Max devices we put in the networkDevices array ! Each DW1000Device is 74 Bytes in SRAM memory for now.
-#define MAX_DEVICES 3
+#define MAX_DEVICES 5
 
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
@@ -77,6 +77,7 @@ class DW1000RangingClass {
     static void startAsTag(char address[], const byte mode[]);
     static boolean addNetworkDevices(DW1000Device *device, boolean shortAddress);
     static boolean addNetworkDevices(DW1000Device *device);
+    static void removeNetworkDevices(short index);
     
     //setters
     static void setReplyTime(unsigned int replyDelayTimeUs);
@@ -155,6 +156,7 @@ class DW1000RangingClass {
     
     //global functions:
     static void checkForReset();
+    static void checkForInactiveDevices();
     static void copyShortAddress(byte address1[],byte address2[]);
     
     //for ranging protocole (ANCHOR)

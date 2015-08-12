@@ -141,7 +141,8 @@ void DW1000Device::noteActivity(){
 
 boolean DW1000Device::isInactive(){
     //One second of inactivity
-    if(millis()-_activity>1000){
+    if(millis()-_activity>INACTIVITY_TIME){
+        _activity=millis();
         return true;
     }
     return false;

@@ -206,7 +206,7 @@ boolean DW1000RangingClass::addNetworkDevices(DW1000Device *device, boolean shor
     
     if(addDevice)
     {
-        memcpy(_networkDevices+_networkDevicesNumber*sizeof(DW1000Device), device, sizeof(DW1000Device));
+        memcpy(&_networkDevices[_networkDevicesNumber], device, sizeof(DW1000Device));
         _networkDevicesNumber++;
         return true;
     }
@@ -235,12 +235,32 @@ boolean DW1000RangingClass::addNetworkDevices(DW1000Device *device)
         {
             _networkDevicesNumber=0;
         }
-        memcpy(_networkDevices+_networkDevicesNumber*sizeof(DW1000Device), device, sizeof(DW1000Device));
+        memcpy(&_networkDevices[_networkDevicesNumber], device, sizeof(DW1000Device));
         _networkDevicesNumber++;
         return true;
     }
     
     return false;
+}
+
+void DW1000RangingClass::removeNetworkDevices(short index){
+    //if we have just 1 element
+    if(_networkDevicesNumber==1){
+        _networkDevicesNumber=0;
+    }
+    else if(index==_networkDevicesNumber-1) //if we delete the last element
+    {
+        _networkDevicesNumber--;
+    }
+    else
+    {
+        //we translate all the element wich are after the one we want to delete.
+        for(int i=index; i<_networkDevicesNumber-1; i++)
+        {
+            memcpy(&_networkDevices[i], &_networkDevices[i+1], sizeof(DW1000Device));
+        }
+        _networkDevicesNumber--;
+    }
 }
 
 /* ###########################################################################
@@ -289,6 +309,18 @@ void DW1000RangingClass::checkForReset(){
             resetInactive();
         }
         return;
+    }
+}
+
+void DW1000RangingClass::checkForInactiveDevices(){
+    for(int i=0; i<_networkDevicesNumber; i++){
+        if(_networkDevices[i].isInactive()){
+            Serial.print("delete inactive device: ");
+            Serial.println(_networkDevices[i].getShortAddress(), HEX);
+            //we need to delete the device from the array:
+            removeNetworkDevices(i);
+            
+        }
     }
 }
 
@@ -378,8 +410,7 @@ void DW1000RangingClass::loop(){
             _globalMac.decodeBlinkFrame(data, address, shortAddress);
             //we crate a new device with th tag
             DW1000Device myTag(address, shortAddress);
-            Serial.print(shortAddress[1], HEX);
-            Serial.println(shortAddress[0], HEX);
+            
             if(addNetworkDevices(&myTag))
             {
                 Serial.print("blink; 1 device added ! -> "); 
@@ -449,6 +480,9 @@ void DW1000RangingClass::loop(){
                     _protocolFailed = false;
                     
                     DW1000.getReceiveTimestamp(myDistantDevice->timePollReceived);
+                    //we note activity for our device:
+                    myDistantDevice->noteActivity();
+                    //we indicate our next receive message for our ranging protocole
                     _expectedMsgId = RANGE;
                     transmitPollAck(myDistantDevice);
                     noteActivity();
@@ -575,7 +609,6 @@ void DW1000RangingClass::noteActivity() {
 void DW1000RangingClass::resetInactive() {
     //if inactive
     if(_type==ANCHOR){
-        Serial.println("---- RESET INACTIVE ---");
         _expectedMsgId = POLL;
         receiver();
     }
@@ -583,31 +616,31 @@ void DW1000RangingClass::resetInactive() {
 }
 
 void DW1000RangingClass::timerTick(){
-    if(_type==TAG){
+    
         if(_networkDevicesNumber>0 && counterForBlink!=0)
         {
-            _expectedMsgId = POLL_ACK;
-            //need to do a broadcast poll !
-            transmitPoll(&_networkDevices[0]);
+            if(_type==TAG){
+                _expectedMsgId = POLL_ACK;
+                //need to do a broadcast poll !
+                transmitPoll(&_networkDevices[0]);
+            }
         }
         else if(counterForBlink==0)
         {
-            transmitBlink();
+            if(_type==TAG){
+                transmitBlink();
+            }
+            //check for inactive devices if we are a TAG or ANCHOR
+            checkForInactiveDevices();
         }
         counterForBlink++;
-        if(counterForBlink>50){
+        if(counterForBlink>30){
             counterForBlink=0;
             
-            for(int i=0; i<_networkDevicesNumber; i++){
-                if(_networkDevices[i].isInactive()){
-                    //we need to delete the device from the array:
-                    
-                }
-            }
         }
-    }
     
 }
+
 
 
 void DW1000RangingClass::copyShortAddress(byte address1[],byte address2[]){
