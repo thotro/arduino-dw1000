@@ -71,7 +71,10 @@ class DW1000Device {
         DW1000Time timePollAckSent;
         DW1000Time timePollAckReceived;
         DW1000Time timeRangeSent;
-        DW1000Time timeRangeReceived;  
+        DW1000Time timeRangeReceived;
+    
+        void noteActivity();
+        boolean isInactive();
     
     
     private:
@@ -79,7 +82,7 @@ class DW1000Device {
         byte _ownAddress[8];
         byte _shortAddress[2];
     
-        long _inactivity;
+        long _activity;
     
         unsigned int _replyDelayTimeUS;
     

@@ -133,3 +133,16 @@ void DW1000Device::randomShortAddress(){
     _shortAddress[0]=random(0, 256);
     _shortAddress[1]=random(0, 256);
 }
+
+void DW1000Device::noteActivity(){
+    _activity=millis();
+}
+
+
+boolean DW1000Device::isInactive(){
+    //One second of inactivity
+    if(millis()-_activity>1000){
+        return true;
+    }
+    return false;
+}

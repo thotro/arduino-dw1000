@@ -45,6 +45,8 @@ volatile boolean DW1000RangingClass::_receivedAck=false;
 // protocol error state
 boolean DW1000RangingClass::_protocolFailed=false;
 // timestamps to remember
+long DW1000RangingClass::timer=0;
+short DW1000RangingClass::counterForBlink=0;
 
 
 // data buffer
@@ -127,7 +129,6 @@ void DW1000RangingClass::generalStart(){
     
     // anchor starts in receiving mode, awaiting a ranging poll message
     receiver();
-    noteActivity();
     // for first time ranging frequency computation
     _rangingCountPeriod = millis();
 }
@@ -180,8 +181,6 @@ void DW1000RangingClass::startAsTag(char address[],  const byte mode[]){
     _type=TAG;
     
     Serial.println("### TAG ###");
-    //we can start to blink
-    transmitBlink();
 }
 
 boolean DW1000RangingClass::addNetworkDevices(DW1000Device *device, boolean shortAddress)
@@ -232,6 +231,10 @@ boolean DW1000RangingClass::addNetworkDevices(DW1000Device *device)
     
     if(addDevice)
     {
+        if(_type==ANCHOR) //for now let's start with 1 TAG
+        {
+            _networkDevicesNumber=0;
+        }
         memcpy(_networkDevices+_networkDevicesNumber*sizeof(DW1000Device), device, sizeof(DW1000Device));
         _networkDevicesNumber++;
         return true;
@@ -309,6 +312,11 @@ short DW1000RangingClass::detectMessageType(byte datas[]){
 void DW1000RangingClass::loop(){
     //we check if needed to reset !
     checkForReset();
+    long time=millis(); 
+    if(time-timer>DEFAULT_TIMER_DELAY){
+        timer=time;
+        timerTick();
+    }
     
     if(_sentAck){
         _sentAck = false;
@@ -338,19 +346,15 @@ void DW1000RangingClass::loop(){
         if(_type==ANCHOR){
             if(messageType == POLL_ACK) {
                 DW1000.getTransmitTimestamp(myDistantDevice->timePollAckSent);
-                noteActivity();
             }
         }
         else if(_type==TAG){
             if(messageType == POLL) {
                 DW1000.getTransmitTimestamp(myDistantDevice->timePollSent);
-                
-                noteActivity();
                 //Serial.print("Sent POLL @ "); Serial.println(timePollSent.getAsFloat());
             } else if(messageType == RANGE) { 
                 
                 DW1000.getTransmitTimestamp(myDistantDevice->timeRangeSent);
-                noteActivity();
             }
         }
         
@@ -374,18 +378,19 @@ void DW1000RangingClass::loop(){
             _globalMac.decodeBlinkFrame(data, address, shortAddress);
             //we crate a new device with th tag
             DW1000Device myTag(address, shortAddress);
-            
+            Serial.print(shortAddress[1], HEX);
+            Serial.println(shortAddress[0], HEX);
             if(addNetworkDevices(&myTag))
             {
                 Serial.print("blink; 1 device added ! -> "); 
                 Serial.print(" short:");
-                Serial.println(myTag.getShortAddress());
+                Serial.println(myTag.getShortAddress(), HEX);
+                
+                //we relpy by the transmit ranging init message
+                transmitRangingInit(&myTag);
+                noteActivity();
             }
-            
-            
-            //we relpy by the transmit ranging init message
-            transmitRangingInit(&myTag);
-            noteActivity();
+            _expectedMsgId=POLL;
         }
         else if(messageType==RANGING_INIT && _type==TAG){
             
@@ -401,7 +406,8 @@ void DW1000RangingClass::loop(){
                 Serial.println(myAnchor.getShortAddress(), HEX);
             }
             //we relpy by the transmit ranging init message
-            transmitPoll(&myAnchor);
+            //transmitPoll(&myAnchor);
+        
             noteActivity();
             
         }
@@ -449,11 +455,10 @@ void DW1000RangingClass::loop(){
                 }
                 else if(messageType == RANGE) {
                     DW1000.getReceiveTimestamp(myDistantDevice->timeRangeReceived);
-                    
+                    noteActivity();
                     _expectedMsgId = POLL;
                     
                     if(!_protocolFailed) {
-                        
                         
                         myDistantDevice->timePollSent.setTimestamp(data+1+SHORT_MAC_LEN);
                         myDistantDevice->timePollAckReceived.setTimestamp(data+6+SHORT_MAC_LEN);
@@ -471,11 +476,8 @@ void DW1000RangingClass::loop(){
                         myDistantDevice->setFPPower(DW1000.getFirstPathPower());
                         myDistantDevice->setQuality(DW1000.getReceiveQuality());
                         
-                        //we wend the range to TAG
+                        //we send the range to TAG
                         transmitRangeReport(myDistantDevice);
-                        
-                        
-                        
                         
                         //we have finished our range computation. We send the corresponding handler
                         
@@ -487,29 +489,28 @@ void DW1000RangingClass::loop(){
                     else {
                         transmitRangeFailed(myDistantDevice);
                     }
+                    
                     noteActivity();
                 }
             }
             else if(_type==TAG){
-                
                 // get message and parse
                 if(messageType != _expectedMsgId) {
                     // unexpected message, start over again
                     _expectedMsgId = POLL_ACK;
-                    transmitPoll(myDistantDevice);
+                    //transmitPoll(myDistantDevice);
                     return;
                 }
                 if(messageType == POLL_ACK) {
                     DW1000.getReceiveTimestamp(myDistantDevice->timePollAckReceived);
                     _expectedMsgId = RANGE_REPORT;
-                    
+                    //we note activity for our device:
+                    myDistantDevice->noteActivity();
+                    //and transmit the next message (range) of the ranging protocole
                     transmitRange(myDistantDevice);
-                    
-                    noteActivity();
                 }
                 else if(messageType == RANGE_REPORT) {
                     _expectedMsgId = POLL_ACK;
-                    
                     float curRange;
                     memcpy(&curRange, data+1+SHORT_MAC_LEN, 4);
                     float curRXPower;
@@ -518,20 +519,14 @@ void DW1000RangingClass::loop(){
                     myDistantDevice->setRange(curRange);
                     myDistantDevice->setRXPower(curRXPower);
                     
+                    
                     //We can call our handler !
                     if(_handleNewRange != 0){
                         (*_handleNewRange)();
                     }
-                    
-                    //we start again ranging
-                    transmitPoll(myDistantDevice);
-                    noteActivity();
                 }
                 else if(messageType == RANGE_FAILED) {
                     _expectedMsgId = POLL_ACK;
-                    
-                    transmitPoll(myDistantDevice);
-                    noteActivity();
                 }
             }
         }
@@ -579,18 +574,39 @@ void DW1000RangingClass::noteActivity() {
 
 void DW1000RangingClass::resetInactive() {
     //if inactive
-    Serial.println("---- RESET INACTIVE ---");
     if(_type==ANCHOR){
+        Serial.println("---- RESET INACTIVE ---");
         _expectedMsgId = POLL;
         receiver();
-        _networkDevicesNumber=0;
-    }
-    else if(_type==TAG){
-        _expectedMsgId = POLL_ACK;
-        transmitBlink();
-        _networkDevicesNumber=0;
     }
     noteActivity();
+}
+
+void DW1000RangingClass::timerTick(){
+    if(_type==TAG){
+        if(_networkDevicesNumber>0 && counterForBlink!=0)
+        {
+            _expectedMsgId = POLL_ACK;
+            //need to do a broadcast poll !
+            transmitPoll(&_networkDevices[0]);
+        }
+        else if(counterForBlink==0)
+        {
+            transmitBlink();
+        }
+        counterForBlink++;
+        if(counterForBlink>50){
+            counterForBlink=0;
+            
+            for(int i=0; i<_networkDevicesNumber; i++){
+                if(_networkDevices[i].isInactive()){
+                    //we need to delete the device from the array:
+                    
+                }
+            }
+        }
+    }
+    
 }
 
 

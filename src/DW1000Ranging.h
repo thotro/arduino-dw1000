@@ -44,18 +44,21 @@
 
 //Default value
 //in ms
-#define DEFAULT_RESET_PERIOD 200
+#define DEFAULT_RESET_PERIOD 50
 //in us
-#define DEFAULT_REPLY_DELAY_TIME 9000
+#define DEFAULT_REPLY_DELAY_TIME 4500
 
 //sketch type (anchor or tag)
 #define TAG 0
 #define ANCHOR 1
+
+//default timer delay
+#define DEFAULT_TIMER_DELAY 45
  
 
 //debug mode
 #ifndef DEBUG
-#define DEBUG true
+#define DEBUG false
 #endif
 
 
@@ -108,6 +111,8 @@ class DW1000RangingClass {
     static byte _currentShortAddress[2];
     static byte _lastSentToShortAddress[2];
     static DW1000Mac _globalMac;
+    static long timer;
+    static short counterForBlink;
     
     //Handlers:
     static void (*_handleNewRange)(void);
@@ -170,6 +175,7 @@ class DW1000RangingClass {
     //methods for range computation
     static void computeRangeAsymmetric(DW1000Device *myDistantDevice, DW1000Time *myTOF);
     
+    static void timerTick();
      
 
 };
