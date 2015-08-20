@@ -87,6 +87,7 @@ public:
 	boolean operator==(const DW1000Time &cmp) const;
 	boolean operator!=(const DW1000Time &cmp) const;
 
+    void print();
 	 
 private:
 	long long int _timestamp;

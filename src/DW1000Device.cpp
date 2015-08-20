@@ -70,8 +70,6 @@ void DW1000Device::setQuality(float quality){ _quality=round(quality*100); }
 
 
 
-//getters
-unsigned int DW1000Device::getReplyTime(){ return _replyDelayTimeUS; }
 
 byte* DW1000Device::getByteAddress(){
     return _ownAddress;

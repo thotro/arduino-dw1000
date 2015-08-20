@@ -165,3 +165,29 @@ boolean DW1000Time::operator!=(const DW1000Time &cmp) const {
 	return !(*this == cmp);
 }
 
+void DW1000Time::print(){
+    long long int number=_timestamp;
+    unsigned char buf[64];
+    uint8_t i = 0;
+    
+    if (number == 0)
+    {
+        Serial.print((char)'0');
+        return;
+    }
+    
+    
+    while (number > 0)
+    {
+        uint64_t q = number/10;
+        buf[i++] = number - q*10;
+        number = q;
+    }
+    for (; i > 0; i--)
+        Serial.print((char) (buf[i - 1] < 10 ? '0' + buf[i - 1] : 'A' + buf[i - 1] - 10));
+    
+    Serial.println();
+    
+}
+
+

@@ -20,7 +20,7 @@
  */
 
 
-#define INACTIVITY_TIME 2000
+#define INACTIVITY_TIME 1000
 
 #ifndef _DW1000Device_H_INCLUDED
 #define _DW1000Device_H_INCLUDED
@@ -49,13 +49,14 @@ class DW1000Device {
         void setFPPower(float power);
         void setQuality(float quality);
     
-        void setReplyDelayTime(int time){
-            _replyDelayTimeUS=time;}
+        void setReplyDelayTime(int time){ _replyDelayTimeUS=time;}
     
+        void setIndex(short index){ _index=index; }
     
         //getters
-        unsigned int getReplyTime();
+        unsigned int getReplyTime(){ return _replyDelayTimeUS; }
         byte* getByteAddress();
+        short getIndex(){return _index;}
     
         //String getAddress();
         byte* getByteShortAddress();
@@ -88,7 +89,8 @@ class DW1000Device {
         byte _ownAddress[8];
         byte _shortAddress[2];
         long _activity;
-        unsigned int _replyDelayTimeUS; 
+        unsigned int _replyDelayTimeUS;
+        short _index;
     
         int _range;
         int _RXPower;
