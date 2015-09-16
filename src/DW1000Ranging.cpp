@@ -74,10 +74,10 @@ void (*DW1000RangingClass::_handleNewRange)(void) = 0;
  * #### Init and end #######################################################
  * ######################################################################### */
 
-void DW1000RangingClass::initCommunication(unsigned int RST, unsigned int SS){
+void DW1000RangingClass::initCommunication(unsigned int myRST, unsigned int mySS){
     // reset line to the chip
-    _RST = RST;
-    _SS = SS;
+    _RST = myRST;
+    _SS = mySS;
     _resetPeriod = DEFAULT_RESET_PERIOD;
     // reply times (same on both sides for symm. ranging)
     _replyDelayTimeUS = DEFAULT_REPLY_DELAY_TIME;
@@ -85,8 +85,8 @@ void DW1000RangingClass::initCommunication(unsigned int RST, unsigned int SS){
     _timerDelay = DEFAULT_TIMER_DELAY;
     
     
-    DW1000.begin(0, RST);
-    DW1000.select(SS);
+    DW1000.begin(0, myRST);
+    DW1000.select(mySS);
 }
  
 
