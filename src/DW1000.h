@@ -734,6 +734,7 @@ private:
 	static const byte WRITE_SUB = 0xC0; // write with sub address
 	static const byte READ = 0x00; // regular read
 	static const byte READ_SUB = 0x40; // read with sub address
+	static const byte RW_SUB_EXT = 0x80; // R/W with sub address extension
 
 	/* clocks available. */
 	static const byte AUTO_CLOCK = 0x00;

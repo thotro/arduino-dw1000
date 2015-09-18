@@ -1487,7 +1487,7 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 			header[1] = (byte)offset;
 			headerLen++;
 		} else {
-			header[1] = READ | (byte)offset;
+			header[1] = RW_SUB_EXT | (byte)offset;
 			header[2] = (byte)(offset >> 7);
 			headerLen+=2;
 		}
@@ -1551,7 +1551,7 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 			header[1] = (byte)offset;
 			headerLen++;
 		} else {
-			header[1] = WRITE | (byte)offset;
+			header[1] = RW_SUB_EXT | (byte)offset;
 			header[2] = (byte)(offset >> 7);
 			headerLen+=2;
 		}
