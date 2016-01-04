@@ -44,7 +44,7 @@ void loop() {
     // wait a bit
     delay(1000);
     // DEBUG chip info and registers pretty printed
-    char msg[1024];
+    char msg[64];
     DW1000.getPrintableDeviceIdentifier(msg);
     Serial.print("Device ID: "); Serial.println(msg);
     DW1000.getPrintableExtendedUniqueIdentifier(msg);
