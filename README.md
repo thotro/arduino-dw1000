@@ -30,7 +30,6 @@ Contents
  * [Features and design intentions](../../wiki/Features)
  * [Testbed and Adapter board](../../wiki/Testbed-and-Adapter-board)
  * [Projects, Media, Links](../../wiki/Projects)
- * [Get Started] (../../wiki/Get-Started)
  * [Benchmarks](../../wiki/Benchmarks)
  * API docs
    * [HTML](https://cdn.rawgit.com/thotro/arduino-dw1000/master/extras/doc/html/index.html)
