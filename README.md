@@ -29,6 +29,7 @@ Contents
  * [Project structure](../../wiki/Project-structure)
  * [Features and design intentions](../../wiki/Features)
  * [Testbed and Adapter board](../../wiki/Testbed-and-Adapter-board)
+ * [Projects, Media, Links](../../wiki/Projects)
  * [Get Started] (../../wiki/Get-Started)
  * [Benchmarks](../../wiki/Benchmarks)
  * API docs
