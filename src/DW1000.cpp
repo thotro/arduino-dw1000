@@ -18,7 +18,6 @@
  * Arduino driver library (source file) for the Decawave DW1000 UWB transceiver IC.
  */
 
-#include "digitalWriteFast.h"
 #include "pins_arduino.h"
 #include "DW1000.h"
 
@@ -1493,7 +1492,7 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		}
 	}
 	SPI.beginTransaction(*_currentSPI);
-	digitalWriteFast(_ss, LOW);
+	digitalWrite(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
@@ -1501,7 +1500,7 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		data[i] = SPI.transfer(JUNK);
 	}
 	delayMicroseconds(5);
-	digitalWriteFast(_ss,HIGH);
+	digitalWrite(_ss,HIGH);
 	SPI.endTransaction();
 }
 
@@ -1557,7 +1556,7 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 		}
 	}
 	SPI.beginTransaction(*_currentSPI); 
-	digitalWriteFast(_ss, LOW);
+	digitalWrite(_ss, LOW);
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
@@ -1565,7 +1564,7 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 		SPI.transfer(data[i]);
 	}
 	delayMicroseconds(5);
-	digitalWriteFast(_ss,HIGH);
+	digitalWrite(_ss,HIGH);
 	SPI.endTransaction();
 }
 
