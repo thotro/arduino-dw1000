@@ -41,7 +41,6 @@
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
 #define DEFAULT_SPI_SS_PIN 10
-#define DEFAULT_INT 0
 
 //Default value
 //in ms
@@ -56,9 +55,6 @@
 //default timer delay
 #define DEFAULT_TIMER_DELAY 80
  
-//default Network Id
-#define DEFAULT_NETWORK_Id 0xDECA
-
 
 //debug mode
 #ifndef DEBUG
@@ -74,18 +70,13 @@ class DW1000RangingClass {
     
     
     //initialisation
-	static void initCommunication(unsigned int myRST, unsigned int mySS);
-    static void initCommunication(unsigned int myRST=DEFAULT_RST_PIN, unsigned int mySS=DEFAULT_SPI_SS_PIN, unsigned int myINT=DEFAULT_INT);
+    static void initCommunication(unsigned int myRST=DEFAULT_RST_PIN, unsigned int mySS=DEFAULT_SPI_SS_PIN);
     static void configureNetwork(unsigned int deviceAddress, unsigned int networkId, const byte mode[]); 
-    static void generalStart(char address[], const byte mode[],byte familyId, byte nodeId,unsigned int networkId,byte type);
+    static void generalStart();
     static void startAsAnchor(char address[], const byte mode[]);
-	static void startAsAnchor(char address[],const byte mode[], byte familyId, byte nodeId);
-	static void startAsAnchor(char address[],const byte mode[], byte familyId, byte nodeId, unsigned int networkId);
-	static void startAsTag(char address[], const byte mode[]);
-	static void startAsTag(char address[],const byte mode[], byte familyId, byte nodeId);
-	static void startAsTag(char address[],const byte mode[], byte familyId, byte nodeId, unsigned int networkId);
-          
-    static boolean addNetworkDevices(DW1000Device *device, boolean shortAddress=false);
+    static void startAsTag(char address[], const byte mode[]);
+    static boolean addNetworkDevices(DW1000Device *device, boolean shortAddress);
+    static boolean addNetworkDevices(DW1000Device *device);
     static void removeNetworkDevices(short index);
     
     //setters
@@ -96,7 +87,6 @@ class DW1000RangingClass {
     static byte* getCurrentAddress(){return _currentAddress; };
     static byte* getCurrentShortAddress(){return _currentShortAddress; };
     static short getNetworkDevicesNumber(){return _networkDevicesNumber; };
-	static byte* generateShortAddress();
     
     //ranging functions
     static short detectMessageType(byte datas[]);
