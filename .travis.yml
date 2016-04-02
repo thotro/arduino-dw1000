@@ -1,0 +1,34 @@
+language: python
+python:
+    - "2.7"
+
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+env:
+    # add examples here and define which boards should be tested (only compile test)
+    - PLATFORMIO_CI_SRC=examples/BasicConnectivityTest/BasicConnectivityTest.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/TimestampUsageTest/TimestampUsageTest.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/BasicReceiver/BasicReceiver.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/BasicSender/BasicSender.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/DW1000Ranging_ANCHOR/DW1000Ranging_ANCHOR.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/DW1000Ranging_TAG/DW1000Ranging_TAG.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/MessagePingPong/MessagePingPong.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/RangingAnchor/RangingAnchor.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/RangingTag/RangingTag.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/TimestampUsageTest/TimestampUsageTest.ino TESTBOARD=arduino_avr
+
+install:
+    - pip install -U platformio
+
+script:
+    # short the string comparison
+    - stringContain() { [ -z "${2##*$1*}" ]; }
+    # selectable board tests @Rotzbua
+    - board="arduino_avr";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=uno --board=megaatmega1280; else echo "skip board test of $board"; fi
+    - board="arduino_arm";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=due --board=zero; else echo "skip board test of $board"; fi
+    - board="teensy";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=teensy31; else echo "skip board test of $board"; fi
+    - board="esp";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=d1_mini; else echo "skip board test of $board"; fi
