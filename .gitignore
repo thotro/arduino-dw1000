@@ -2,3 +2,5 @@
 extras/doc/latex
 # exclude datasheets
 datasheets
+# exclude IDE stuff
+.idea

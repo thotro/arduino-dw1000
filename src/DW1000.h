@@ -262,7 +262,7 @@ public:
 	 * - CANSFCS in SYS_CTRL to cancel frame check suppression
 	 * - HSRBP in SYS_CTRL to determine in double buffered mode from which buffer to read
 	 */
-
+	
 	/* ##### Init ################################################################ */
 	/** 
 	Initiates and starts a sessions with one or more DW1000.
@@ -279,7 +279,7 @@ public:
 	@param[in] irq The interrupt line/pin that connects the Arduino.
 	*/
 	static void begin(int irq);
-
+	
 	/** 
 	Selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use
 	this call only needs to be done once at start up, but is still mandatory. Other than a call
@@ -289,7 +289,7 @@ public:
 	Arduino.
 	*/
 	static void select(int ss);
-
+	
 	/** 
 	(Re-)selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use
 	this call is not needed; only a call to `select()` has to be performed once at start up. Other 
@@ -300,25 +300,25 @@ public:
 	Arduino.
 	*/
 	static void reselect(int ss);
-
+	
 	/** 
 	Tells the driver library that no communication to a DW1000 will be required anymore.
 	This basically just frees SPI and the previously used pins.
 	*/
 	static void end();
-
+	
 	/** 
 	Resets all connected or the currently selected DW1000 chip. A hard reset of all chips
 	is preferred, although a soft reset of the currently selected one is executed if no 
 	reset pin has been specified (when using `begin(int)`, instead of `begin(int, int)`).
 	*/
 	static void reset();
-
+	
 	/** 
 	Resets the currently selected DW1000 chip programmatically (via corresponding commands).
 	*/
 	static void softReset();
-
+	
 	/* ##### Print device id, address, etc. ###################################### */
 	/** 
 	Generates a String representation of the device identifier of the chip. That usually 
@@ -328,7 +328,7 @@ public:
 		Provide 128 bytes, this should be sufficient.
 	*/
 	static void getPrintableDeviceIdentifier(char msgBuffer[]);
-
+	
 	/** 
 	Generates a String representation of the extended unique identifier (EUI) of the chip.
 
@@ -336,7 +336,7 @@ public:
 		Provide 128 bytes, this should be sufficient.
 	*/
 	static void getPrintableExtendedUniqueIdentifier(char msgBuffer[]);
-
+	
 	/** 
 	Generates a String representation of the short address and network identifier currently
 	defined for the respective chip.
@@ -345,7 +345,7 @@ public:
 		Provide 128 bytes, this should be sufficient.
 	*/
 	static void getPrintableNetworkIdAndShortAddress(char msgBuffer[]);
-
+	
 	/** 
 	Generates a String representation of the main operational settings of the chip. This
 	includes data rate, pulse repetition frequency, preamble and channel settings.
@@ -354,7 +354,7 @@ public:
 		Provide 128 bytes, this should be sufficient.
 	*/
 	static void getPrintableDeviceMode(char msgBuffer[]);
-
+	
 	/* ##### Device address management, filters ################################## */
 	/** 
 	(Re-)set the network identifier which the selected chip should be associated with. This
@@ -362,10 +362,10 @@ public:
 
 	@param[in] val An arbitrary numeric network identifier.
 	*/
-    
-    
+	
+	
 	static void setNetworkId(unsigned int val);
-
+	
 	/** 
 	(Re-)set the device address (i.e. short address) for the currently selected chip. This
 	setting is important for certain MAC address filtering rules.
@@ -374,9 +374,9 @@ public:
 	*/
 	static void setDeviceAddress(unsigned int val);
 	// TODO MAC and filters
-
+	
 	static void setEUI(char eui[]);
-    	static void setEUI(byte eui[]);
+	static void setEUI(byte eui[]);
 	
 	/* ##### General device configuration ######################################## */
 	/** 
@@ -399,7 +399,7 @@ public:
 	@param[in] val `true` for active high interrupts, `false` for active low interrupts.
 	*/
 	static void setInterruptPolarity(boolean val);
-
+	
 	/** 
 	Specifies whether to suppress any frame check measures while sending or receiving messages.
 	If suppressed, no 2-byte checksum is appended to the message before sending and this 
@@ -412,7 +412,7 @@ public:
 	@param[in] val `true` to suppress frame check on sender and receiver side, `false` otherwise.
 	*/
 	static void suppressFrameCheck(boolean val);
-
+	
 	/** 
 	Specifies the data transmission rate of the DW1000 chip. One of the values
 	- `TRX_RATE_110KBPS` (i.e. 110 kb/s)
@@ -425,7 +425,7 @@ public:
 	@param[in] rate The data transmission rate, encoded by the above defined constants.
 	*/
 	static void setDataRate(byte rate);
-
+	
 	/** 
 	Specifies the pulse repetition frequency (PRF) of data transmissions with the DW1000. Either
 	- `TX_PULSE_FREQ_16MHZ` (i.e. 16 MHz)
@@ -441,32 +441,32 @@ public:
 	@param[in] freq The PRF, encoded by the above defined constants.
 	*/
 	static void setPulseFrequency(byte freq);
-    	static byte getPulseFrequency();
+	static byte getPulseFrequency();
 	static void setPreambleLength(byte prealen);
 	static void setChannel(byte channel);
 	static void setPreambleCode(byte preacode);
 	static void useSmartPower(boolean smartPower);
-
+	
 	/* transmit and receive configuration. */
-	static DW1000Time setDelay(const DW1000Time& delay);
-	static void receivePermanently(boolean val);
-	static void setData(byte data[], unsigned int n);
-	static void setData(const String& data);
-	static void getData(byte data[], unsigned int n);
-	static void getData(String& data);
+	static DW1000Time   setDelay(const DW1000Time& delay);
+	static void         receivePermanently(boolean val);
+	static void         setData(byte data[], unsigned int n);
+	static void         setData(const String& data);
+	static void         getData(byte data[], unsigned int n);
+	static void         getData(String& data);
 	static unsigned int getDataLength();
-	static void getTransmitTimestamp(DW1000Time& time);
-	static void getReceiveTimestamp(DW1000Time& time);
-	static void getSystemTimestamp(DW1000Time& time);
-	static void getTransmitTimestamp(byte data[]);
-	static void getReceiveTimestamp(byte data[]);
-	static void getSystemTimestamp(byte data[]);
-
+	static void         getTransmitTimestamp(DW1000Time& time);
+	static void         getReceiveTimestamp(DW1000Time& time);
+	static void         getSystemTimestamp(DW1000Time& time);
+	static void         getTransmitTimestamp(byte data[]);
+	static void         getReceiveTimestamp(byte data[]);
+	static void         getSystemTimestamp(byte data[]);
+	
 	/* receive quality information. */
 	static float getReceivePower();
 	static float getFirstPathPower();
 	static float getReceiveQuality();
-
+	
 	/* interrupt management. */
 	static void interruptOnSent(boolean val);
 	static void interruptOnReceived(boolean val);
@@ -474,43 +474,48 @@ public:
 	static void interruptOnReceiveTimeout(boolean val);
 	static void interruptOnReceiveTimestampAvailable(boolean val);
 	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
-
+	
 	/* callback handler management. */
-	static void attachErrorHandler(void (*handleError)(void)) {
+	static void attachErrorHandler(void (* handleError)(void)) {
 		_handleError = handleError;
 	}
-	static void attachSentHandler(void (*handleSent)(void)) {
+	
+	static void attachSentHandler(void (* handleSent)(void)) {
 		_handleSent = handleSent;
 	}
-	static void attachReceivedHandler(void (*handleReceived)(void)) {
+	
+	static void attachReceivedHandler(void (* handleReceived)(void)) {
 		_handleReceived = handleReceived;
 	}
-	static void attachReceiveFailedHandler(void (*handleReceiveFailed)(void)) {
+	
+	static void attachReceiveFailedHandler(void (* handleReceiveFailed)(void)) {
 		_handleReceiveFailed = handleReceiveFailed;
 	}
-	static void attachReceiveTimeoutHandler(void (*handleReceiveTimeout)(void)) {
+	
+	static void attachReceiveTimeoutHandler(void (* handleReceiveTimeout)(void)) {
 		_handleReceiveTimeout = handleReceiveTimeout;
 	}
-	static void attachReceiveTimestampAvailableHandler(void (*handleReceiveTimestampAvailable)(void)) {
+	
+	static void attachReceiveTimestampAvailableHandler(void (* handleReceiveTimestampAvailable)(void)) {
 		_handleReceiveTimestampAvailable = handleReceiveTimestampAvailable;
 	}
-
+	
 	/* device state management. */
 	// idle state
 	static void idle();
-
+	
 	// general configuration state
 	static void newConfiguration();
 	static void commitConfiguration();
-
+	
 	// reception state
 	static void newReceive();
 	static void startReceive();
-
+	
 	// transmission state
 	static void newTransmit();
 	static void startTransmit();
-
+	
 	/* ##### Operation mode selection ############################################ */
 	/** 
 	Specifies the mode of operation for the DW1000. Modes of operation are pre-defined
@@ -534,44 +539,44 @@ public:
 	@param[in] mode The mode of operation, encoded by the above defined constants.
 	*/
 	static void enableMode(const byte mode[]);
-
+	
 	// use RX/TX specific and general default settings
 	static void setDefaults();
-
+	
 	/* debug pretty print registers. */
 	static void getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsigned int n);
 	static void getPrettyBytes(byte data[], char msgBuffer[], unsigned int n);
-    
+	
 	//convert from char to 4 bits (hexadecimal)
-	static int nibbleFromChar(char c);
-	static void convertToByte(char string[], byte *eui_byte);
-
+	static int  nibbleFromChar(char c);
+	static void convertToByte(char string[], byte* eui_byte);
+	
 	// transmission/reception bit rate
-	static const byte TRX_RATE_110KBPS = 0x00;
-	static const byte TRX_RATE_850KBPS = 0x01;
+	static const byte TRX_RATE_110KBPS  = 0x00;
+	static const byte TRX_RATE_850KBPS  = 0x01;
 	static const byte TRX_RATE_6800KBPS = 0x02;
-
+	
 	// transmission pulse frequency
 	// 0x00 is 4MHZ, but receiver in DW1000 does not support it (!??)
-	static const byte TX_PULSE_FREQ_16MHZ = 0x01; 
+	static const byte TX_PULSE_FREQ_16MHZ = 0x01;
 	static const byte TX_PULSE_FREQ_64MHZ = 0x02;
-
+	
 	// preamble length (PE + TXPSR bits)
-	static const byte TX_PREAMBLE_LEN_64 = 0x01;
-	static const byte TX_PREAMBLE_LEN_128 = 0x05;
-	static const byte TX_PREAMBLE_LEN_256 = 0x09;
-	static const byte TX_PREAMBLE_LEN_512 = 0x0D;
+	static const byte TX_PREAMBLE_LEN_64   = 0x01;
+	static const byte TX_PREAMBLE_LEN_128  = 0x05;
+	static const byte TX_PREAMBLE_LEN_256  = 0x09;
+	static const byte TX_PREAMBLE_LEN_512  = 0x0D;
 	static const byte TX_PREAMBLE_LEN_1024 = 0x02;
 	static const byte TX_PREAMBLE_LEN_1536 = 0x06;
 	static const byte TX_PREAMBLE_LEN_2048 = 0x0A;
 	static const byte TX_PREAMBLE_LEN_4096 = 0x03;
-
+	
 	// PAC size. */
-	static const byte PAC_SIZE_8 = 8;
+	static const byte PAC_SIZE_8  = 8;
 	static const byte PAC_SIZE_16 = 16;
 	static const byte PAC_SIZE_32 = 32;
 	static const byte PAC_SIZE_64 = 64;
-
+	
 	/* channel of operation. */
 	static const byte CHANNEL_1 = 1;
 	static const byte CHANNEL_2 = 2;
@@ -579,17 +584,17 @@ public:
 	static const byte CHANNEL_4 = 4;
 	static const byte CHANNEL_5 = 5;
 	static const byte CHANNEL_7 = 7;
-
+	
 	/* preamble codes. */
-	static const byte PREAMBLE_CODE_16MHZ_1 = 1;
-	static const byte PREAMBLE_CODE_16MHZ_2 = 2;
-	static const byte PREAMBLE_CODE_16MHZ_3 = 3;
-	static const byte PREAMBLE_CODE_16MHZ_4 = 4;
-	static const byte PREAMBLE_CODE_16MHZ_5 = 5;
-	static const byte PREAMBLE_CODE_16MHZ_6 = 6;
-	static const byte PREAMBLE_CODE_16MHZ_7 = 7;
-	static const byte PREAMBLE_CODE_16MHZ_8 = 8;
-	static const byte PREAMBLE_CODE_64MHZ_9 = 9;
+	static const byte PREAMBLE_CODE_16MHZ_1  = 1;
+	static const byte PREAMBLE_CODE_16MHZ_2  = 2;
+	static const byte PREAMBLE_CODE_16MHZ_3  = 3;
+	static const byte PREAMBLE_CODE_16MHZ_4  = 4;
+	static const byte PREAMBLE_CODE_16MHZ_5  = 5;
+	static const byte PREAMBLE_CODE_16MHZ_6  = 6;
+	static const byte PREAMBLE_CODE_16MHZ_7  = 7;
+	static const byte PREAMBLE_CODE_16MHZ_8  = 8;
+	static const byte PREAMBLE_CODE_64MHZ_9  = 9;
 	static const byte PREAMBLE_CODE_64MHZ_10 = 10;
 	static const byte PREAMBLE_CODE_64MHZ_11 = 11;
 	static const byte PREAMBLE_CODE_64MHZ_12 = 12;
@@ -597,11 +602,11 @@ public:
 	static const byte PREAMBLE_CODE_64MHZ_18 = 18;
 	static const byte PREAMBLE_CODE_64MHZ_19 = 19;
 	static const byte PREAMBLE_CODE_64MHZ_20 = 20;
-
+	
 	/* frame length settings. */
-	static const byte FRAME_LENGTH_NORMAL = 0x00;
+	static const byte FRAME_LENGTH_NORMAL   = 0x00;
 	static const byte FRAME_LENGTH_EXTENDED = 0x03;
-
+	
 	/* pre-defined modes of operation (3 bytes for data rate, pulse frequency and 
 	preamble length). */
 	static const byte MODE_LONGDATA_RANGE_LOWPOWER[];
@@ -616,15 +621,15 @@ private:
 	static unsigned int _ss;
 	static unsigned int _rst;
 	static unsigned int _irq;
-
+	
 	/* callbacks. */
-	static void (*_handleError)(void);
-	static void (*_handleSent)(void);
-	static void (*_handleReceived)(void);
-	static void (*_handleReceiveFailed)(void);
-	static void (*_handleReceiveTimeout)(void);
-	static void (*_handleReceiveTimestampAvailable)(void);
-
+	static void (* _handleError)(void);
+	static void (* _handleSent)(void);
+	static void (* _handleReceived)(void);
+	static void (* _handleReceiveFailed)(void);
+	static void (* _handleReceiveTimeout)(void);
+	static void (* _handleReceiveTimestampAvailable)(void);
+	
 	/* register caches. */
 	static byte _syscfg[LEN_SYS_CFG];
 	static byte _sysctrl[LEN_SYS_CTRL];
@@ -632,53 +637,53 @@ private:
 	static byte _txfctrl[LEN_TX_FCTRL];
 	static byte _sysmask[LEN_SYS_MASK];
 	static byte _chanctrl[LEN_CHAN_CTRL];
-
+	
 	/* PAN and short address. */
 	static byte _networkAndAddress[LEN_PANADR];
-
+	
 	/* internal helper that guide tuning the chip. */
-	static boolean _smartPower;
-	static byte _extendedFrameLength;
-	static byte _preambleCode;
-	static byte _channel;
-	static byte _preambleLength;
-	static byte _pulseFrequency;
-	static byte _dataRate;
-	static byte _pacSize;
+	static boolean    _smartPower;
+	static byte       _extendedFrameLength;
+	static byte       _preambleCode;
+	static byte       _channel;
+	static byte       _preambleLength;
+	static byte       _pulseFrequency;
+	static byte       _dataRate;
+	static byte       _pacSize;
 	static DW1000Time _antennaDelay;
-
+	
 	/* internal helper to remember how to properly act. */
 	static boolean _permanentReceive;
 	static boolean _frameCheck;
-
+	
 	// whether RX or TX is active
 	static int _deviceMode;
-
+	
 	/* Arduino interrupt handler */
 	static void handleInterrupt();
-
+	
 	/* Allow MAC frame filtering . */
 	// TODO auto-acknowledge
 	static void setFrameFilter(boolean val);
-    static void setFrameFilterBehaveCoordinator(boolean val);
-    static void setFrameFilterAllowBeacon(boolean val);
-    //data type is used in the FC_1 0x41
-    static void setFrameFilterAllowData(boolean val);
-    static void setFrameFilterAllowAcknowledgement(boolean val);
-    static void setFrameFilterAllowMAC(boolean val);
-    //Reserved is used for the Blink message
-    static void setFrameFilterAllowReserved(boolean val);
-    
+	static void setFrameFilterBehaveCoordinator(boolean val);
+	static void setFrameFilterAllowBeacon(boolean val);
+	//data type is used in the FC_1 0x41
+	static void setFrameFilterAllowData(boolean val);
+	static void setFrameFilterAllowAcknowledgement(boolean val);
+	static void setFrameFilterAllowMAC(boolean val);
+	//Reserved is used for the Blink message
+	static void setFrameFilterAllowReserved(boolean val);
+	
 	// note: not sure if going to be implemented for now
 	static void setDoubleBuffering(boolean val);
 	// TODO is implemented, but needs testing
 	static void useExtendedFrameLength(boolean val);
 	// TODO is implemented, but needs testing	
 	static void waitForResponse(boolean val);
-
+	
 	/* tuning according to mode. */
 	static void tune();
-
+	
 	/* device status flags */
 	static boolean isReceiveTimestampAvailable();
 	static boolean isTransmitDone();
@@ -686,14 +691,14 @@ private:
 	static boolean isReceiveFailed();
 	static boolean isReceiveTimeout();
 	static boolean isClockProblem();
-
+	
 	/* interrupt state handling */
 	static void clearInterrupts();
 	static void clearAllStatus();
 	static void clearReceiveStatus();
 	static void clearReceiveTimestampAvailableStatus();
 	static void clearTransmitStatus();
-
+	
 	/* internal helper to read/write system registers. */
 	static void readSystemEventStatusRegister();
 	static void readSystemConfigurationRegister();
@@ -706,46 +711,46 @@ private:
 	static void writeChannelControlRegister();
 	static void readTransmitFrameControlRegister();
 	static void writeTransmitFrameControlRegister();
-
+	
 	/* clock management. */
 	static void enableClock(byte clock);
-
+	
 	/* LDE micro-code management. */
 	static void manageLDE();
-
+	
 	/* timestamp correction. */
 	static void correctTimestamp(DW1000Time& timestamp);
-
+	
 	/* reading and writing bytes from and to DW1000 module. */
 	static void readBytes(byte cmd, word offset, byte data[], unsigned int n);
 	static void readBytesOTP(word address, byte data[]);
 	static void writeBytes(byte cmd, word offset, byte data[], unsigned int n);
-
+	
 	/* writing numeric values to bytes. */
-	static void writeValueToBytes(byte data[], long val, unsigned int n); 
-
+	static void writeValueToBytes(byte data[], long val, unsigned int n);
+	
 	/* internal helper for bit operations on multi-bytes. */
 	static boolean getBit(byte data[], unsigned int n, unsigned int bit);
-	static void setBit(byte data[], unsigned int n, unsigned int bit, boolean val);
-    
+	static void    setBit(byte data[], unsigned int n, unsigned int bit, boolean val);
+	
 	/* Register is 6 bit, 7 = write, 6 = sub-adressing, 5-0 = register value
 	 * Total header with sub-adressing can be 15 bit. */
-	static const byte WRITE = 0x80; // regular write
-	static const byte WRITE_SUB = 0xC0; // write with sub address
-	static const byte READ = 0x00; // regular read
-	static const byte READ_SUB = 0x40; // read with sub address
+	static const byte WRITE      = 0x80; // regular write
+	static const byte WRITE_SUB  = 0xC0; // write with sub address
+	static const byte READ       = 0x00; // regular read
+	static const byte READ_SUB   = 0x40; // read with sub address
 	static const byte RW_SUB_EXT = 0x80; // R/W with sub address extension
-
+	
 	/* clocks available. */
 	static const byte AUTO_CLOCK = 0x00;
-	static const byte XTI_CLOCK = 0x01;
-	static const byte PLL_CLOCK = 0x02;
-
+	static const byte XTI_CLOCK  = 0x01;
+	static const byte PLL_CLOCK  = 0x02;
+	
 	/* SPI configs. */
 	static const SPISettings _fastSPI;
 	static const SPISettings _slowSPI;
 	static const SPISettings* _currentSPI;
-
+	
 	/* range bias tables (500/900 MHz band, 16/64 MHz PRF), -61 to -95 dBm. */
 	static const byte BIAS_500_16_ZERO = 10;
 	static const byte BIAS_500_16[];
