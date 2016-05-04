@@ -83,10 +83,10 @@ void transmitter() {
 }
 
 void loop() {
-  if(!sentAck) {
+  if (!sentAck) {
     return;
   }
-  // continue on success confirmation 
+  // continue on success confirmation
   // (we are here after the given amount of send delay time has passed)
   sentAck = false;
   // update and print some information about the sent message

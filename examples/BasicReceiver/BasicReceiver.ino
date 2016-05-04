@@ -82,22 +82,22 @@ void receiver() {
 }
 
 void loop() {
-    // enter on confirmation of ISR status change (successfully received)
-    if(received) {
-      numReceived++;
-      // get data as string
-      DW1000.getData(message);
-      Serial.print("Received message ... #"); Serial.println(numReceived);
-      Serial.print("Data is ... "); Serial.println(message);
-      Serial.print("FP power is [dBm] ... "); Serial.println(DW1000.getFirstPathPower());
-      Serial.print("RX power is [dBm] ... "); Serial.println(DW1000.getReceivePower());
-      Serial.print("Signal quality is ... "); Serial.println(DW1000.getReceiveQuality());
-      received = false;
-    }
-    if(error) {
-      Serial.println("Error receiving a message");
-      error = false;
-      DW1000.getData(message);
-      Serial.print("Error data is ... "); Serial.println(message);
-    }
+  // enter on confirmation of ISR status change (successfully received)
+  if (received) {
+    numReceived++;
+    // get data as string
+    DW1000.getData(message);
+    Serial.print("Received message ... #"); Serial.println(numReceived);
+    Serial.print("Data is ... "); Serial.println(message);
+    Serial.print("FP power is [dBm] ... "); Serial.println(DW1000.getFirstPathPower());
+    Serial.print("RX power is [dBm] ... "); Serial.println(DW1000.getReceivePower());
+    Serial.print("Signal quality is ... "); Serial.println(DW1000.getReceiveQuality());
+    received = false;
+  }
+  if (error) {
+    Serial.println("Error receiving a message");
+    error = false;
+    DW1000.getData(message);
+    Serial.print("Error data is ... "); Serial.println(message);
+  }
 }
