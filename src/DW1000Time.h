@@ -55,40 +55,40 @@ public:
 	DW1000Time(long value, float factorUs);
 	DW1000Time(const DW1000Time& copy);
 	~DW1000Time();
-
+	
 	void setTime(float timeUs);
 	void setTime(long value, float factorUs);
-
+	
 	float getAsFloat() const;
-	void getAsBytes(byte data[]) const;
+	void  getAsBytes(byte data[]) const;
 	float getAsMeters() const;
-
-	void getTimestamp(byte data[]) const;
+	
+	void          getTimestamp(byte data[]) const;
 	long long int getTimestamp() const;
-	void setTimestamp(byte data[]);
-	void setTimestamp(const DW1000Time& copy);
-	void setTimestamp(int value); 
-
+	void          setTimestamp(byte data[]);
+	void          setTimestamp(const DW1000Time& copy);
+	void          setTimestamp(int value);
+	
 	DW1000Time& wrap();
-
-	DW1000Time& operator=(const DW1000Time &assign);
-	DW1000Time& operator+=(const DW1000Time &add);
-	DW1000Time operator+(const DW1000Time &add) const;
-	DW1000Time& operator-=(const DW1000Time &sub);
-	DW1000Time operator-(const DW1000Time &sub) const;
+	
+	DW1000Time& operator=(const DW1000Time& assign);
+	DW1000Time& operator+=(const DW1000Time& add);
+	DW1000Time operator+(const DW1000Time& add) const;
+	DW1000Time& operator-=(const DW1000Time& sub);
+	DW1000Time operator-(const DW1000Time& sub) const;
 	DW1000Time& operator*=(float factor);
-	DW1000Time operator*(const DW1000Time &factor) const;
-	DW1000Time& operator*=(const DW1000Time &factor);
+	DW1000Time operator*(const DW1000Time& factor) const;
+	DW1000Time& operator*=(const DW1000Time& factor);
 	DW1000Time operator*(float factor) const;
 	DW1000Time& operator/=(float factor);
 	DW1000Time operator/(float factor) const;
-	DW1000Time& operator/=(const DW1000Time &factor);
-	DW1000Time operator/(const DW1000Time &factor) const;
-	boolean operator==(const DW1000Time &cmp) const;
-	boolean operator!=(const DW1000Time &cmp) const;
+	DW1000Time& operator/=(const DW1000Time& factor);
+	DW1000Time operator/(const DW1000Time& factor) const;
+	boolean operator==(const DW1000Time& cmp) const;
+	boolean operator!=(const DW1000Time& cmp) const;
+	
+	void print();
 
-    void print();
-	 
 private:
 	long long int _timestamp;
 };

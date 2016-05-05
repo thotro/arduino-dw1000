@@ -41,22 +41,22 @@ DW1000Time::DW1000Time(long value, float factorUs) {
 	setTime(value, factorUs);
 }
 
-DW1000Time::~DW1000Time() {}
+DW1000Time::~DW1000Time() { }
 
 void DW1000Time::setTime(float timeUs) {
-	_timestamp = (long long int)(timeUs * TIME_RES_INV);
+	_timestamp = (long long int)(timeUs*TIME_RES_INV);
 }
 
 void DW1000Time::setTime(long value, float factorUs) {
-	float tsValue = value * factorUs;
-   	tsValue = fmod(tsValue, TIME_OVERFLOW); 
+	float tsValue = value*factorUs;
+	tsValue = fmod(tsValue, TIME_OVERFLOW);
 	setTime(tsValue);
 }
 
 void DW1000Time::setTimestamp(byte data[]) {
 	_timestamp = 0;
 	for(int i = 0; i < LEN_STAMP; i++) {
-	    _timestamp |= ((long long int)data[i] << (i*8));
+		_timestamp |= ((long long int)data[i] << (i*8));
 	}
 }
 
@@ -82,19 +82,19 @@ DW1000Time& DW1000Time::wrap() {
 void DW1000Time::getTimestamp(byte data[]) const {
 	memset(data, 0, LEN_STAMP);
 	for(int i = 0; i < LEN_STAMP; i++) {
-	    data[i] = (byte)((_timestamp >> (i*8)) & 0xFF);
+		data[i] = (byte)((_timestamp >> (i*8)) & 0xFF);
 	}
 }
 
 float DW1000Time::getAsFloat() const {
-	return fmod((float)_timestamp, TIME_OVERFLOW) * TIME_RES;
+	return fmod((float)_timestamp, TIME_OVERFLOW)*TIME_RES;
 }
 
 float DW1000Time::getAsMeters() const {
-	return fmod((float)_timestamp, TIME_OVERFLOW) * DISTANCE_OF_RADIO;
+	return fmod((float)_timestamp, TIME_OVERFLOW)*DISTANCE_OF_RADIO;
 }
 
-DW1000Time& DW1000Time::operator=(const DW1000Time &assign) {
+DW1000Time& DW1000Time::operator=(const DW1000Time& assign) {
 	if(this == &assign) {
 		return *this;
 	}
@@ -102,26 +102,26 @@ DW1000Time& DW1000Time::operator=(const DW1000Time &assign) {
 	return *this;
 }
 
-DW1000Time& DW1000Time::operator+=(const DW1000Time &add) {
+DW1000Time& DW1000Time::operator+=(const DW1000Time& add) {
 	_timestamp += add.getTimestamp();
 	return *this;
 }
 
-DW1000Time DW1000Time::operator+(const DW1000Time &add) const {
-    return DW1000Time(*this) += add;
+DW1000Time DW1000Time::operator+(const DW1000Time& add) const {
+	return DW1000Time(*this) += add;
 }
 
-DW1000Time& DW1000Time::operator-=(const DW1000Time &sub) {
+DW1000Time& DW1000Time::operator-=(const DW1000Time& sub) {
 	_timestamp -= sub.getTimestamp();
 	return *this;
 }
 
-DW1000Time DW1000Time::operator-(const DW1000Time &sub) const {
+DW1000Time DW1000Time::operator-(const DW1000Time& sub) const {
 	return DW1000Time(*this) -= sub;
 }
 
 DW1000Time& DW1000Time::operator*=(float factor) {
-	float tsValue = (float)_timestamp * factor;
+	float tsValue = (float)_timestamp*factor;
 	_timestamp = (long long int)tsValue;
 	return *this;
 }
@@ -130,12 +130,12 @@ DW1000Time DW1000Time::operator*(float factor) const {
 	return DW1000Time(*this) *= factor;
 }
 
-DW1000Time& DW1000Time::operator*=(const DW1000Time &factor) {
+DW1000Time& DW1000Time::operator*=(const DW1000Time& factor) {
 	_timestamp *= factor.getTimestamp();
 	return *this;
 }
 
-DW1000Time DW1000Time::operator*(const DW1000Time &factor) const {
+DW1000Time DW1000Time::operator*(const DW1000Time& factor) const {
 	return DW1000Time(*this) *= factor;
 }
 
@@ -148,46 +148,44 @@ DW1000Time DW1000Time::operator/(float factor) const {
 	return DW1000Time(*this) /= factor;
 }
 
-DW1000Time& DW1000Time::operator/=(const DW1000Time &factor) {
-	_timestamp /= factor.getTimestamp(); 
+DW1000Time& DW1000Time::operator/=(const DW1000Time& factor) {
+	_timestamp /= factor.getTimestamp();
 	return *this;
 }
 
-DW1000Time DW1000Time::operator/(const DW1000Time &factor) const {
+DW1000Time DW1000Time::operator/(const DW1000Time& factor) const {
 	return DW1000Time(*this) /= factor;
 }
 
-boolean DW1000Time::operator==(const DW1000Time &cmp) const {
+boolean DW1000Time::operator==(const DW1000Time& cmp) const {
 	return _timestamp == cmp.getTimestamp();
 }
 
-boolean DW1000Time::operator!=(const DW1000Time &cmp) const {
+boolean DW1000Time::operator!=(const DW1000Time& cmp) const {
 	return !(*this == cmp);
 }
 
-void DW1000Time::print(){
-    long long int number=_timestamp;
-    unsigned char buf[64];
-    uint8_t i = 0;
-    
-    if (number == 0)
-    {
-        Serial.print((char)'0');
-        return;
-    }
-    
-    
-    while (number > 0)
-    {
-        uint64_t q = number/10;
-        buf[i++] = number - q*10;
-        number = q;
-    }
-    for (; i > 0; i--)
-        Serial.print((char) (buf[i - 1] < 10 ? '0' + buf[i - 1] : 'A' + buf[i - 1] - 10));
-    
-    Serial.println();
-    
+void DW1000Time::print() {
+	long long int number = _timestamp;
+	unsigned char buf[64];
+	uint8_t       i      = 0;
+	
+	if(number == 0) {
+		Serial.print((char)'0');
+		return;
+	}
+	
+	
+	while(number > 0) {
+		uint64_t q = number/10;
+		buf[i++] = number-q*10;
+		number = q;
+	}
+	for(; i > 0; i--)
+		Serial.print((char)(buf[i-1] < 10 ? '0'+buf[i-1] : 'A'+buf[i-1]-10));
+	
+	Serial.println();
+	
 }
 
 

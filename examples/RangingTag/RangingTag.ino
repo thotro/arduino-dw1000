@@ -124,9 +124,9 @@ void transmitRange() {
     // delay sending the message and remember expected future sent timestamp
     DW1000Time deltaTime = DW1000Time(replyDelayTimeUS, DW_MICROSECONDS);
     timeRangeSent = DW1000.setDelay(deltaTime);
-    timePollSent.getTimestamp(data+1);
-    timePollAckReceived.getTimestamp(data+6);
-    timeRangeSent.getTimestamp(data+11);
+    timePollSent.getTimestamp(data + 1);
+    timePollAckReceived.getTimestamp(data + 6);
+    timeRangeSent.getTimestamp(data + 11);
     DW1000.setData(data, LEN_DATA);
     DW1000.startTransmit();
     //Serial.print("Expect RANGE to be sent @ "); Serial.println(timeRangeSent.getAsFloat());
@@ -141,50 +141,50 @@ void receiver() {
 }
 
 void loop() {
-    if(!sentAck && !receivedAck) {
+    if (!sentAck && !receivedAck) {
         // check if inactive
-        if(millis() - lastActivity > resetPeriod) {
+        if (millis() - lastActivity > resetPeriod) {
             resetInactive();
         }
         return;
     }
     // continue on any success confirmation
-    if(sentAck) {
+    if (sentAck) {
         sentAck = false;
         byte msgId = data[0];
-        if(msgId == POLL) {
+        if (msgId == POLL) {
             DW1000.getTransmitTimestamp(timePollSent);
             //Serial.print("Sent POLL @ "); Serial.println(timePollSent.getAsFloat());
-        } else if(msgId == RANGE) {
+        } else if (msgId == RANGE) {
             DW1000.getTransmitTimestamp(timeRangeSent);
             noteActivity();
         }
     }
-    if(receivedAck) {
+    if (receivedAck) {
         receivedAck = false;
         // get message and parse
         DW1000.getData(data, LEN_DATA);
         byte msgId = data[0];
-        if(msgId != expectedMsgId) {
+        if (msgId != expectedMsgId) {
             // unexpected message, start over again
             //Serial.print("Received wrong message # "); Serial.println(msgId);
             expectedMsgId = POLL_ACK;
             transmitPoll();
             return;
         }
-        if(msgId == POLL_ACK) {
+        if (msgId == POLL_ACK) {
             DW1000.getReceiveTimestamp(timePollAckReceived);
             expectedMsgId = RANGE_REPORT;
             transmitRange();
             noteActivity();
-        } else if(msgId == RANGE_REPORT) {
+        } else if (msgId == RANGE_REPORT) {
             expectedMsgId = POLL_ACK;
             float curRange;
-            memcpy(&curRange, data+1, 4);
+            memcpy(&curRange, data + 1, 4);
             transmitPoll();
             noteActivity();
-        } else if(msgId == RANGE_FAILED) {
-            expectedMsgId = POLL_ACK; 
+        } else if (msgId == RANGE_FAILED) {
+            expectedMsgId = POLL_ACK;
             transmitPoll();
             noteActivity();
         }

@@ -31,7 +31,7 @@
 #define SENDER true
 #define RECEIVER false
 // toggle and message RX/TX
-// NOTE: the other Arduino needs to be configured with RECEIVER 
+// NOTE: the other Arduino needs to be configured with RECEIVER
 //       (or SENDER respectively)
 volatile boolean trxToggle = RECEIVER;
 volatile boolean trxAck = false;
@@ -70,7 +70,7 @@ void setup() {
   DW1000.attachReceivedHandler(handleReceived);
   DW1000.attachReceiveFailedHandler(handleReceiveFailed);
   // sender starts by sending a PING message, receiver starts listening
-  if(trxToggle == SENDER) {
+  if (trxToggle == SENDER) {
     msg = "Ping ...";
     receiver();
     transmit();
@@ -111,21 +111,21 @@ void receiver() {
 }
 
 void loop() {
-  if(rxError) {
-     Serial.println("Failed to properly receive message.");
-     rxError = false;
-     return;
+  if (rxError) {
+    Serial.println("Failed to properly receive message.");
+    rxError = false;
+    return;
   }
-  if(!trxAck) {
+  if (!trxAck) {
     return;
   }
   // continue on any success confirmation
-  trxAck = false; 
+  trxAck = false;
   // a sender will be a receiver and vice versa
   trxToggle = !trxToggle;
-  if(trxToggle == SENDER) {
+  if (trxToggle == SENDER) {
     // formerly a receiver
-    String rxMsg; 
+    String rxMsg;
     DW1000.getData(rxMsg);
     Serial.print("Received: "); Serial.println(rxMsg);
     transmit();
