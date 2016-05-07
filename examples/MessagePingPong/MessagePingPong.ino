@@ -56,7 +56,7 @@ void setup() {
   DW1000.commitConfiguration();
   Serial.println("Committed configuration ...");
   // DEBUG chip info and registers pretty printed
-  char msgInfo[1024];
+  char msgInfo[128];
   DW1000.getPrintableDeviceIdentifier(msgInfo);
   Serial.print("Device ID: "); Serial.println(msgInfo);
   DW1000.getPrintableExtendedUniqueIdentifier(msgInfo);
