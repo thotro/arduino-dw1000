@@ -22,22 +22,25 @@
 #include <SPI.h>
 #include <DW1000.h>
 
+// connection pins
+const uint8_t PIN_RST = 9; // reset pin
+const uint8_t PIN_IRQ = 0; // irq pin
+const uint8_t PIN_SS = SS; // spi select pin
+
 // DEBUG packet sent status and count
 volatile boolean received = false;
 volatile boolean error = false;
 volatile int numReceived = 0;
 String message;
-// reset line to the chip
-int RST = 9;
 
 void setup() {
   // DEBUG monitoring
   Serial.begin(9600);
-  Serial.println("### DW1000-arduino-receiver-test ###");
+  Serial.println(F("### DW1000-arduino-receiver-test ###"));
   // initialize the driver
-  DW1000.begin(0, RST);
-  DW1000.select(SS);
-  Serial.println("DW1000 initialized ...");
+  DW1000.begin(PIN_IRQ, PIN_RST);
+  DW1000.select(PIN_SS);
+  Serial.println(F("DW1000 initialized ..."));
   // general configuration
   DW1000.newConfiguration();
   DW1000.setDefaults();
@@ -45,7 +48,7 @@ void setup() {
   DW1000.setNetworkId(10);
   DW1000.enableMode(DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
   DW1000.commitConfiguration();
-  Serial.println("Committed configuration ...");
+  Serial.println(F("Committed configuration ..."));
   // DEBUG chip info and registers pretty printed
   char msg[128];
   DW1000.getPrintableDeviceIdentifier(msg);

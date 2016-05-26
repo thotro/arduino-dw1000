@@ -22,27 +22,29 @@
 #include <SPI.h>
 #include <DW1000.h>
 
-// reset line to the chip
-int RST = 9;
+// connection pins
+const uint8_t PIN_RST = 9; // reset pin
+const uint8_t PIN_IRQ = 0; // irq pin
+const uint8_t PIN_SS = SS; // spi select pin
 
 void setup() {
   // DEBUG monitoring
   Serial.begin(9600);
   // initialize the driver
-  DW1000.begin(0, RST);
-  DW1000.select(SS);
-  Serial.println("DW1000 initialized ...");
+  DW1000.begin(PIN_IRQ, PIN_RST);
+  DW1000.select(PIN_SS);
+  Serial.println(F("DW1000 initialized ..."));
   // general configuration
   DW1000.newConfiguration();
   DW1000.setDeviceAddress(5);
   DW1000.setNetworkId(10);
   DW1000.commitConfiguration();
-  Serial.println("Committed configuration ...");
+  Serial.println(F("Committed configuration ..."));
+  // wait a bit
+  delay(1000);
 }
 
 void loop() {
-  // wait a bit
-  delay(1000);
   // DEBUG chip info and registers pretty printed
   char msg[128];
   DW1000.getPrintableDeviceIdentifier(msg);

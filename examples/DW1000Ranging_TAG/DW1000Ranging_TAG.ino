@@ -3,12 +3,17 @@
 #include "DW1000Ranging.h"
 #include "DW1000Device.h"
 
+// connection pins
+const uint8_t PIN_RST = 9; // reset pin
+const uint8_t PIN_SS = SS; // spi select pin
+// not used:
+//const uint8_t PIN_IRQ = 0; // irq pin
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
   //init the configuration
-  DW1000Ranging.initCommunication(9, 10); //Reset and CS pin
+  DW1000Ranging.initCommunication(PIN_RST, PIN_SS); //Reset and CS pin  
   //define the sketch as anchor. It will be great to dynamically change the type of module
   DW1000Ranging.attachNewRange(newRange);
   //we start the module as a tag
