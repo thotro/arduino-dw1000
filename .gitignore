@@ -4,3 +4,4 @@ extras/doc/latex
 datasheets
 # exclude IDE stuff
 .idea
+cmake
