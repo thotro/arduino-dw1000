@@ -7,7 +7,7 @@
 const uint8_t PIN_RST = 9; // reset pin
 const uint8_t PIN_SS = SS; // spi select pin
 // not used:
-//const uint8_t PIN_IRQ = 0; // irq pin
+//const uint8_t PIN_IRQ = 2; // irq pin
 
 void setup() {
   Serial.begin(115200);
