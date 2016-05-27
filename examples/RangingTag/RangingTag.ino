@@ -26,6 +26,11 @@
 #include <SPI.h>
 #include <DW1000.h>
 
+// connection pins
+const uint8_t PIN_RST = 9; // reset pin
+const uint8_t PIN_IRQ = 2; // irq pin
+const uint8_t PIN_SS = SS; // spi select pin
+
 // messages used in the ranging protocol
 #define POLL 0
 #define POLL_ACK 1
@@ -44,8 +49,6 @@ DW1000Time timeRangeSent;
 // data buffer
 #define LEN_DATA 16
 byte data[LEN_DATA];
-// reset line to the chip
-int RST = 9;
 // watchdog and reset period
 unsigned long lastActivity;
 unsigned long resetPeriod = 250;
@@ -55,10 +58,10 @@ unsigned int replyDelayTimeUS = 3000;
 void setup() {
     // DEBUG monitoring
     Serial.begin(115200);
-    Serial.println("### DW1000-arduino-ranging-tag ###");
+    Serial.println(F("### DW1000-arduino-ranging-tag ###"));
     // initialize the driver
-    DW1000.begin(0, RST);
-    DW1000.select(SS);
+    DW1000.begin(PIN_RST, PIN_RST);
+    DW1000.select(PIN_SS);
     Serial.println("DW1000 initialized ...");
     // general configuration
     DW1000.newConfiguration();
@@ -67,9 +70,9 @@ void setup() {
     DW1000.setNetworkId(10);
     DW1000.enableMode(DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
     DW1000.commitConfiguration();
-    Serial.println("Committed configuration ...");
+    Serial.println(F("Committed configuration ..."));
     // DEBUG chip info and registers pretty printed
-    char msg[256];
+    char msg[128];
     DW1000.getPrintableDeviceIdentifier(msg);
     Serial.print("Device ID: "); Serial.println(msg);
     DW1000.getPrintableExtendedUniqueIdentifier(msg);

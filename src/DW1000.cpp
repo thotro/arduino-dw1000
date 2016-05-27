@@ -144,7 +144,8 @@ void DW1000Class::begin(int irq, int rst) {
 	_irq        = irq;
 	_deviceMode = IDLE_MODE;
 	// attach interrupt
-	attachInterrupt(_irq, DW1000Class::handleInterrupt, RISING);
+	// TODO throw error if pin is not a interrupt pin
+	attachInterrupt(digitalPinToInterrupt(_irq), DW1000Class::handleInterrupt, RISING);
 }
 
 void DW1000Class::manageLDE() {

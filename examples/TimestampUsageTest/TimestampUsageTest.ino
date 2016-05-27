@@ -24,7 +24,7 @@
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("### DW1000Time-arduino-test ###");  
+  Serial.println(F("### DW1000Time-arduino-test ###"));
 }
 
 void loop() {
