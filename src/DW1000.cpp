@@ -101,8 +101,8 @@ void DW1000Class::select(int ss) {
 	delay(5);
 	// reset chip (either soft or hard)
 	if(_rst > 0) {
-		pinMode(_rst, OUTPUT);
-		digitalWrite(_rst, HIGH);
+		// sheet §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
+		pinMode(_rst, INPUT);
 	}
 	reset();
 	// default network and node id
@@ -204,10 +204,12 @@ void DW1000Class::reset() {
 	if(_rst < 0) {
 		softReset();
 	} else {
+		// sheet §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
+		pinMode(_rst, OUTPUT);
 		digitalWrite(_rst, LOW);
-		delay(10);
-		digitalWrite(_rst, HIGH);
-		delay(10);
+		delay(10); // TODO verify time
+		pinMode(_rst, INPUT);
+		delay(10); // TODO verify time
 		// force into idle mode (although it should be already after reset)
 		idle();
 	}
