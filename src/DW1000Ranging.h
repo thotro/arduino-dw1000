@@ -70,7 +70,7 @@ public:
 	
 	
 	//initialisation
-	static void    initCommunication(unsigned int myRST = DEFAULT_RST_PIN, unsigned int mySS = DEFAULT_SPI_SS_PIN);
+	static void    initCommunication(uint8_t myRST = DEFAULT_RST_PIN, uint8_t mySS = DEFAULT_SPI_SS_PIN, uint8_t myIRQ = 2);
 	static void    configureNetwork(unsigned int deviceAddress, unsigned int networkId, const byte mode[]);
 	static void    generalStart();
 	static void    startAsAnchor(char address[], const byte mode[]);

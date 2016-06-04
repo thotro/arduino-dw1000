@@ -76,7 +76,7 @@ void (* DW1000RangingClass::_handleNewRange)(void) = 0;
  * #### Init and end #######################################################
  * ######################################################################### */
 
-void DW1000RangingClass::initCommunication(unsigned int myRST, unsigned int mySS) {
+void DW1000RangingClass::initCommunication(uint8_t myRST, uint8_t mySS, uint8_t myIRQ) {
 	// reset line to the chip
 	_RST              = myRST;
 	_SS               = mySS;
@@ -87,7 +87,7 @@ void DW1000RangingClass::initCommunication(unsigned int myRST, unsigned int mySS
 	_timerDelay       = DEFAULT_TIMER_DELAY;
 	
 	
-	DW1000.begin(0, myRST);
+	DW1000.begin(myIRQ, myRST);
 	DW1000.select(mySS);
 }
 
