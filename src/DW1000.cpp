@@ -101,7 +101,7 @@ void DW1000Class::select(int ss) {
 	delay(5);
 	// reset chip (either soft or hard)
 	if(_rst > 0) {
-		// sheet §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
+		// dw1000 data sheet v2.08 §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
 		pinMode(_rst, INPUT);
 	}
 	reset();
@@ -204,12 +204,12 @@ void DW1000Class::reset() {
 	if(_rst < 0) {
 		softReset();
 	} else {
-		// sheet §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
+		// dw1000 data sheet v2.08 §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
 		pinMode(_rst, OUTPUT);
 		digitalWrite(_rst, LOW);
-		delay(10); // TODO verify time
+		delay(2);  // dw1000 data sheet v2.08 §5.6.1 page 20: nominal 50ns, to be safe take more time
 		pinMode(_rst, INPUT);
-		delay(10); // TODO verify time
+		delay(10); // dwm1000 data sheet v1.2 page 5: nominal 3 ms, to be safe take more time
 		// force into idle mode (although it should be already after reset)
 		idle();
 	}
