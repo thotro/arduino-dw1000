@@ -1097,6 +1097,8 @@ void DW1000Class::setDefaults() {
 		useSmartPower(false);
 		suppressFrameCheck(false);
 		//for global frame filtering
+		setFrameFilter(false);
+		/* old defaults with active frame filter - better set filter in every script where you really need it
 		setFrameFilter(true);
 		//for data frame (poll, poll_ack, range, range report, range failed) filtering
 		setFrameFilterAllowData(true);
@@ -1105,6 +1107,7 @@ void DW1000Class::setDefaults() {
 		//setFrameFilterAllowMAC(true);
 		//setFrameFilterAllowBeacon(true);
 		//setFrameFilterAllowAcknowledgement(true);
+		*/
 		interruptOnSent(true);
 		interruptOnReceived(true);
 		interruptOnReceiveFailed(true);

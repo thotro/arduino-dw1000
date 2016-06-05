@@ -661,7 +661,8 @@ private:
 	
 	/* Arduino interrupt handler */
 	static void handleInterrupt();
-	
+
+public: // TODO move and resort functions - filter functions should be accessible from external
 	/* Allow MAC frame filtering . */
 	// TODO auto-acknowledge
 	static void setFrameFilter(boolean val);
@@ -673,7 +674,8 @@ private:
 	static void setFrameFilterAllowMAC(boolean val);
 	//Reserved is used for the Blink message
 	static void setFrameFilterAllowReserved(boolean val);
-	
+
+private:
 	// note: not sure if going to be implemented for now
 	static void setDoubleBuffering(boolean val);
 	// TODO is implemented, but needs testing
