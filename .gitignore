@@ -5,3 +5,4 @@ datasheets
 # exclude IDE stuff
 .idea
 cmake
+CMakeLists.txt

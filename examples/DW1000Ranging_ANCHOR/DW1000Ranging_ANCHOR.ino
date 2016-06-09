@@ -5,15 +5,14 @@
 
 // connection pins
 const uint8_t PIN_RST = 9; // reset pin
+const uint8_t PIN_IRQ = 2; // irq pin
 const uint8_t PIN_SS = SS; // spi select pin
-// not used:
-//const uint8_t PIN_IRQ = 2; // irq pin
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
   //init the configuration
-  DW1000Ranging.initCommunication(PIN_RST, PIN_SS); //Reset and CS pin  
+  DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   //define the sketch as anchor. It will be great to dynamically change the type of module
   DW1000Ranging.attachNewRange(newRange);
   //we start the module as an anchor

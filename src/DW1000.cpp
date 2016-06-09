@@ -18,7 +18,9 @@
  * Arduino driver library (source file) for the Decawave DW1000 UWB transceiver IC.
  */
 
+#ifdef __AVR__
 #include "digitalWriteFast.h"
+#endif
 #include "pins_arduino.h"
 #include "DW1000.h"
 
@@ -99,8 +101,8 @@ void DW1000Class::select(int ss) {
 	delay(5);
 	// reset chip (either soft or hard)
 	if(_rst > 0) {
-		pinMode(_rst, OUTPUT);
-		digitalWrite(_rst, HIGH);
+		// dw1000 data sheet v2.08 §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
+		pinMode(_rst, INPUT);
 	}
 	reset();
 	// default network and node id
@@ -202,10 +204,12 @@ void DW1000Class::reset() {
 	if(_rst < 0) {
 		softReset();
 	} else {
+		// dw1000 data sheet v2.08 §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
+		pinMode(_rst, OUTPUT);
 		digitalWrite(_rst, LOW);
-		delay(10);
-		digitalWrite(_rst, HIGH);
-		delay(10);
+		delay(2);  // dw1000 data sheet v2.08 §5.6.1 page 20: nominal 50ns, to be safe take more time
+		pinMode(_rst, INPUT);
+		delay(10); // dwm1000 data sheet v1.2 page 5: nominal 3 ms, to be safe take more time
 		// force into idle mode (although it should be already after reset)
 		idle();
 	}
@@ -1093,6 +1097,8 @@ void DW1000Class::setDefaults() {
 		useSmartPower(false);
 		suppressFrameCheck(false);
 		//for global frame filtering
+		setFrameFilter(false);
+		/* old defaults with active frame filter - better set filter in every script where you really need it
 		setFrameFilter(true);
 		//for data frame (poll, poll_ack, range, range report, range failed) filtering
 		setFrameFilterAllowData(true);
@@ -1101,6 +1107,7 @@ void DW1000Class::setDefaults() {
 		//setFrameFilterAllowMAC(true);
 		//setFrameFilterAllowBeacon(true);
 		//setFrameFilterAllowAcknowledgement(true);
+		*/
 		interruptOnSent(true);
 		interruptOnReceived(true);
 		interruptOnReceiveFailed(true);
@@ -1496,7 +1503,11 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		}
 	}
 	SPI.beginTransaction(*_currentSPI);
+#ifdef __AVR__
 	digitalWriteFast(_ss, LOW);
+#else
+	digitalWrite(_ss, LOW);
+#endif
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
@@ -1504,7 +1515,11 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		data[i] = SPI.transfer(JUNK);
 	}
 	delayMicroseconds(5);
+#ifdef __AVR__
 	digitalWriteFast(_ss, HIGH);
+#else
+	digitalWrite(_ss, HIGH);
+#endif
 	SPI.endTransaction();
 }
 
@@ -1560,7 +1575,11 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 		}
 	}
 	SPI.beginTransaction(*_currentSPI);
+#ifdef __AVR__
 	digitalWriteFast(_ss, LOW);
+#else
+	digitalWrite(_ss, LOW);
+#endif
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
@@ -1568,7 +1587,11 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 		SPI.transfer(data[i]);
 	}
 	delayMicroseconds(5);
+#ifdef __AVR__
 	digitalWriteFast(_ss, HIGH);
+#else
+	digitalWrite(_ss, HIGH);
+#endif
 	SPI.endTransaction();
 }
 
