@@ -501,7 +501,7 @@ void DW1000RangingClass::loop() {
 						//we test if the short address is our address
 						if(shortAddress[0] == _currentShortAddress[0] && shortAddress[1] == _currentShortAddress[1]) {
 							//we grab the replytime wich is for us
-							unsigned int replyTime;
+							unsigned int replyTime = 0;
 							memcpy(&replyTime, data+SHORT_MAC_LEN+2+i*4+2, 2);
 							//we configure our replyTime;
 							_replyDelayTimeUS = replyTime;
