@@ -95,7 +95,7 @@ void DW1000Class::end() {
 
 void DW1000Class::select(int ss) {
 	reselect(ss);
-	// try locking clock at PLL speed (should be done already, 
+	// try locking clock at PLL speed (should be done already,
 	// but just to be sure)
 	enableClock(AUTO_CLOCK);
 	delay(5);
@@ -140,7 +140,7 @@ void DW1000Class::begin(int irq, int rst) {
 	delay(5);
 	// start SPI
 	SPI.begin();
-	SPI.usingInterrupt(irq);
+	SPI.usingInterrupt(digitalPinToInterrupt(irq));
 	// pin and basic member setup
 	_rst        = rst;
 	_irq        = irq;
@@ -234,7 +234,7 @@ void DW1000Class::enableMode(const byte mode[]) {
 	setDataRate(mode[0]);
 	setPulseFrequency(mode[1]);
 	setPreambleLength(mode[2]);
-	// TODO add channel and code to mode tuples 
+	// TODO add channel and code to mode tuples
 	// TODO add channel and code settings with checks (see Table 58)
 	setChannel(CHANNEL_5);
 	if(mode[1] == TX_PULSE_FREQ_16MHZ) {
@@ -1013,7 +1013,7 @@ void DW1000Class::setDataRate(byte rate) {
 		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
 		setBit(_chanctrl, LEN_CHAN_CTRL, TNSSFD_BIT, true);
 		setBit(_chanctrl, LEN_CHAN_CTRL, RNSSFD_BIT, true);
-		
+
 	}
 	byte sfdLength;
 	if(rate == TRX_RATE_6800KBPS) {
@@ -1034,7 +1034,7 @@ void DW1000Class::setPulseFrequency(byte freq) {
 	_chanctrl[2] &= 0xF3;
 	_chanctrl[2] |= (byte)((freq << 2) & 0xFF);
 	_pulseFrequency = freq;
-	
+
 }
 
 byte DW1000Class::getPulseFrequency() {
@@ -1089,9 +1089,9 @@ void DW1000Class::setPreambleCode(byte preacode) {
 
 void DW1000Class::setDefaults() {
 	if(_deviceMode == TX_MODE) {
-		
+
 	} else if(_deviceMode == RX_MODE) {
-		
+
 	} else if(_deviceMode == IDLE_MODE) {
 		useExtendedFrameLength(false);
 		useSmartPower(false);
@@ -1431,7 +1431,7 @@ float DW1000Class::getReceivePower() {
 void DW1000Class::setBit(byte data[], unsigned int n, unsigned int bit, boolean val) {
 	int idx;
 	int shift;
-	
+
 	idx = bit/8;
 	if(idx >= n) {
 		return; // TODO proper error handling: out of bounds
@@ -1458,14 +1458,14 @@ void DW1000Class::setBit(byte data[], unsigned int n, unsigned int bit, boolean 
 boolean DW1000Class::getBit(byte data[], unsigned int n, unsigned int bit) {
 	int idx;
 	int shift;
-	
+
 	idx = bit/8;
 	if(idx >= n) {
 		return false; // TODO proper error handling: out of bounds
 	}
 	byte targetByte = data[idx];
 	shift = bit%8;
-	
+
 	return bitRead(targetByte, shift);
 }
 
@@ -1478,9 +1478,9 @@ void DW1000Class::writeValueToBytes(byte data[], long val, unsigned int n) {
 
 /*
  * Read bytes from the DW1000. Number of bytes depend on register length.
- * @param cmd 
+ * @param cmd
  * 		The register address (see Chapter 7 in the DW1000 user manual).
- * @param data 
+ * @param data
  *		The data array to be read into.
  * @param n
  *		The number of bytes expected to be received.
@@ -1545,15 +1545,15 @@ void DW1000Class::readBytesOTP(word address, byte data[]) {
 
 /*
  * Write bytes to the DW1000. Single bytes can be written to registers via sub-addressing.
- * @param cmd 
+ * @param cmd
  * 		The register address (see Chapter 7 in the DW1000 user manual).
  * @param offset
- *		The offset to select register sub-parts for writing, or 0x00 to disable 
+ *		The offset to select register sub-parts for writing, or 0x00 to disable
  * 		sub-adressing.
- * @param data 
+ * @param data
  *		The data array to be written.
  * @param n
- *		The number of bytes to be written (take care not to go out of bounds of 
+ *		The number of bytes to be written (take care not to go out of bounds of
  * 		the register).
  */
 void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n) {
@@ -1614,7 +1614,7 @@ void DW1000Class::getPrettyBytes(byte data[], char msgBuffer[], unsigned int n) 
 				msgBuffer[b++] = '\0';
 			}
 		}
-		
+
 	}
 	msgBuffer[b++] = '\0';
 }
@@ -1640,7 +1640,7 @@ void DW1000Class::getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsign
 				msgBuffer[b++] = '\0';
 			}
 		}
-		
+
 	}
 	msgBuffer[b++] = '\0';
 	free(readBuf);
