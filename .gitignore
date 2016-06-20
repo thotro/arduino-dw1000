@@ -6,3 +6,5 @@ datasheets
 .idea
 cmake
 CMakeLists.txt
+#exclude OSX stuff
+.DS_STORE
