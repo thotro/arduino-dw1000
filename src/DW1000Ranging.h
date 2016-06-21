@@ -55,7 +55,8 @@
 //default timer delay
 #define DEFAULT_TIMER_DELAY 80
 
-
+//Range filter value
+#define RANGE_FILTER_VALUE 15
 //debug mode
 #ifndef DEBUG
 #define DEBUG false
@@ -93,6 +94,7 @@ public:
 	//ranging functions
 	static short detectMessageType(byte datas[]);
 	static void  loop();
+	static void useRangeFilter(boolean enabled);
 	
 	
 	//Handlers:
@@ -143,7 +145,8 @@ private:
 	// ranging counter (per second)
 	static unsigned int     _successRangingCount;
 	static unsigned long    _rangingCountPeriod;
-	
+	//ranging filter
+	static volatile boolean _useRangeFilter;
 	//_bias correction
 	static char  _bias_RSL[17];
 	//17*2=34 bytes in SRAM
@@ -183,6 +186,8 @@ private:
 	
 	static void timerTick();
 	
+	//Utils
+	static float filterValue(float value, float previousValue, int numberOfElements);
 };
 
 extern DW1000RangingClass DW1000Ranging;
