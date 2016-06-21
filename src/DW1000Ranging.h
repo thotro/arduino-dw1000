@@ -94,7 +94,7 @@ public:
 	//ranging functions
 	static short detectMessageType(byte datas[]);
 	static void  loop();
-    static void useRangeFilter(boolean enabled);
+	static void useRangeFilter(boolean enabled);
 	
 	
 	//Handlers:
@@ -146,7 +146,7 @@ private:
 	static unsigned int     _successRangingCount;
 	static unsigned long    _rangingCountPeriod;
 	//ranging filter
-    static volatile boolean _useRangeFilter;
+	static volatile boolean _useRangeFilter;
 	//_bias correction
 	static char  _bias_RSL[17];
 	//17*2=34 bytes in SRAM
@@ -186,8 +186,8 @@ private:
 	
 	static void timerTick();
 	
-    //Utils
-    static float filterValue(float value, float previousValue, int numberOfElements);
+	//Utils
+	static float filterValue(float value, float previousValue, int numberOfElements);
 };
 
 extern DW1000RangingClass DW1000Ranging;

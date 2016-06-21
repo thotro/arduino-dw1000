@@ -559,14 +559,14 @@ void DW1000RangingClass::loop() {
 								computeRangeAsymmetric(myDistantDevice, &myTOF); // CHOSEN RANGING ALGORITHM
 								
 								float distance = myTOF.getAsMeters();
-                                
-                                if (_useRangeFilter) {
-                                    //Skip first range
-                                    if (myDistantDevice->getRange() != 0.0f) {
-                                        distance = filterValue(distance, myDistantDevice->getRange(), RANGE_FILTER_VALUE);
-                                    }
-                                }
-                                
+								
+								if (_useRangeFilter) {
+									//Skip first range
+									if (myDistantDevice->getRange() != 0.0f) {
+										distance = filterValue(distance, myDistantDevice->getRange(), RANGE_FILTER_VALUE);
+									}
+								}
+								
 								myDistantDevice->setRXPower(DW1000.getReceivePower());
 								myDistantDevice->setRange(distance);
 								
@@ -626,14 +626,14 @@ void DW1000RangingClass::loop() {
 					memcpy(&curRange, data+1+SHORT_MAC_LEN, 4);
 					float curRXPower;
 					memcpy(&curRXPower, data+5+SHORT_MAC_LEN, 4);
-                    
-                    if (_useRangeFilter) {
-                        //Skip first range
-                        if (myDistantDevice->getRange() != 0.0f) {
-                            curRange = filterValue(curRange, myDistantDevice->getRange(), RANGE_FILTER_VALUE);
-                        }
-                    }
-                    //Serial.print("Current:");Serial.print(myDistantDevice->getRange());Serial.print(" New:");Serial.println(curRange);
+					
+					if (_useRangeFilter) {
+						//Skip first range
+						if (myDistantDevice->getRange() != 0.0f) {
+							curRange = filterValue(curRange, myDistantDevice->getRange(), RANGE_FILTER_VALUE);
+						}
+					}
+					//Serial.print("Current:");Serial.print(myDistantDevice->getRange());Serial.print(" New:");Serial.println(curRange);
 					//we have a new range to save !
 					myDistantDevice->setRange(curRange);
 					myDistantDevice->setRXPower(curRXPower);
@@ -658,7 +658,7 @@ void DW1000RangingClass::loop() {
 }
 
 void DW1000RangingClass::useRangeFilter(boolean enabled) {
-    _useRangeFilter = enabled;
+	_useRangeFilter = enabled;
 }
 
 
@@ -958,9 +958,9 @@ void DW1000RangingClass::visualizeDatas(byte datas[]) {
 //Utils
 
 float DW1000RangingClass::filterValue(float value, float previousValue, int numberOfElements) {
-    
-    float k = 2.0f / ((float)numberOfElements + 1.0f);
-    return (value * k) + previousValue * (1.0f - k);
+	
+	float k = 2.0f / ((float)numberOfElements + 1.0f);
+	return (value * k) + previousValue * (1.0f - k);
 }
 
 
