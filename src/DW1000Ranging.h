@@ -55,8 +55,6 @@
 //default timer delay
 #define DEFAULT_TIMER_DELAY 80
 
-//Range filter value
-#define RANGE_FILTER_VALUE 15
 //debug mode
 #ifndef DEBUG
 #define DEBUG false
@@ -95,7 +93,8 @@ public:
 	static short detectMessageType(byte datas[]);
 	static void  loop();
 	static void useRangeFilter(boolean enabled);
-	
+	// Used for the smoothing algorithm (Exponential Moving Average). newValue must be >= 2. Default 15.
+	static void setRangeFilterValue(unsigned int newValue);
 	
 	//Handlers:
 	static void attachNewRange(void (* handleNewRange)(void)) { _handleNewRange = handleNewRange; };
@@ -147,6 +146,7 @@ private:
 	static unsigned long    _rangingCountPeriod;
 	//ranging filter
 	static volatile boolean _useRangeFilter;
+	static unsigned int _rangeFilterValue;
 	//_bias correction
 	static char  _bias_RSL[17];
 	//17*2=34 bytes in SRAM

@@ -47,6 +47,7 @@ volatile boolean DW1000RangingClass::_receivedAck = false;
 
 // range filter
 volatile boolean DW1000RangingClass::_useRangeFilter = false;
+unsigned int DW1000RangingClass::_rangeFilterValue = 15;
 
 // protocol error state
 boolean          DW1000RangingClass::_protocolFailed = false;
@@ -563,7 +564,7 @@ void DW1000RangingClass::loop() {
 								if (_useRangeFilter) {
 									//Skip first range
 									if (myDistantDevice->getRange() != 0.0f) {
-										distance = filterValue(distance, myDistantDevice->getRange(), RANGE_FILTER_VALUE);
+										distance = filterValue(distance, myDistantDevice->getRange(), _rangeFilterValue);
 									}
 								}
 								
@@ -610,9 +611,6 @@ void DW1000RangingClass::loop() {
 					//we note activity for our device:
 					myDistantDevice->noteActivity();
 					
-					
-					
-					
 					//in the case the message come from our last device:
 					if(myDistantDevice->getIndex() == _networkDevicesNumber-1) {
 						_expectedMsgId = RANGE_REPORT;
@@ -630,10 +628,10 @@ void DW1000RangingClass::loop() {
 					if (_useRangeFilter) {
 						//Skip first range
 						if (myDistantDevice->getRange() != 0.0f) {
-							curRange = filterValue(curRange, myDistantDevice->getRange(), RANGE_FILTER_VALUE);
+							curRange = filterValue(curRange, myDistantDevice->getRange(), _rangeFilterValue);
 						}
 					}
-					//Serial.print("Current:");Serial.print(myDistantDevice->getRange());Serial.print(" New:");Serial.println(curRange);
+
 					//we have a new range to save !
 					myDistantDevice->setRange(curRange);
 					myDistantDevice->setRXPower(curRXPower);
@@ -659,6 +657,14 @@ void DW1000RangingClass::loop() {
 
 void DW1000RangingClass::useRangeFilter(boolean enabled) {
 	_useRangeFilter = enabled;
+}
+
+void DW1000RangingClass::setRangeFilterValue(unsigned int newValue) {
+	if (newValue < 2) {
+		_rangeFilterValue = 2;
+	}else{
+		_rangeFilterValue = newValue;
+	}
 }
 
 
