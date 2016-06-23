@@ -74,7 +74,9 @@ unsigned int  DW1000RangingClass::_successRangingCount = 0;
 unsigned long DW1000RangingClass::_rangingCountPeriod  = 0;
 //Here our handlers
 void (* DW1000RangingClass::_handleNewRange)(void) = 0;
-
+void (* DW1000RangingClass::_handleBlinkDevice)(DW1000Device*) = 0;
+void (* DW1000RangingClass::_handleNewDevice)(DW1000Device*) = 0;
+void (* DW1000RangingClass::_handleInactiveDevice)(DW1000Device*) = 0;
 
 /* ###########################################################################
  * #### Init and end #######################################################
@@ -324,8 +326,9 @@ void DW1000RangingClass::checkForReset() {
 void DW1000RangingClass::checkForInactiveDevices() {
 	for(int i = 0; i < _networkDevicesNumber; i++) {
 		if(_networkDevices[i].isInactive()) {
-			Serial.print("delete inactive device: ");
-			Serial.println(_networkDevices[i].getShortAddress(), HEX);
+			if(_handleInactiveDevice != 0) {
+				(*_handleInactiveDevice)(&_networkDevices[i]);
+			}
 			//we need to delete the device from the array:
 			removeNetworkDevices(i);
 			
@@ -435,11 +438,10 @@ void DW1000RangingClass::loop() {
 			DW1000Device myTag(address, shortAddress);
 			
 			if(addNetworkDevices(&myTag)) {
-				Serial.print("blink; 1 device added ! -> ");
-				Serial.print(" short:");
-				Serial.println(myTag.getShortAddress(), HEX);
-				
-				//we relpy by the transmit ranging init message
+				if(_handleBlinkDevice != 0) {
+					(*_handleBlinkDevice)(&myTag);
+				}
+				//we reply by the transmit ranging init message
 				transmitRangingInit(&myTag);
 				noteActivity();
 			}
@@ -453,13 +455,12 @@ void DW1000RangingClass::loop() {
 			DW1000Device myAnchor(address, true);
 			
 			if(addNetworkDevices(&myAnchor, true)) {
-				Serial.print("ranging init; 1 device added ! -> ");
-				Serial.print(" short:");
-				Serial.println(myAnchor.getShortAddress(), HEX);
+				if(_handleNewDevice != 0) {
+					(*_handleNewDevice)(&myAnchor);
+				}
 			}
 			
 			noteActivity();
-			
 		}
 		else {
 			//we have a short mac layer frame !
@@ -961,7 +962,9 @@ void DW1000RangingClass::visualizeDatas(byte datas[]) {
 
 
 
-//Utils
+/* ###########################################################################
+ * #### Utils  ###############################################################
+ * ######################################################################### */
 
 float DW1000RangingClass::filterValue(float value, float previousValue, int numberOfElements) {
 	
