@@ -99,6 +99,13 @@ public:
 	//Handlers:
 	static void attachNewRange(void (* handleNewRange)(void)) { _handleNewRange = handleNewRange; };
 	
+	static void attachBlinkDevice(void (* handleBlinkDevice)(DW1000Device*)) { _handleBlinkDevice = handleBlinkDevice; };
+	
+	static void attachNewDevice(void (* handleNewDevice)(DW1000Device*)) { _handleNewDevice = handleNewDevice; };
+	
+	static void attachInactiveDevice(void (* handleInactiveDevice)(DW1000Device*)) { _handleInactiveDevice = handleInactiveDevice; };
+	
+	
 	
 	static DW1000Device* getDistantDevice();
 	static DW1000Device* searchDistantDevice(byte shortAddress[]);
@@ -121,6 +128,9 @@ private:
 	
 	//Handlers:
 	static void (* _handleNewRange)(void);
+	static void (* _handleBlinkDevice)(DW1000Device*);
+	static void (* _handleNewDevice)(DW1000Device*);
+	static void (* _handleInactiveDevice)(DW1000Device*);
 	
 	//sketch type (tag or anchor)
 	static int              _type; //0 for tag and 1 for anchor
