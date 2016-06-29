@@ -21,7 +21,6 @@
 #ifdef __AVR__
 #include "digitalWriteFast.h"
 #endif
-#include "pins_arduino.h"
 #include "DW1000.h"
 
 DW1000Class DW1000;
