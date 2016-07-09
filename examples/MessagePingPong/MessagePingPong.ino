@@ -22,23 +22,29 @@
  *
  * Configure each node by setting their "trxToggle" attribute to either
  * "SENDER" or "RECEIVER".
+ * 
+ * @todo
+ * - add in SENDER mode timeout if no pong received then resend ping
  */
 
+#include "require_cpp11.h"
 #include <SPI.h>
 #include <DW1000.h>
 
 // connection pins
-const uint8_t PIN_RST = 9; // reset pin
-const uint8_t PIN_IRQ = 2; // irq pin
-const uint8_t PIN_SS = SS; // spi select pin
+constexpr uint8_t PIN_RST = 9; // reset pin
+constexpr uint8_t PIN_IRQ = 2; // irq pin
+constexpr uint8_t PIN_SS = SS; // spi select pin
 
 // toggle state
-#define SENDER true
-#define RECEIVER false
+enum class TransmissionState : uint8_t {
+  SENDER,
+  RECEIVER
+};
 // toggle and message RX/TX
 // NOTE: the other Arduino needs to be configured with RECEIVER
 //       (or SENDER respectively)
-volatile boolean trxToggle = RECEIVER;
+TransmissionState trxToggle = TransmissionState::RECEIVER;
 volatile boolean trxAck = false;
 volatile boolean rxError = false;
 String msg;
@@ -61,19 +67,19 @@ void setup() {
   // DEBUG chip info and registers pretty printed
   char msgInfo[128];
   DW1000.getPrintableDeviceIdentifier(msgInfo);
-  Serial.print("Device ID: "); Serial.println(msgInfo);
+  Serial.print(F("Device ID: ")); Serial.println(msgInfo);
   DW1000.getPrintableExtendedUniqueIdentifier(msgInfo);
-  Serial.print("Unique ID: "); Serial.println(msgInfo);
+  Serial.print(F("Unique ID: ")); Serial.println(msgInfo);
   DW1000.getPrintableNetworkIdAndShortAddress(msgInfo);
-  Serial.print("Network ID & Device Address: "); Serial.println(msgInfo);
+  Serial.print(F("Network ID & Device Address: ")); Serial.println(msgInfo);
   DW1000.getPrintableDeviceMode(msgInfo);
-  Serial.print("Device mode: "); Serial.println(msg);
+  Serial.print(F("Device mode: ")); Serial.println(msgInfo);
   // attach callback for (successfully) sent and received messages
   DW1000.attachSentHandler(handleSent);
   DW1000.attachReceivedHandler(handleReceived);
   DW1000.attachReceiveFailedHandler(handleReceiveFailed);
   // sender starts by sending a PING message, receiver starts listening
-  if (trxToggle == SENDER) {
+  if (trxToggle == TransmissionState::SENDER) {
     msg = "Ping ...";
     receiver();
     transmit();
@@ -115,7 +121,7 @@ void receiver() {
 
 void loop() {
   if (rxError) {
-    Serial.println("Failed to properly receive message.");
+    Serial.println(F("Failed to properly receive message."));
     rxError = false;
     return;
   }
@@ -125,15 +131,14 @@ void loop() {
   // continue on any success confirmation
   trxAck = false;
   // a sender will be a receiver and vice versa
-  trxToggle = !trxToggle;
-  if (trxToggle == SENDER) {
+  trxToggle = (trxToggle == TransmissionState::SENDER) ? TransmissionState::RECEIVER : TransmissionState::SENDER;
+  if (trxToggle == TransmissionState::SENDER) {
     // formerly a receiver
     String rxMsg;
     DW1000.getData(rxMsg);
-    Serial.print("Received: "); Serial.println(rxMsg);
+    Serial.print(F("Received: ")); Serial.println(rxMsg);
     transmit();
   } else {
-    Serial.print("Transmitted: "); Serial.println(msg);
+    Serial.print(F("Transmitted: ")); Serial.println(msg);
   }
 }
-
