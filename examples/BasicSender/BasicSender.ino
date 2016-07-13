@@ -18,7 +18,6 @@
  * Use this to test simple sender/receiver functionality with two
  * DW1000. Complements the "BasicReceiver" example sketch. 
  */
-
 #include <SPI.h>
 #include <DW1000.h>
 
@@ -79,7 +78,7 @@ void transmitter() {
   String msg = "Hello DW1000, it's #"; msg += sentNum;
   DW1000.setData(msg);
   // delay sending the message for the given amount
-  DW1000Time deltaTime = DW1000Time(10, DW_MILLISECONDS);
+  DW1000Time deltaTime = DW1000Time(10, DW1000Time::MILLISECONDS);
   DW1000.setDelay(deltaTime);
   DW1000.startTransmit();
   delaySent = millis();
@@ -97,9 +96,9 @@ void loop() {
   DW1000Time newSentTime;
   DW1000.getTransmitTimestamp(newSentTime);
   Serial.print("Processed packet ... #"); Serial.println(sentNum);
-  Serial.print("Sent timestamp ... "); Serial.println(newSentTime.getAsFloat());
+  Serial.print("Sent timestamp ... "); Serial.println(newSentTime.getAsMicroSeconds());
   // note: delta is just for simple demo as not correct on system time counter wrap-around
-  Serial.print("DW1000 delta send time [ms] ... "); Serial.println((newSentTime.getAsFloat() - sentTime.getAsFloat()) * 1.0e-3);
+  Serial.print("DW1000 delta send time [ms] ... "); Serial.println((newSentTime.getAsMicroSeconds() - sentTime.getAsMicroSeconds()) * 1.0e-3);
   sentTime = newSentTime;
   sentNum++;
   // again, transmit some data

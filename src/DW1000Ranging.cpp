@@ -829,7 +829,7 @@ void DW1000RangingClass::transmitPollAck(DW1000Device* myDistantDevice) {
 	_globalMac.generateShortMACFrame(data, _currentShortAddress, myDistantDevice->getByteShortAddress());
 	data[SHORT_MAC_LEN] = POLL_ACK;
 	// delay the same amount as ranging tag
-	DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, DW_MICROSECONDS);
+	DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, DW1000Time::MICROSECONDS);
 	copyShortAddress(_lastSentToShortAddress, myDistantDevice->getByteShortAddress());
 	transmit(data, deltaTime);
 }
@@ -850,7 +850,7 @@ void DW1000RangingClass::transmitRange(DW1000Device* myDistantDevice) {
 		data[SHORT_MAC_LEN+1] = _networkDevicesNumber;
 		
 		// delay sending the message and remember expected future sent timestamp
-		DW1000Time deltaTime     = DW1000Time(DEFAULT_REPLY_DELAY_TIME, DW_MICROSECONDS);
+		DW1000Time deltaTime     = DW1000Time(DEFAULT_REPLY_DELAY_TIME, DW1000Time::MICROSECONDS);
 		DW1000Time timeRangeSent = DW1000.setDelay(deltaTime);
 		
 		for(short i = 0; i < _networkDevicesNumber; i++) {
@@ -873,7 +873,7 @@ void DW1000RangingClass::transmitRange(DW1000Device* myDistantDevice) {
 		_globalMac.generateShortMACFrame(data, _currentShortAddress, myDistantDevice->getByteShortAddress());
 		data[SHORT_MAC_LEN] = RANGE;
 		// delay sending the message and remember expected future sent timestamp
-		DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, DW_MICROSECONDS);
+		DW1000Time deltaTime = DW1000Time(_replyDelayTimeUS, DW1000Time::MICROSECONDS);
 		//we get the device which correspond to the message which was sent (need to be filtered by MAC address)
 		myDistantDevice->timeRangeSent = DW1000.setDelay(deltaTime);
 		myDistantDevice->timePollSent.getTimestamp(data+1+SHORT_MAC_LEN);
@@ -898,7 +898,7 @@ void DW1000RangingClass::transmitRangeReport(DW1000Device* myDistantDevice) {
 	memcpy(data+1+SHORT_MAC_LEN, &curRange, 4);
 	memcpy(data+5+SHORT_MAC_LEN, &curRXPower, 4);
 	copyShortAddress(_lastSentToShortAddress, myDistantDevice->getByteShortAddress());
-	transmit(data, DW1000Time(_replyDelayTimeUS, DW_MICROSECONDS));
+	transmit(data, DW1000Time(_replyDelayTimeUS, DW1000Time::MICROSECONDS));
 }
 
 void DW1000RangingClass::transmitRangeFailed(DW1000Device* myDistantDevice) {

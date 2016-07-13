@@ -1,3 +1,10 @@
+notifications:
+  email:
+    recipients:
+      - secure: "axZN6doTif7sLXc0h72F8dC2HHoep647SxzLFpIg/ACVXKALNB2o5ZS/oELs1/fQq+wZLvpaOOtsVMhbbinfm/J438v3EQieUSQ3+YKQB8jpYPTvIvCMgjorgwmfFWQiVwtHTIodI2zpPKA2oVCQjC0n08u/jpb2yIwEQsLcfMCnOlvWO4vVuTVLydAUtvC5P7md/OLEsKKIIUvd2zfB/vOx44Kpv45GD2Pr6F9XywW8PkP07ucxgXPUq8kfOowDaEbkO9+PUyvCC8XjRkJzOzocnrHkeT5pLtVLBOngdPZDFqtZAixfK9mO2eMYdlS3p+0Nt4QlohjRGXWjouptqy14iDhnCtgB1VjSIYCkvgNR/h+v3FSsFATbrqiwAgkkeIvOamRdX7nvjPwdqb77fWqe6e20X3CCZd5PTpHSpuh7eOidb+kLqpS3V9NYF4AFWKYCLo3om/KNTiIrzMORXNFF6LOtP68quo+U0BdUh4O2NdjutsAR6qtNbuAiPefeaJmc0BAiBh4XViFldSRMDWnhaG1ErhDGbJtKLiIxOrSksGwHHSOl+W3zx9MQGLzusSvdgV0kO/QQ7YXH6+LprgSi1WxCS4QMCfjocBS57X4AqCnbRDD6LvO+LH9Rne9CLt6aEqNVI35CbIQ3SR59V+mhy8dZId04QHaLEQmZdA4=" # my encrypted private build report email @Rotzbua
+    on_success: change # [always|never|change]
+    on_failure: always # [always|never|change]
+
 language: python
 python:
     - "2.7"
@@ -10,16 +17,16 @@ cache:
 
 env:
     # add examples here and define which boards should be tested (only compile test)
-    - PLATFORMIO_CI_SRC=examples/BasicConnectivityTest/BasicConnectivityTest.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/TimestampUsageTest/TimestampUsageTest.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/BasicReceiver/BasicReceiver.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/BasicSender/BasicSender.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/DW1000Ranging_ANCHOR/DW1000Ranging_ANCHOR.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/DW1000Ranging_TAG/DW1000Ranging_TAG.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/MessagePingPong/MessagePingPong.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/RangingAnchor/RangingAnchor.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/RangingTag/RangingTag.ino TESTBOARD=arduino_avr
-    - PLATFORMIO_CI_SRC=examples/TimestampUsageTest/TimestampUsageTest.ino TESTBOARD=arduino_avr
+    - PLATFORMIO_CI_SRC=examples/BasicConnectivityTest/BasicConnectivityTest.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/BasicReceiver/BasicReceiver.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/BasicSender/BasicSender.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/DW1000Ranging_ANCHOR/DW1000Ranging_ANCHOR.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/DW1000Ranging_TAG/DW1000Ranging_TAG.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/MessagePingPong/MessagePingPong.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/RangingAnchor/RangingAnchor.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/RangingTag/RangingTag.ino TESTBOARD=arduino_avr,arduino_arm
+    - PLATFORMIO_CI_SRC=examples/TimestampUsageTest/TimestampUsageTest.ino TESTBOARD=arduino_avr,arduino_arm
+
 
 install:
     - pip install -U platformio
@@ -28,7 +35,8 @@ script:
     # short the string comparison
     - stringContain() { [ -z "${2##*$1*}" ]; }
     # selectable board tests @Rotzbua
-    - board="arduino_avr";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=uno --board=megaatmega1280; else echo "skip board test of $board"; fi
-    - board="arduino_arm";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=due --board=zero; else echo "skip board test of $board"; fi
-    - board="teensy";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=teensy31; else echo "skip board test of $board"; fi
-    - board="esp";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; platformio ci --lib=. --board=d1_mini; else echo "skip board test of $board"; fi
+    # prints only warnings and errors, to show all remove "1>/dev/null"
+    - board="arduino_avr";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; ouput=$(platformio ci --lib=. --board=uno --board=megaatmega1280); echo "--<Result>--"; echo "$ouput" | grep -E "^(Device|Data|Program|text|[0-9])"; else echo "skip board test of $board"; fi
+    - board="arduino_arm";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; ouput=$(platformio ci --lib=. --board=due --board=zero); echo "--<Result>--"; echo "$ouput" | grep -E "^(Device|Data|Program|text|[0-9])"; else echo "skip board test of $board"; fi
+    - board="teensy";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; ouput=$(platformio ci --lib=. --board=teensy20 --board=teensy31); echo "--<Result>--"; echo "$ouput" | grep -E "^(Device|Data|Program|text|[0-9])"; else echo "skip board test of $board"; fi
+    - board="esp";  if stringContain "$board" "$TESTBOARD"; then echo "check board $board"; ouput=$(platformio ci --lib=. --board=d1_mini); echo "--<Result>--"; echo "$ouput" | grep -E "^(Device|Data|Program|text|[0-9])"; else echo "skip board test of $board"; fi

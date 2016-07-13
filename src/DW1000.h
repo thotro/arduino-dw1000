@@ -21,11 +21,6 @@
 #ifndef _DW1000_H_INCLUDED
 #define _DW1000_H_INCLUDED
 
-// Time resolution in micro-seconds of time based registers/values.
-// Each bit in a timestamp counts for a period of approx. 15.65ps
-#define TIME_RES 0.000015650040064103
-#define TIME_RES_INV 63897.6
-
 // time stamp byte length
 #define LEN_STAMP 5
 

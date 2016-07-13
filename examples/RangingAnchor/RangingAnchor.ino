@@ -134,7 +134,7 @@ void transmitPollAck() {
     DW1000.setDefaults();
     data[0] = POLL_ACK;
     // delay the same amount as ranging tag
-    DW1000Time deltaTime = DW1000Time(replyDelayTimeUS, DW_MICROSECONDS);
+    DW1000Time deltaTime = DW1000Time(replyDelayTimeUS, DW1000Time::MICROSECONDS);
     DW1000.setDelay(deltaTime);
     DW1000.setData(data, LEN_DATA);
     DW1000.startTransmit();
@@ -246,7 +246,7 @@ void loop() {
                 timeRangeSent.setTimestamp(data + 11);
                 // (re-)compute range as two-way ranging is done
                 computeRangeAsymmetric(); // CHOSEN RANGING ALGORITHM
-                transmitRangeReport(timeComputedRange.getAsFloat());
+                transmitRangeReport(timeComputedRange.getAsMicroSeconds());
                 float distance = timeComputedRange.getAsMeters();
                 Serial.print("Range: "); Serial.print(distance); Serial.print(" m");
                 Serial.print("\t RX power: "); Serial.print(DW1000.getReceivePower()); Serial.print(" dBm");
