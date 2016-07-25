@@ -1,0 +1,16 @@
+{
+  "name": "DW1000",
+  "keywords": "wireless, communication",
+  "description": "A library that offers functionality to use Decawave's DW1000 chips.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thotro/arduino-dw1000.git"
+  },
+  "version": "0.6",
+  "exclude": [
+    "adapterBoard",
+    "extras"
+  ],
+  "frameworks": "arduino",
+  "platforms": "*"
+}
