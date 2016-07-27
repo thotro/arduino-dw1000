@@ -16,6 +16,8 @@ Project state
 Installation
 ------------
 
+**Requires c++11 support**, Arduino IDE >= 1.6.6 support c++11.
+
  1. Get a ZIP file of the master branch or the latest release and save somewhere on your machine.
  2. Open your Arduino IDE and goto _Sketch_ / _Include Library_ / _Add .ZIP Library..._
  3. Select the downloaded ZIP file of the DW1000 library
