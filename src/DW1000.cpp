@@ -940,6 +940,16 @@ void DW1000Class::newConfiguration() {
 }
 
 void DW1000Class::commitConfiguration() {
+	byte sfdLength;
+	if(_dataRate == TRX_RATE_6800KBPS) {
+		sfdLength = 0x08;
+	} else if(_dataRate == TRX_RATE_850KBPS) {
+		sfdLength = 0x10;
+	} else {
+		sfdLength = 0x40;
+	}
+	writeBytes(USR_SFD, SFD_LENGTH_SUB, &sfdLength, LEN_SFD_LENGTH);
+
 	// write all configurations back to device
 	writeNetworkIdAndDeviceAddress();
 	writeSystemConfigurationRegister();
@@ -1015,15 +1025,6 @@ void DW1000Class::setDataRate(byte rate) {
 		setBit(_chanctrl, LEN_CHAN_CTRL, RNSSFD_BIT, true);
 
 	}
-	byte sfdLength;
-	if(rate == TRX_RATE_6800KBPS) {
-		sfdLength = 0x08;
-	} else if(rate == TRX_RATE_850KBPS) {
-		sfdLength = 0x10;
-	} else {
-		sfdLength = 0x40;
-	}
-	writeBytes(USR_SFD, SFD_LENGTH_SUB, &sfdLength, LEN_SFD_LENGTH);
 	_dataRate = rate;
 }
 
