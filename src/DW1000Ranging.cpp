@@ -195,7 +195,7 @@ void DW1000RangingClass::startAsTag(char address[], const byte mode[]) {
 	DW1000Ranging.configureNetwork(_currentShortAddress[0]*256+_currentShortAddress[1], 0xDECA, mode);
 	
 	generalStart();
-	//defined type as anchor
+	//defined type as tag
 	_type = TAG;
 	
 	Serial.println("### TAG ###");
@@ -337,7 +337,7 @@ void DW1000RangingClass::checkForInactiveDevices() {
 }
 
 short DW1000RangingClass::detectMessageType(byte datas[]) {
-	if(datas[0] == 0xC5) {
+	if(datas[0] == FC_1_BLINK) {
 		return BLINK;
 	}
 	else if(datas[0] == FC_1 && datas[1] == FC_2) {
@@ -348,6 +348,8 @@ short DW1000RangingClass::detectMessageType(byte datas[]) {
 		//we have a short mac frame message (poll, range, range report, etc..)
 		return datas[SHORT_MAC_LEN];
 	}
+
+	return -1;
 }
 
 void DW1000RangingClass::loop() {
