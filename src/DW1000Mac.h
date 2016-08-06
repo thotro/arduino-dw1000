@@ -71,8 +71,8 @@ public:
 	
 	//in order to decode the frame and save source Address!
 	void    decodeBlinkFrame(byte frame[], byte address[], byte shortAddress[]);
-	boolean decodeShortMACFrame(byte frame[], byte address[]);
-	boolean decodeLongMACFrame(byte frame[], byte address[]);
+	void decodeShortMACFrame(byte frame[], byte address[]);
+	void decodeLongMACFrame(byte frame[], byte address[]);
 	
 	void incrementSeqNumber();
 
