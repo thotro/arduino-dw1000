@@ -223,6 +223,8 @@
 #define TX_CAL 0x2A
 #define TC_PGDELAY_SUB 0x0B
 #define LEN_TC_PGDELAY 1
+#define TC_SARC 0x00
+#define TC_SARL 0x03
 
 // FS_CTRL (for re-tuning only)
 #define FS_CTRL 0x2B
@@ -546,6 +548,9 @@ public:
 	static int  nibbleFromChar(char c);
 	static void convertToByte(char string[], byte* eui_byte);
 	
+	// host-initiated reading of temperature and battery voltage
+	static void getTempAndVbat(float& temp, float& vbat);
+
 	// transmission/reception bit rate
 	static const byte TRX_RATE_110KBPS  = 0x00;
 	static const byte TRX_RATE_850KBPS  = 0x01;
@@ -633,6 +638,10 @@ private:
 	static byte _sysmask[LEN_SYS_MASK];
 	static byte _chanctrl[LEN_CHAN_CTRL];
 	
+	/* device status monitoring */
+	static short _vmeas3v3;
+	static short _tmeas23C;
+
 	/* PAN and short address. */
 	static byte _networkAndAddress[LEN_PANADR];
 	

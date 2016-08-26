@@ -52,6 +52,10 @@ byte       DW1000Class::_sysmask[LEN_SYS_MASK];
 byte       DW1000Class::_chanctrl[LEN_CHAN_CTRL];
 byte       DW1000Class::_networkAndAddress[LEN_PANADR];
 
+// monitoring
+short DW1000Class::_vmeas3v3 = 0;
+short DW1000Class::_tmeas23C = 0;
+
 // driver internal state
 byte       DW1000Class::_extendedFrameLength = FRAME_LENGTH_NORMAL;
 byte       DW1000Class::_pacSize             = PAC_SIZE_8;
@@ -123,6 +127,14 @@ void DW1000Class::select(int ss) {
 	delay(5);
 	enableClock(AUTO_CLOCK);
 	delay(5);
+
+	// read the temp and vbat readings from OTP that were recorded during production test
+	byte vmeas[4]; // the stored 3.3 V reading
+	readBytesOTP(0x008, vmeas);
+	_vmeas3v3 = vmeas[0] & 0xFF;
+	byte tmeas[4]; // the stored 23C reading
+	readBytesOTP(0x009, tmeas);
+	_tmeas23C = tmeas[0] & 0xFF;
 }
 
 void DW1000Class::reselect(int ss) {
@@ -796,6 +808,20 @@ void DW1000Class::convertToByte(char string[], byte* bytes) {
 		eui_byte[i] = (nibbleFromChar(string[i*3]) << 4)+nibbleFromChar(string[i*3+1]);
 	}
 	memcpy(bytes, eui_byte, LEN_EUI);
+}
+
+void DW1000Class::getTempAndVbat(float& temp, float& vbat) {
+	// follow the procedure from section 6.4 of the User Manual
+	byte step1 = 0x80; writeBytes(RF_CONF, 0x11, &step1, 1);
+	byte step2 = 0x0A; writeBytes(RF_CONF, 0x12, &step2, 1);
+	byte step3 = 0x0F; writeBytes(RF_CONF, 0x12, &step3, 1);
+	byte step4 = 0x01; writeBytes(TX_CAL, NO_SUB, &step4, 1);
+	byte step5 = 0x00; writeBytes(TX_CAL, NO_SUB, &step5, 1);
+	byte sar_lvbat = 0; readBytes(TX_CAL, 0x03, &sar_lvbat, 1);
+	byte sar_ltemp = 0; readBytes(TX_CAL, 0x04, &sar_ltemp, 1);
+
+	vbat = ((short)(sar_lvbat&0xFF) - _vmeas3v3) / 173.0f + 3.3f;
+	temp = ((short)(sar_ltemp&0xFF) - _tmeas23C) * 1.14f + 23.0f;
 }
 
 void DW1000Class::setEUI(char eui[]) {
