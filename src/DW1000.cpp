@@ -53,8 +53,8 @@ byte       DW1000Class::_chanctrl[LEN_CHAN_CTRL];
 byte       DW1000Class::_networkAndAddress[LEN_PANADR];
 
 // monitoring
-short DW1000Class::_vmeas3v3 = 0;
-short DW1000Class::_tmeas23C = 0;
+int DW1000Class::_vmeas3v3 = 0;
+int DW1000Class::_tmeas23C = 0;
 
 // driver internal state
 byte       DW1000Class::_extendedFrameLength = FRAME_LENGTH_NORMAL;
@@ -820,8 +820,8 @@ void DW1000Class::getTempAndVbat(float& temp, float& vbat) {
 	byte sar_lvbat = 0; readBytes(TX_CAL, 0x03, &sar_lvbat, 1);
 	byte sar_ltemp = 0; readBytes(TX_CAL, 0x04, &sar_ltemp, 1);
 
-	vbat = ((short)(sar_lvbat&0xFF) - _vmeas3v3) / 173.0f + 3.3f;
-	temp = ((short)(sar_ltemp&0xFF) - _tmeas23C) * 1.14f + 23.0f;
+	vbat = ((int)(sar_lvbat&0xFF) - _vmeas3v3) / 173.0f + 3.3f;
+	temp = ((int)(sar_ltemp&0xFF) - _tmeas23C) * 1.14f + 23.0f;
 }
 
 void DW1000Class::setEUI(char eui[]) {
