@@ -148,7 +148,9 @@ void DW1000Class::begin(int irq, int rst) {
 	delay(5);
 	// start SPI
 	SPI.begin();
-	SPI.usingInterrupt(digitalPinToInterrupt(irq));
+#ifndef ESP8266
+	SPI.usingInterrupt(digitalPinToInterrupt(irq)); // not every board support this, e.g. ESP8266
+#endif
 	// pin and basic member setup
 	_rst        = rst;
 	_irq        = irq;
