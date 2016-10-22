@@ -17,6 +17,8 @@
  * @file DW1000Device.h
  * Arduino global library (header file) working with the DW1000 library
  * for the Decawave DW1000 UWB transceiver IC.
+ * 
+ * @todo complete this class
  */
 
 
@@ -25,10 +27,12 @@
 #ifndef _DW1000Device_H_INCLUDED
 #define _DW1000Device_H_INCLUDED
 
-#include <DW1000Time.h>
+#include "DW1000Time.h"
 #include "DW1000Mac.h"
 
 class DW1000Mac;
+
+class DW1000Device;
 
 class DW1000Device {
 public:
@@ -39,7 +43,7 @@ public:
 	~DW1000Device();
 	
 	//setters:
-	void setReplyTime(unsigned int replyDelayTimeUs);
+	void setReplyTime(uint16_t replyDelayTimeUs);
 	void setAddress(char address[]);
 	void setAddress(byte* address);
 	void setShortAddress(byte address[]);
@@ -49,20 +53,20 @@ public:
 	void setFPPower(float power);
 	void setQuality(float quality);
 	
-	void setReplyDelayTime(int time) { _replyDelayTimeUS = time; }
+	void setReplyDelayTime(int16_t time) { _replyDelayTimeUS = time; }
 	
-	void setIndex(short index) { _index = index; }
+	void setIndex(int8_t index) { _index = index; }
 	
 	//getters
-	unsigned int getReplyTime() { return _replyDelayTimeUS; }
+	uint16_t getReplyTime() { return _replyDelayTimeUS; }
 	
 	byte* getByteAddress();
 	
-	short getIndex() { return _index; }
+	int8_t getIndex() { return _index; }
 	
 	//String getAddress();
 	byte* getByteShortAddress();
-	unsigned int getShortAddress();
+	uint16_t getShortAddress();
 	//String getShortAddress();
 	
 	float getRange();
@@ -90,14 +94,14 @@ private:
 	//device ID
 	byte         _ownAddress[8];
 	byte         _shortAddress[2];
-	long         _activity;
-	unsigned int _replyDelayTimeUS;
-	short        _index;
+	int32_t      _activity;
+	uint16_t     _replyDelayTimeUS;
+	int8_t       _index; // not used
 	
-	int _range;
-	int _RXPower;
-	int _FPPower;
-	int _quality;
+	int16_t _range;
+	int16_t _RXPower;
+	int16_t _FPPower;
+	int16_t _quality;
 	
 	void randomShortAddress();
 	
@@ -105,4 +109,3 @@ private:
 
 
 #endif
-

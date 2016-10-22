@@ -17,6 +17,8 @@
  * @file DW1000Device.cpp
  * Arduino global library (source file) working with the DW1000 library
  * for the Decawave DW1000 UWB transceiver IC.
+ * 
+ * @todo complete this class
  */
 
 #include "DW1000Device.h"
@@ -51,7 +53,7 @@ DW1000Device::~DW1000Device() {
 }
 
 //setters:
-void DW1000Device::setReplyTime(unsigned int replyDelayTimeUs) { _replyDelayTimeUS = replyDelayTimeUs; }
+void DW1000Device::setReplyTime(uint16_t replyDelayTimeUs) { _replyDelayTimeUS = replyDelayTimeUs; }
 
 void DW1000Device::setAddress(char deviceAddress[]) { DW1000.convertToByte(deviceAddress, _ownAddress); }
 
@@ -98,27 +100,17 @@ String DW1000Device::getShortAddress(){
 }
 */
 
-unsigned int DW1000Device::getShortAddress() {
+uint16_t DW1000Device::getShortAddress() {
 	return _shortAddress[1]*256+_shortAddress[0];
 }
 
 
 boolean DW1000Device::isAddressEqual(DW1000Device* device) {
-	if(memcmp(this->getByteAddress(), device->getByteAddress(), 8) == 0) {
-		return true;
-	}
-	else {
-		return false;
-	}
+	return memcmp(this->getByteAddress(), device->getByteAddress(), 8) == 0;
 }
 
 boolean DW1000Device::isShortAddressEqual(DW1000Device* device) {
-	if(memcmp(this->getByteShortAddress(), device->getByteShortAddress(), 2) == 0) {
-		return true;
-	}
-	else {
-		return false;
-	}
+	return memcmp(this->getByteShortAddress(), device->getByteShortAddress(), 2) == 0;
 }
 
 
