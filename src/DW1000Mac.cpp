@@ -18,6 +18,8 @@
  * Arduino global library (header file) working with the DW1000 library
  * for the Decawave DW1000 UWB transceiver IC. This class has the purpose
  * to generate the mac layer
+ * 
+ * @todo everything, this class is only a prototype
  */
 
 #include "DW1000Mac.h" 
@@ -37,7 +39,7 @@ DW1000Mac::~DW1000Mac() {
 //total=12 bytes
 void DW1000Mac::generateBlinkFrame(byte frame[], byte sourceAddress[], byte sourceShortAddress[]) {
 	//Frame Control
-	*frame = FC_1_BLINK;
+	*frame     = FC_1_BLINK;
 	//sequence number
 	*(frame+1) = _seqNumber;
 	//tag 64 bit ID (8 bytes address) -- reverse
@@ -61,7 +63,7 @@ void DW1000Mac::generateShortMACFrame(byte frame[], byte sourceShortAddress[], b
 	//Frame controle
 	*frame     = FC_1;
 	*(frame+1) = FC_2_SHORT;
-	//sequence number
+	//sequence number (11.3) modulo 256
 	*(frame+2) = _seqNumber;
 	//PAN ID
 	*(frame+3) = 0xCA;
@@ -142,14 +144,16 @@ void DW1000Mac::decodeLongMACFrame(byte frame[], byte address[]) {
 
 
 void DW1000Mac::incrementSeqNumber() {
-	_seqNumber++;
-	if(_seqNumber > 255)
+	// normally overflow of uint8 automatically resets to 0 if over 255
+	// but if-clause seems safer way
+	if(_seqNumber == 255)
 		_seqNumber = 0;
+	else
+		_seqNumber++;
 }
 
-void DW1000Mac::reverseArray(byte to[], byte from[], int size) {
-	for(int i = 0; i < size; i++) {
+void DW1000Mac::reverseArray(byte to[], byte from[], int16_t size) {
+	for(int16_t i = 0; i < size; i++) {
 		*(to+i) = *(from+size-i-1);
 	}
-	
 }
