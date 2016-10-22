@@ -45,7 +45,7 @@ public:
 	@param[in] irq The interrupt line/pin that connects the Arduino.
 	@param[in] rst The reset line/pin for hard resets of ICs that connect to the Arduino.
 	*/
-	static void begin(int irq, int rst);
+	static void begin(uint8_t irq, uint8_t rst);
 	
 	/** 
 	Initiates and starts a sessions with one or more DW1000. Soft resets (i.e. command
@@ -53,7 +53,7 @@ public:
 
 	@param[in] irq The interrupt line/pin that connects the Arduino.
 	*/
-	static void begin(int irq);
+	static void begin(uint8_t irq);
 	
 	/** 
 	Selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use
@@ -63,7 +63,7 @@ public:
 	@param[in] ss The chip select line/pin that connects the to-be-selected chip with the
 	Arduino.
 	*/
-	static void select(int ss);
+	static void select(uint8_t ss);
 	
 	/** 
 	(Re-)selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use
@@ -74,7 +74,7 @@ public:
 	@param[in] ss The chip select line/pin that connects the to-be-selected chip with the
 	Arduino.
 	*/
-	static void reselect(int ss);
+	static void reselect(uint8_t ss);
 	
 	/** 
 	Tells the driver library that no communication to a DW1000 will be required anymore.
@@ -139,7 +139,7 @@ public:
 	*/
 	
 	
-	static void setNetworkId(unsigned int val);
+	static void setNetworkId(uint16_t val);
 	
 	/** 
 	(Re-)set the device address (i.e. short address) for the currently selected chip. This
@@ -147,7 +147,7 @@ public:
 
 	@param[in] val An arbitrary numeric device address.
 	*/
-	static void setDeviceAddress(unsigned int val);
+	static void setDeviceAddress(uint16_t val);
 	// TODO MAC and filters
 	
 	static void setEUI(char eui[]);
@@ -225,11 +225,11 @@ public:
 	/* transmit and receive configuration. */
 	static DW1000Time   setDelay(const DW1000Time& delay);
 	static void         receivePermanently(boolean val);
-	static void         setData(byte data[], unsigned int n);
+	static void         setData(byte data[], uint16_t n);
 	static void         setData(const String& data);
-	static void         getData(byte data[], unsigned int n);
+	static void         getData(byte data[], uint16_t n);
 	static void         getData(String& data);
-	static unsigned int getDataLength();
+	static uint16_t     getDataLength();
 	static void         getTransmitTimestamp(DW1000Time& time);
 	static void         getReceiveTimestamp(DW1000Time& time);
 	static void         getSystemTimestamp(DW1000Time& time);
@@ -319,86 +319,86 @@ public:
 	static void setDefaults();
 	
 	/* debug pretty print registers. */
-	static void getPrettyBytes(byte cmd, word offset, char msgBuffer[], unsigned int n);
-	static void getPrettyBytes(byte data[], char msgBuffer[], unsigned int n);
+	static void getPrettyBytes(byte cmd, uint16_t offset, char msgBuffer[], uint16_t n);
+	static void getPrettyBytes(byte data[], char msgBuffer[], uint16_t n);
 	
 	//convert from char to 4 bits (hexadecimal)
-	static int  nibbleFromChar(char c);
+	static uint8_t nibbleFromChar(char c);
 	static void convertToByte(char string[], byte* eui_byte);
 	
 	// host-initiated reading of temperature and battery voltage
 	static void getTempAndVbat(float& temp, float& vbat);
-
+	
 	// transmission/reception bit rate
-	static const byte TRX_RATE_110KBPS  = 0x00;
-	static const byte TRX_RATE_850KBPS  = 0x01;
-	static const byte TRX_RATE_6800KBPS = 0x02;
+	static constexpr byte TRX_RATE_110KBPS  = 0x00;
+	static constexpr byte TRX_RATE_850KBPS  = 0x01;
+	static constexpr byte TRX_RATE_6800KBPS = 0x02;
 	
 	// transmission pulse frequency
 	// 0x00 is 4MHZ, but receiver in DW1000 does not support it (!??)
-	static const byte TX_PULSE_FREQ_16MHZ = 0x01;
-	static const byte TX_PULSE_FREQ_64MHZ = 0x02;
+	static constexpr byte TX_PULSE_FREQ_16MHZ = 0x01;
+	static constexpr byte TX_PULSE_FREQ_64MHZ = 0x02;
 	
 	// preamble length (PE + TXPSR bits)
-	static const byte TX_PREAMBLE_LEN_64   = 0x01;
-	static const byte TX_PREAMBLE_LEN_128  = 0x05;
-	static const byte TX_PREAMBLE_LEN_256  = 0x09;
-	static const byte TX_PREAMBLE_LEN_512  = 0x0D;
-	static const byte TX_PREAMBLE_LEN_1024 = 0x02;
-	static const byte TX_PREAMBLE_LEN_1536 = 0x06;
-	static const byte TX_PREAMBLE_LEN_2048 = 0x0A;
-	static const byte TX_PREAMBLE_LEN_4096 = 0x03;
+	static constexpr byte TX_PREAMBLE_LEN_64   = 0x01;
+	static constexpr byte TX_PREAMBLE_LEN_128  = 0x05;
+	static constexpr byte TX_PREAMBLE_LEN_256  = 0x09;
+	static constexpr byte TX_PREAMBLE_LEN_512  = 0x0D;
+	static constexpr byte TX_PREAMBLE_LEN_1024 = 0x02;
+	static constexpr byte TX_PREAMBLE_LEN_1536 = 0x06;
+	static constexpr byte TX_PREAMBLE_LEN_2048 = 0x0A;
+	static constexpr byte TX_PREAMBLE_LEN_4096 = 0x03;
 	
 	// PAC size. */
-	static const byte PAC_SIZE_8  = 8;
-	static const byte PAC_SIZE_16 = 16;
-	static const byte PAC_SIZE_32 = 32;
-	static const byte PAC_SIZE_64 = 64;
+	static constexpr byte PAC_SIZE_8  = 8;
+	static constexpr byte PAC_SIZE_16 = 16;
+	static constexpr byte PAC_SIZE_32 = 32;
+	static constexpr byte PAC_SIZE_64 = 64;
 	
 	/* channel of operation. */
-	static const byte CHANNEL_1 = 1;
-	static const byte CHANNEL_2 = 2;
-	static const byte CHANNEL_3 = 3;
-	static const byte CHANNEL_4 = 4;
-	static const byte CHANNEL_5 = 5;
-	static const byte CHANNEL_7 = 7;
+	static constexpr byte CHANNEL_1 = 1;
+	static constexpr byte CHANNEL_2 = 2;
+	static constexpr byte CHANNEL_3 = 3;
+	static constexpr byte CHANNEL_4 = 4;
+	static constexpr byte CHANNEL_5 = 5;
+	static constexpr byte CHANNEL_7 = 7;
 	
 	/* preamble codes. */
-	static const byte PREAMBLE_CODE_16MHZ_1  = 1;
-	static const byte PREAMBLE_CODE_16MHZ_2  = 2;
-	static const byte PREAMBLE_CODE_16MHZ_3  = 3;
-	static const byte PREAMBLE_CODE_16MHZ_4  = 4;
-	static const byte PREAMBLE_CODE_16MHZ_5  = 5;
-	static const byte PREAMBLE_CODE_16MHZ_6  = 6;
-	static const byte PREAMBLE_CODE_16MHZ_7  = 7;
-	static const byte PREAMBLE_CODE_16MHZ_8  = 8;
-	static const byte PREAMBLE_CODE_64MHZ_9  = 9;
-	static const byte PREAMBLE_CODE_64MHZ_10 = 10;
-	static const byte PREAMBLE_CODE_64MHZ_11 = 11;
-	static const byte PREAMBLE_CODE_64MHZ_12 = 12;
-	static const byte PREAMBLE_CODE_64MHZ_17 = 17;
-	static const byte PREAMBLE_CODE_64MHZ_18 = 18;
-	static const byte PREAMBLE_CODE_64MHZ_19 = 19;
-	static const byte PREAMBLE_CODE_64MHZ_20 = 20;
+	static constexpr byte PREAMBLE_CODE_16MHZ_1  = 1;
+	static constexpr byte PREAMBLE_CODE_16MHZ_2  = 2;
+	static constexpr byte PREAMBLE_CODE_16MHZ_3  = 3;
+	static constexpr byte PREAMBLE_CODE_16MHZ_4  = 4;
+	static constexpr byte PREAMBLE_CODE_16MHZ_5  = 5;
+	static constexpr byte PREAMBLE_CODE_16MHZ_6  = 6;
+	static constexpr byte PREAMBLE_CODE_16MHZ_7  = 7;
+	static constexpr byte PREAMBLE_CODE_16MHZ_8  = 8;
+	static constexpr byte PREAMBLE_CODE_64MHZ_9  = 9;
+	static constexpr byte PREAMBLE_CODE_64MHZ_10 = 10;
+	static constexpr byte PREAMBLE_CODE_64MHZ_11 = 11;
+	static constexpr byte PREAMBLE_CODE_64MHZ_12 = 12;
+	static constexpr byte PREAMBLE_CODE_64MHZ_17 = 17;
+	static constexpr byte PREAMBLE_CODE_64MHZ_18 = 18;
+	static constexpr byte PREAMBLE_CODE_64MHZ_19 = 19;
+	static constexpr byte PREAMBLE_CODE_64MHZ_20 = 20;
 	
 	/* frame length settings. */
-	static const byte FRAME_LENGTH_NORMAL   = 0x00;
-	static const byte FRAME_LENGTH_EXTENDED = 0x03;
+	static constexpr byte FRAME_LENGTH_NORMAL   = 0x00;
+	static constexpr byte FRAME_LENGTH_EXTENDED = 0x03;
 	
 	/* pre-defined modes of operation (3 bytes for data rate, pulse frequency and 
 	preamble length). */
-	static const byte MODE_LONGDATA_RANGE_LOWPOWER[];
-	static const byte MODE_SHORTDATA_FAST_LOWPOWER[];
-	static const byte MODE_LONGDATA_FAST_LOWPOWER[];
-	static const byte MODE_SHORTDATA_FAST_ACCURACY[];
-	static const byte MODE_LONGDATA_FAST_ACCURACY[];
-	static const byte MODE_LONGDATA_RANGE_ACCURACY[];
+	static constexpr byte MODE_LONGDATA_RANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_2048};
+	static constexpr byte MODE_SHORTDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
+	static constexpr byte MODE_LONGDATA_FAST_LOWPOWER[]  = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_1024};
+	static constexpr byte MODE_SHORTDATA_FAST_ACCURACY[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_128};
+	static constexpr byte MODE_LONGDATA_FAST_ACCURACY[]  = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_1024};
+	static constexpr byte MODE_LONGDATA_RANGE_ACCURACY[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_64MHZ, TX_PREAMBLE_LEN_2048};
 
-private:
+//private:
 	/* chip select, reset and interrupt pins. */
-	static unsigned int _ss;
-	static unsigned int _rst;
-	static unsigned int _irq;
+	static uint8_t _ss;
+	static uint8_t _rst;
+	static uint8_t _irq;
 	
 	/* callbacks. */
 	static void (* _handleError)(void);
@@ -439,12 +439,11 @@ private:
 	static boolean _frameCheck;
 	
 	// whether RX or TX is active
-	static int _deviceMode;
+	static uint8_t _deviceMode;
 	
 	/* Arduino interrupt handler */
 	static void handleInterrupt();
-
-public: // TODO move and resort functions - filter functions should be accessible from external
+	
 	/* Allow MAC frame filtering . */
 	// TODO auto-acknowledge
 	static void setFrameFilter(boolean val);
@@ -456,13 +455,12 @@ public: // TODO move and resort functions - filter functions should be accessibl
 	static void setFrameFilterAllowMAC(boolean val);
 	//Reserved is used for the Blink message
 	static void setFrameFilterAllowReserved(boolean val);
-
-private:
+	
 	// note: not sure if going to be implemented for now
 	static void setDoubleBuffering(boolean val);
 	// TODO is implemented, but needs testing
 	static void useExtendedFrameLength(boolean val);
-	// TODO is implemented, but needs testing	
+	// TODO is implemented, but needs testing
 	static void waitForResponse(boolean val);
 	
 	/* tuning according to mode. */
@@ -506,16 +504,17 @@ private:
 	static void correctTimestamp(DW1000Time& timestamp);
 	
 	/* reading and writing bytes from and to DW1000 module. */
-	static void readBytes(byte cmd, word offset, byte data[], unsigned int n);
-	static void readBytesOTP(word address, byte data[]);
-	static void writeBytes(byte cmd, word offset, byte data[], unsigned int n);
+	static void readBytes(byte cmd, uint16_t offset, byte data[], uint16_t n);
+	static void readBytesOTP(uint16_t address, byte data[]);
+	static void writeByte(byte cmd, uint16_t offset, byte data);
+	static void writeBytes(byte cmd, uint16_t offset, byte data[], uint16_t n);
 	
 	/* writing numeric values to bytes. */
-	static void writeValueToBytes(byte data[], long val, unsigned int n);
+	static void writeValueToBytes(byte data[], int32_t val, uint16_t n);
 	
 	/* internal helper for bit operations on multi-bytes. */
-	static boolean getBit(byte data[], unsigned int n, unsigned int bit);
-	static void    setBit(byte data[], unsigned int n, unsigned int bit, boolean val);
+	static boolean getBit(byte data[], uint16_t n, uint16_t bit);
+	static void    setBit(byte data[], uint16_t n, uint16_t bit, boolean val);
 	
 	/* Register is 6 bit, 7 = write, 6 = sub-adressing, 5-0 = register value
 	 * Total header with sub-adressing can be 15 bit. */
@@ -537,13 +536,16 @@ private:
 	
 	/* range bias tables (500/900 MHz band, 16/64 MHz PRF), -61 to -95 dBm. */
 	static const byte BIAS_500_16_ZERO = 10;
-	static const byte BIAS_500_16[];
 	static const byte BIAS_500_64_ZERO = 8;
-	static const byte BIAS_500_64[];
 	static const byte BIAS_900_16_ZERO = 7;
-	static const byte BIAS_900_16[];
 	static const byte BIAS_900_64_ZERO = 7;
-	static const byte BIAS_900_64[];
+	
+	// range bias tables (500 MHz in [mm] and 900 MHz in [2mm] - to fit into bytes)
+	static constexpr byte BIAS_500_16[] = {198, 187, 179, 163, 143, 127, 109, 84, 59, 31, 0, 36, 65, 84, 97, 106, 110, 112};
+	static constexpr byte BIAS_500_64[] = {110, 105, 100, 93, 82, 69, 51, 27, 0, 21, 35, 42, 49, 62, 71, 76, 81, 86};
+	static constexpr byte BIAS_900_16[] = {137, 122, 105, 88, 69, 47, 25, 0, 21, 48, 79, 105, 127, 147, 160, 169, 178, 197};
+	static constexpr byte BIAS_900_64[] = {147, 133, 117, 99, 75, 50, 29, 0, 24, 45, 63, 76, 87, 98, 116, 122, 132, 142};
+	
 };
 
 extern DW1000Class DW1000;
