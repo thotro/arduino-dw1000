@@ -18,10 +18,6 @@
  * Arduino driver library (source file) for the Decawave DW1000 UWB transceiver IC.
  */
 
-#ifdef __AVR__
-#include "digitalWriteFast.h"
-#endif
-#include "pins_arduino.h"
 #include "DW1000.h"
 
 DW1000Class DW1000;
@@ -152,7 +148,9 @@ void DW1000Class::begin(int irq, int rst) {
 	delay(5);
 	// start SPI
 	SPI.begin();
-	SPI.usingInterrupt(digitalPinToInterrupt(irq));
+#ifndef ESP8266
+	SPI.usingInterrupt(digitalPinToInterrupt(irq)); // not every board support this, e.g. ESP8266
+#endif
 	// pin and basic member setup
 	_rst        = rst;
 	_irq        = irq;
@@ -1529,11 +1527,7 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		}
 	}
 	SPI.beginTransaction(*_currentSPI);
-#ifdef __AVR__
-	digitalWriteFast(_ss, LOW);
-#else
 	digitalWrite(_ss, LOW);
-#endif
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
@@ -1541,11 +1535,7 @@ void DW1000Class::readBytes(byte cmd, word offset, byte data[], unsigned int n) 
 		data[i] = SPI.transfer(JUNK);
 	}
 	delayMicroseconds(5);
-#ifdef __AVR__
-	digitalWriteFast(_ss, HIGH);
-#else
 	digitalWrite(_ss, HIGH);
-#endif
 	SPI.endTransaction();
 }
 
@@ -1601,11 +1591,7 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 		}
 	}
 	SPI.beginTransaction(*_currentSPI);
-#ifdef __AVR__
-	digitalWriteFast(_ss, LOW);
-#else
 	digitalWrite(_ss, LOW);
-#endif
 	for(i = 0; i < headerLen; i++) {
 		SPI.transfer(header[i]);
 	}
@@ -1613,11 +1599,7 @@ void DW1000Class::writeBytes(byte cmd, word offset, byte data[], unsigned int n)
 		SPI.transfer(data[i]);
 	}
 	delayMicroseconds(5);
-#ifdef __AVR__
-	digitalWriteFast(_ss, HIGH);
-#else
 	digitalWrite(_ss, HIGH);
-#endif
 	SPI.endTransaction();
 }
 
