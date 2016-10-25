@@ -49,8 +49,8 @@ byte       DW1000Class::_chanctrl[LEN_CHAN_CTRL];
 byte       DW1000Class::_networkAndAddress[LEN_PANADR];
 
 // monitoring
-int DW1000Class::_vmeas3v3 = 0;
-int DW1000Class::_tmeas23C = 0;
+byte DW1000Class::_vmeas3v3 = 0;
+byte DW1000Class::_tmeas23C = 0;
 
 // driver internal state
 byte       DW1000Class::_extendedFrameLength = FRAME_LENGTH_NORMAL;
@@ -62,6 +62,7 @@ byte       DW1000Class::_preambleCode        = PREAMBLE_CODE_16MHZ_4;
 byte       DW1000Class::_channel             = CHANNEL_5;
 DW1000Time DW1000Class::_antennaDelay;
 boolean    DW1000Class::_smartPower          = false;
+
 boolean    DW1000Class::_frameCheck          = true;
 boolean    DW1000Class::_permanentReceive    = false;
 int        DW1000Class::_deviceMode          = IDLE_MODE;
@@ -123,14 +124,14 @@ void DW1000Class::select(int ss) {
 	delay(5);
 	enableClock(AUTO_CLOCK);
 	delay(5);
-
+	
 	// read the temp and vbat readings from OTP that were recorded during production test
-	byte vmeas[4]; // the stored 3.3 V reading
-	readBytesOTP(0x008, vmeas);
-	_vmeas3v3 = vmeas[0] & 0xFF;
-	byte tmeas[4]; // the stored 23C reading
-	readBytesOTP(0x009, tmeas);
-	_tmeas23C = tmeas[0] & 0xFF;
+	// see 6.3.1 OTP memory map
+	byte buf_otp[4];
+	readBytesOTP(0x008, buf_otp); // the stored 3.3 V reading
+	_vmeas3v3 = buf_otp[0];
+	readBytesOTP(0x009, buf_otp); // the stored 23C reading
+	_tmeas23C = buf_otp[0];
 }
 
 void DW1000Class::reselect(int ss) {
@@ -817,9 +818,10 @@ void DW1000Class::getTempAndVbat(float& temp, float& vbat) {
 	byte step5 = 0x00; writeBytes(TX_CAL, NO_SUB, &step5, 1);
 	byte sar_lvbat = 0; readBytes(TX_CAL, 0x03, &sar_lvbat, 1);
 	byte sar_ltemp = 0; readBytes(TX_CAL, 0x04, &sar_ltemp, 1);
-
-	vbat = ((int)(sar_lvbat&0xFF) - _vmeas3v3) / 173.0f + 3.3f;
-	temp = ((int)(sar_ltemp&0xFF) - _tmeas23C) * 1.14f + 23.0f;
+	
+	// calculate voltage and temperature
+	vbat = (sar_lvbat - _vmeas3v3) / 173.0f + 3.3f;
+	temp = (sar_ltemp - _tmeas23C) * 1.14f + 23.0f;
 }
 
 void DW1000Class::setEUI(char eui[]) {

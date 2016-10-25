@@ -417,8 +417,8 @@ private:
 	static byte _chanctrl[LEN_CHAN_CTRL];
 	
 	/* device status monitoring */
-	static int _vmeas3v3;
-	static int _tmeas23C;
+	static byte _vmeas3v3;
+	static byte _tmeas23C;
 
 	/* PAN and short address. */
 	static byte _networkAndAddress[LEN_PANADR];
