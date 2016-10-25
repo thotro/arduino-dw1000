@@ -16,7 +16,11 @@
  *
  * @file BasicReceiver.ino
  * Use this to test simple sender/receiver functionality with two
- * DW1000. Complements the "BasicSender" example sketch. 
+ * DW1000. Complements the "BasicSender" example sketch.
+ * 
+ * @todo
+ *  - move strings to flash (less RAM consumption)
+ *  
  */
 
 #include <SPI.h>
@@ -30,7 +34,7 @@ const uint8_t PIN_SS = SS; // spi select pin
 // DEBUG packet sent status and count
 volatile boolean received = false;
 volatile boolean error = false;
-volatile int numReceived = 0;
+volatile int16_t numReceived = 0; // todo check int type
 String message;
 
 void setup() {

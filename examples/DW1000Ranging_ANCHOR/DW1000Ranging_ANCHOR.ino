@@ -1,4 +1,10 @@
-
+/**
+ * 
+ * @todo
+ *  - move strings to flash (less RAM consumption)
+ *  - fix deprecated convertation form string to char* startAsAnchor
+ *  - give example description
+ */
 #include <SPI.h>
 #include "DW1000Ranging.h"
 #include "DW1000Device.h"
