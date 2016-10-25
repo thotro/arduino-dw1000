@@ -33,7 +33,7 @@
 #define JUNK 0x00
 
 // no sub-address for register write
-#define NO_SUB 0x00
+#define NO_SUB 0xFF
 
 // device id register
 #define DEV_ID 0x00
