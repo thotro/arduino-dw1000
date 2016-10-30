@@ -16,6 +16,13 @@
  *
  * @file DW1000.h
  * Arduino driver library (header file) for the Decawave DW1000 UWB transceiver IC.
+ * 
+ * @todo
+ * - impl: later:
+ * - TXBOFFS in TX_FCTRL for offset buffer transmit
+ * - TR in TX_FCTRL for flagging for ranging messages
+ * - CANSFCS in SYS_CTRL to cancel frame check suppression
+ * - HSRBP in SYS_CTRL to determine in double buffered mode from which buffer to read
  */
 
 #ifndef _DW1000_H_INCLUDED
@@ -31,29 +38,15 @@
 
 class DW1000Class {
 public:
-	/* TODO impl: later
-	 * - TXBOFFS in TX_FCTRL for offset buffer transmit
- 	 * - TR in TX_FCTRL for flagging for ranging messages
-	 * - CANSFCS in SYS_CTRL to cancel frame check suppression
-	 * - HSRBP in SYS_CTRL to determine in double buffered mode from which buffer to read
-	 */
-	
 	/* ##### Init ################################################################ */
 	/** 
-	Initiates and starts a sessions with one or more DW1000.
-
-	@param[in] irq The interrupt line/pin that connects the Arduino.
-	@param[in] rst The reset line/pin for hard resets of ICs that connect to the Arduino.
-	*/
-	static void begin(uint8_t irq, uint8_t rst);
-	
-	/** 
-	Initiates and starts a sessions with one or more DW1000. Soft resets (i.e. command
+	Initiates and starts a sessions with one or more DW1000. If rst is not set or value 0xff, a soft resets (i.e. command
 	triggered) are used and it is assumed that no reset line is wired.
-
+	 
 	@param[in] irq The interrupt line/pin that connects the Arduino.
+	@param[in] rst The reset line/pin for hard resets of ICs that connect to the Arduino. Value 0xff means soft reset.
 	*/
-	static void begin(uint8_t irq);
+	static void begin(uint8_t irq, uint8_t rst = 0xff);
 	
 	/** 
 	Selects a specific DW1000 chip for communication. In case of a single DW1000 chip in use

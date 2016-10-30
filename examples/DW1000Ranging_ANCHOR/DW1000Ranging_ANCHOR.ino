@@ -7,7 +7,6 @@
  */
 #include <SPI.h>
 #include "DW1000Ranging.h"
-#include "DW1000Device.h"
 
 // connection pins
 const uint8_t PIN_RST = 9; // reset pin

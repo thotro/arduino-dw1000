@@ -114,7 +114,7 @@ void DW1000Class::select(uint8_t ss) {
 	enableClock(AUTO_CLOCK);
 	delay(5);
 	// reset chip (either soft or hard)
-	if(_rst > 0) {
+	if(_rst != 0xff) {
 		// dw1000 data sheet v2.08 §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
 		pinMode(_rst, INPUT);
 	}
@@ -151,10 +151,6 @@ void DW1000Class::reselect(uint8_t ss) {
 	_ss = ss;
 	pinMode(_ss, OUTPUT);
 	digitalWrite(_ss, HIGH);
-}
-
-void DW1000Class::begin(uint8_t irq) {
-	begin(irq, -1); // TODO illegal value
 }
 
 void DW1000Class::begin(uint8_t irq, uint8_t rst) {
@@ -226,7 +222,7 @@ void DW1000Class::enableClock(byte clock) {
 }
 
 void DW1000Class::reset() {
-	if(_rst < 0) { // TODO illegal compare with unsigned?
+	if(_rst == 0xff) {
 		softReset();
 	} else {
 		// dw1000 data sheet v2.08 §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
