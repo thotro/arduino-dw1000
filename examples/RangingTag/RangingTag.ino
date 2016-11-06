@@ -21,6 +21,10 @@
  * implemented yet.
  *
  * Complements the "RangingAnchor" example sketch.
+ *
+ * @todo
+ *  - use enum instead of define
+ *  - move strings to flash (less RAM consumption)
  */
 
 #include <SPI.h>
@@ -32,6 +36,7 @@ const uint8_t PIN_IRQ = 2; // irq pin
 const uint8_t PIN_SS = SS; // spi select pin
 
 // messages used in the ranging protocol
+// TODO replace by enum
 #define POLL 0
 #define POLL_ACK 1
 #define RANGE 2
@@ -50,10 +55,10 @@ DW1000Time timeRangeSent;
 #define LEN_DATA 16
 byte data[LEN_DATA];
 // watchdog and reset period
-unsigned long lastActivity;
-unsigned long resetPeriod = 250;
+uint32_t lastActivity;
+uint32_t resetPeriod = 250;
 // reply times (same on both sides for symm. ranging)
-unsigned int replyDelayTimeUS = 3000;
+uint16_t replyDelayTimeUS = 3000;
 
 void setup() {
     // DEBUG monitoring

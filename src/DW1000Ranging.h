@@ -17,6 +17,13 @@
  * @file DW1000Ranging.h
  * Arduino global library (header file) working with the DW1000 library
  * for the Decawave DW1000 UWB transceiver IC.
+ *
+ * @TODO
+ * - remove or debugmode for Serial.print
+ * - move strings to flash to reduce ram usage
+ * - do not safe duplicate of pin settings
+ * - maybe other object structure
+ * - use enums instead of preprocessor constants
  */
 
 #include "DW1000.h"
@@ -63,38 +70,37 @@
 
 class DW1000RangingClass {
 public:
-	//variables 
+	//variables
 	// data buffer
 	static byte data[LEN_DATA];
 	
-	
 	//initialisation
 	static void    initCommunication(uint8_t myRST = DEFAULT_RST_PIN, uint8_t mySS = DEFAULT_SPI_SS_PIN, uint8_t myIRQ = 2);
-	static void    configureNetwork(unsigned int deviceAddress, unsigned int networkId, const byte mode[]);
+	static void    configureNetwork(uint16_t deviceAddress, uint16_t networkId, const byte mode[]);
 	static void    generalStart();
 	static void    startAsAnchor(char address[], const byte mode[]);
 	static void    startAsTag(char address[], const byte mode[]);
 	static boolean addNetworkDevices(DW1000Device* device, boolean shortAddress);
 	static boolean addNetworkDevices(DW1000Device* device);
-	static void    removeNetworkDevices(short index);
+	static void    removeNetworkDevices(int16_t index);
 	
 	//setters
-	static void setReplyTime(unsigned int replyDelayTimeUs);
-	static void setResetPeriod(unsigned long resetPeriod);
+	static void setReplyTime(uint16_t replyDelayTimeUs);
+	static void setResetPeriod(uint32_t resetPeriod);
 	
-	//getters 
+	//getters
 	static byte* getCurrentAddress() { return _currentAddress; };
 	
 	static byte* getCurrentShortAddress() { return _currentShortAddress; };
 	
-	static short getNetworkDevicesNumber() { return _networkDevicesNumber; };
+	static uint8_t getNetworkDevicesNumber() { return _networkDevicesNumber; };
 	
 	//ranging functions
-	static short detectMessageType(byte datas[]);
-	static void  loop();
+	static int16_t detectMessageType(byte datas[]); // TODO check return type
+	static void loop();
 	static void useRangeFilter(boolean enabled);
 	// Used for the smoothing algorithm (Exponential Moving Average). newValue must be >= 2. Default 15.
-	static void setRangeFilterValue(unsigned int newValue);
+	static void setRangeFilterValue(uint16_t newValue);
 	
 	//Handlers:
 	static void attachNewRange(void (* handleNewRange)(void)) { _handleNewRange = handleNewRange; };
@@ -117,14 +123,14 @@ public:
 private:
 	//other devices in the network
 	static DW1000Device _networkDevices[MAX_DEVICES];
-	static short        _networkDevicesNumber;
-	static short        _lastDistantDevice;
+	static uint8_t      _networkDevicesNumber;
+	static int16_t      _lastDistantDevice;
 	static byte         _currentAddress[8];
 	static byte         _currentShortAddress[2];
 	static byte         _lastSentToShortAddress[2];
 	static DW1000Mac    _globalMac;
-	static long         timer;
-	static short        counterForBlink;
+	static int32_t      timer;
+	static int16_t      counterForBlink;
 	
 	//Handlers:
 	static void (* _handleNewRange)(void);
@@ -133,7 +139,8 @@ private:
 	static void (* _handleInactiveDevice)(DW1000Device*);
 	
 	//sketch type (tag or anchor)
-	static int              _type; //0 for tag and 1 for anchor
+	static int16_t          _type; //0 for tag and 1 for anchor
+	// TODO check type, maybe enum?
 	// message flow state
 	static volatile byte    _expectedMsgId;
 	// message sent/received state
@@ -142,27 +149,27 @@ private:
 	// protocol error state
 	static boolean          _protocolFailed;
 	// reset line to the chip
-	static unsigned int     _RST;
-	static unsigned int     _SS;
+	static uint8_t     _RST;
+	static uint8_t     _SS;
 	// watchdog and reset period
-	static unsigned long    _lastActivity;
-	static unsigned long    _resetPeriod;
+	static uint32_t    _lastActivity;
+	static uint32_t    _resetPeriod;
 	// reply times (same on both sides for symm. ranging)
-	static unsigned int     _replyDelayTimeUS;
+	static uint16_t     _replyDelayTimeUS;
 	//timer Tick delay
-	static unsigned int     _timerDelay;
+	static uint16_t     _timerDelay;
 	// ranging counter (per second)
-	static unsigned int     _successRangingCount;
-	static unsigned long    _rangingCountPeriod;
+	static uint16_t     _successRangingCount;
+	static uint32_t    _rangingCountPeriod;
 	//ranging filter
 	static volatile boolean _useRangeFilter;
-	static unsigned int _rangeFilterValue;
+	static uint16_t         _rangeFilterValue;
 	//_bias correction
-	static char  _bias_RSL[17];
+	static char  _bias_RSL[17]; // TODO remove or use
 	//17*2=34 bytes in SRAM
-	static short _bias_PRF_16[17];
+	static int16_t _bias_PRF_16[17]; // TODO remove or use
 	//17 bytes in SRAM
-	static char  _bias_PRF_64[17];
+	static char  _bias_PRF_64[17]; // TODO remove or use
 	
 	
 	//methods
@@ -197,7 +204,7 @@ private:
 	static void timerTick();
 	
 	//Utils
-	static float filterValue(float value, float previousValue, int numberOfElements);
+	static float filterValue(float value, float previousValue, uint16_t numberOfElements);
 };
 
 extern DW1000RangingClass DW1000Ranging;

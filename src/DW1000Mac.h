@@ -18,6 +18,8 @@
  * Arduino global library (header file) working with the DW1000 library
  * for the Decawave DW1000 UWB transceiver IC. This class has the purpose
  * to generate the mac layer
+ * 
+ * @todo everything, this class is only a prototype
  */
 
 #define FC_1 0x41
@@ -70,7 +72,7 @@ public:
 	void generateLongMACFrame(byte frame[], byte sourceShortAddress[], byte destinationAddress[]);
 	
 	//in order to decode the frame and save source Address!
-	void    decodeBlinkFrame(byte frame[], byte address[], byte shortAddress[]);
+	void decodeBlinkFrame(byte frame[], byte address[], byte shortAddress[]);
 	void decodeShortMACFrame(byte frame[], byte address[]);
 	void decodeLongMACFrame(byte frame[], byte address[]);
 	
@@ -78,9 +80,8 @@ public:
 
 
 private:
-	int  _seqNumber;
-	void reverseArray(byte to[], byte from[], int size);
-	
+	uint8_t _seqNumber = 0;
+	void reverseArray(byte to[], byte from[], int16_t size);
 	
 };
 

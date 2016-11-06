@@ -17,6 +17,10 @@
  * @file BasicConnectivityTest.ino
  * Use this to test connectivity with your DW1000 from Arduino.
  * It performs an arbitrary setup of the chip and prints some information.
+ * 
+ * @todo
+ *  - move strings to flash (less RAM consumption)
+ *  - make real check of connection (e.g. change some values on DW1000 and verify)
  */
 
 #include <SPI.h>

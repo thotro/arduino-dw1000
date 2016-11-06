@@ -1,7 +1,12 @@
-
+/**
+ * 
+ * @todo
+ *  - move strings to flash (less RAM consumption)
+ *  - fix deprecated convertation form string to char* startAsTag
+ *  - give example description
+ */
 #include <SPI.h>
 #include "DW1000Ranging.h"
-#include "DW1000Device.h"
 
 // connection pins
 const uint8_t PIN_RST = 9; // reset pin

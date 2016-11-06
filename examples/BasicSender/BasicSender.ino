@@ -17,6 +17,10 @@
  * @file BasicSender.ino
  * Use this to test simple sender/receiver functionality with two
  * DW1000. Complements the "BasicReceiver" example sketch. 
+ * 
+ * @todo
+ *  - move strings to flash (less RAM consumption)
+ *  
  */
 #include <SPI.h>
 #include <DW1000.h>
@@ -30,7 +34,7 @@ const uint8_t PIN_SS = SS; // spi select pin
 boolean sent = false;
 volatile boolean sentAck = false;
 volatile unsigned long delaySent = 0;
-int sentNum = 0;
+int16_t sentNum = 0; // todo check int type
 DW1000Time sentTime;
 
 void setup() {
