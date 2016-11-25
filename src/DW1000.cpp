@@ -191,12 +191,12 @@ void DW1000Class::manageLDE() {
 	pmscctrl0[1] = 0x03;
 	otpctrl[0]   = 0x00;
 	otpctrl[1]   = 0x80;
-	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
-	writeBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, LEN_OTP_CTRL);
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 2);
+	writeBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, 2);
 	delay(5);
 	pmscctrl0[0] = 0x00;
 	pmscctrl0[1] = 0x02;
-	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 2);
 }
 
 void DW1000Class::enableClock(byte clock) {
@@ -218,8 +218,7 @@ void DW1000Class::enableClock(byte clock) {
 	} else {
 		// TODO deliver proper warning
 	}
-	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 1);
-	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 2);
 }
 
 void DW1000Class::reset() {
