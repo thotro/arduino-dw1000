@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['junk',['JUNK',['../DW1000_8h.html#afc5bb7d4f889aa4c7e2f20e2597c560e',1,'DW1000.h']]]
+  ['idle_5fmode',['IDLE_MODE',['../DW1000Constants_8h.html#ae539bc81de218722c5c2c54b5c006894',1,'DW1000Constants.h']]],
+  ['inactivity_5ftime',['INACTIVITY_TIME',['../DW1000Device_8h.html#a28c3d16ddd70570d6c70d1f11a2a1faa',1,'DW1000Device.h']]]
 ];

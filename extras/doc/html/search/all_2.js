@@ -1,13 +1,13 @@
 var searchData=
 [
-  ['chan_5fctrl',['CHAN_CTRL',['../DW1000_8h.html#aa62d908ff8a37c7d0685902e5e3001d2',1,'DW1000.h']]],
-  ['channel_5f1',['CHANNEL_1',['../classDW1000Class.html#ada904c6c0682c1389a779344436c8d40',1,'DW1000Class']]],
-  ['channel_5f2',['CHANNEL_2',['../classDW1000Class.html#a2e11bf6c6ab447c928a1462c6fcfffc2',1,'DW1000Class']]],
-  ['channel_5f3',['CHANNEL_3',['../classDW1000Class.html#a2dcb759a0cc5925e2d074e72116d39d1',1,'DW1000Class']]],
-  ['channel_5f4',['CHANNEL_4',['../classDW1000Class.html#a3176fd0fdc40096013afd86fc2594e04',1,'DW1000Class']]],
-  ['channel_5f5',['CHANNEL_5',['../classDW1000Class.html#a8aebaf6e99bf067f274bebaad6cadeeb',1,'DW1000Class']]],
-  ['channel_5f7',['CHANNEL_7',['../classDW1000Class.html#aeff679fcdbb5db4fd6d627527e234449',1,'DW1000Class']]],
-  ['clkpll_5fll_5fbit',['CLKPLL_LL_BIT',['../DW1000_8h.html#a98ed211b5c6d485bd017531ee77e33fe',1,'DW1000.h']]],
-  ['commitconfiguration',['commitConfiguration',['../classDW1000Class.html#a50e230d4ac0df27e1e1b0ce50242adc2',1,'DW1000Class']]],
-  ['cplock_5fbit',['CPLOCK_BIT',['../DW1000_8h.html#af9503c53f3e429808ded8a8f2abf2e8d',1,'DW1000.h']]]
+  ['begin',['begin',['../classDW1000Class.html#a59b862b3a40d42eb64fab1a85dc12147',1,'DW1000Class']]],
+  ['bias_5f500_5f16',['BIAS_500_16',['../classDW1000Class.html#ac0083e2e4f9c8b2b8c5d07d8863865ab',1,'DW1000Class']]],
+  ['bias_5f500_5f16_5fzero',['BIAS_500_16_ZERO',['../classDW1000Class.html#a21636f8093a43b98ba94f267316fd3f8',1,'DW1000Class']]],
+  ['bias_5f500_5f64',['BIAS_500_64',['../classDW1000Class.html#a3e49c04a1a811e21f8e94d6e9a2cf11f',1,'DW1000Class']]],
+  ['bias_5f500_5f64_5fzero',['BIAS_500_64_ZERO',['../classDW1000Class.html#ae5dd69700316895ed7c7d15e1b96d6e5',1,'DW1000Class']]],
+  ['bias_5f900_5f16',['BIAS_900_16',['../classDW1000Class.html#a4e7fff2ae6c8b9871e9755b4a4cb6b96',1,'DW1000Class']]],
+  ['bias_5f900_5f16_5fzero',['BIAS_900_16_ZERO',['../classDW1000Class.html#ac4f49524ce3fd43c60e54f1a835f8458',1,'DW1000Class']]],
+  ['bias_5f900_5f64',['BIAS_900_64',['../classDW1000Class.html#a7f0e2864171a963b6947b169ccf3da80',1,'DW1000Class']]],
+  ['bias_5f900_5f64_5fzero',['BIAS_900_64_ZERO',['../classDW1000Class.html#a6310b5718bb31694e10138048d410e9d',1,'DW1000Class']]],
+  ['blink',['BLINK',['../DW1000Ranging_8h.html#a38eec52a7dccb94ff563e30eda32c891',1,'DW1000Ranging.h']]]
 ];

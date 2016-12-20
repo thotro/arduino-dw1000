@@ -1,8 +1,13 @@
 var searchData=
 [
-  ['nanoseconds',['NANOSECONDS',['../classDW1000Time.html#a16067bdc0cb4a9eeaccd9e5a8f45e6f7',1,'DW1000Time']]],
-  ['newconfiguration',['newConfiguration',['../classDW1000Class.html#a407b2fff98dab43ed909495a46373468',1,'DW1000Class']]],
-  ['newreceive',['newReceive',['../classDW1000Class.html#a0465bc46e3f60596857abb0cdd5af03c',1,'DW1000Class']]],
-  ['newtransmit',['newTransmit',['../classDW1000Class.html#a6213359c5e788b50154c8d6fd9bf388c',1,'DW1000Class']]],
-  ['no_5fsub',['NO_SUB',['../DW1000_8h.html#a363d880e69ba3f0e3e6e2c96252fa412',1,'DW1000.h']]]
+  ['managelde',['manageLDE',['../classDW1000Class.html#ab9c59dffa5f686c9f301e5e000ee54e5',1,'DW1000Class']]],
+  ['max_5fdevices',['MAX_DEVICES',['../DW1000Ranging_8h.html#a4e132cfaa78353e3af1474a86b2dd535',1,'DW1000Ranging.h']]],
+  ['microseconds',['MICROSECONDS',['../classDW1000Time.html#af6113e457b55261503b8cb21dbfca747',1,'DW1000Time']]],
+  ['milliseconds',['MILLISECONDS',['../classDW1000Time.html#a256fdb9e477c2aac43a7f747036a8069',1,'DW1000Time']]],
+  ['mode_5flongdata_5ffast_5faccuracy',['MODE_LONGDATA_FAST_ACCURACY',['../classDW1000Class.html#af714130b2145d3df7501662d53c0704f',1,'DW1000Class']]],
+  ['mode_5flongdata_5ffast_5flowpower',['MODE_LONGDATA_FAST_LOWPOWER',['../classDW1000Class.html#a66505596b1f1732962b416ba2c2ecf68',1,'DW1000Class']]],
+  ['mode_5flongdata_5frange_5faccuracy',['MODE_LONGDATA_RANGE_ACCURACY',['../classDW1000Class.html#a5fbd14d4ad8f3fea697a13a101274a4b',1,'DW1000Class']]],
+  ['mode_5flongdata_5frange_5flowpower',['MODE_LONGDATA_RANGE_LOWPOWER',['../classDW1000Class.html#a8a8399fd13065fdeb044aac17ac03bc1',1,'DW1000Class']]],
+  ['mode_5fshortdata_5ffast_5faccuracy',['MODE_SHORTDATA_FAST_ACCURACY',['../classDW1000Class.html#a8f3d76ecd2d746b404d48ebd65d69b37',1,'DW1000Class']]],
+  ['mode_5fshortdata_5ffast_5flowpower',['MODE_SHORTDATA_FAST_LOWPOWER',['../classDW1000Class.html#a37625d594b38dd4b6bc5c91800ee4ed6',1,'DW1000Class']]]
 ];

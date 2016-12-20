@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['_7edw1000time',['~DW1000Time',['../classDW1000Time.html#a1036123abf02ee429b9e5e5a557413c5',1,'DW1000Time']]]
+  ['print',['print',['../classDW1000Time.html#a68f5442f59786bb254af5c27bb8276ab',1,'DW1000Time']]],
+  ['printto',['printTo',['../classDW1000Time.html#a9caf1d789c405179004964489c6f0007',1,'DW1000Time']]]
 ];
