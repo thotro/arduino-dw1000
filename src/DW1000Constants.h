@@ -238,10 +238,33 @@
 // PMSC
 #define PMSC 0x36
 #define PMSC_CTRL0_SUB 0x00
+#define PMSC_LEDC_SUB 0x28
 #define LEN_PMSC_CTRL0 4
+#define LEN_PMSC_LEDC 4
+#define GPDCE_BIT 18
+#define KHZCLKEN_BIT 23
+#define BLNKEN 8
 
 // TX_ANTD Antenna delays
 #define TX_ANTD 0x18
 #define LEN_TX_ANTD 2
+
+// GPIO
+#define GPIO_CTRL 0x26
+#define GPIO_MODE_SUB 0x00
+#define LEN_GPIO_MODE 4
+
+#define MSGP0 6
+#define MSGP1 8
+#define MSGP2 10
+#define MSGP3 12
+#define MSGP4 14
+#define MSGP5 16
+#define MSGP6 18
+#define MSGP7 20
+#define MSGP8 22
+
+#define GPIO_MODE 0
+#define LED_MODE 1
 
 #endif
