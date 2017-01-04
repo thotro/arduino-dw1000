@@ -221,6 +221,33 @@ void DW1000Class::enableClock(byte clock) {
 	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 2);
 }
 
+void DW1000Class::enableDebounceClock() {
+	byte pmscctrl0[LEN_PMSC_CTRL0];
+	memset(pmscctrl0, 0, LEN_PMSC_CTRL0);
+	readBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+	setBit(pmscctrl0, LEN_PMSC_CTRL0, GPDCE_BIT, 1);
+	setBit(pmscctrl0, LEN_PMSC_CTRL0, KHZCLKEN_BIT, 1);
+	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, LEN_PMSC_CTRL0);
+}
+
+void DW1000Class::enableLedBlinking() {
+	byte pmscledc[LEN_PMSC_LEDC];
+	memset(pmscledc, 0, LEN_PMSC_LEDC);
+	readBytes(PMSC, PMSC_LEDC_SUB, pmscledc, LEN_PMSC_LEDC);
+	setBit(pmscledc, LEN_PMSC_LEDC, BLNKEN, 1);
+	writeBytes(PMSC, PMSC_LEDC_SUB, pmscledc, LEN_PMSC_LEDC);
+}
+
+void DW1000Class::setGPIOMode(uint8_t msgp, uint8_t mode) {
+	byte gpiomode[LEN_GPIO_MODE];
+	memset(gpiomode, 0, LEN_GPIO_MODE);
+	readBytes(GPIO_CTRL, GPIO_MODE_SUB, gpiomode, LEN_GPIO_MODE);
+	for (char i = 0; i < 2; i++){
+		setBit(gpiomode, LEN_GPIO_MODE, msgp + i, (mode >> i) & 1);
+	}
+	writeBytes(GPIO_CTRL, GPIO_MODE_SUB, gpiomode, LEN_GPIO_MODE);
+}
+
 void DW1000Class::reset() {
 	if(_rst == 0xff) {
 		softReset();
