@@ -455,7 +455,7 @@ void DW1000Class::tune() {
 		writeValueToBytes(fsplltune, 0x5E, LEN_FS_PLLTUNE);
 	} else if(_channel == CHANNEL_5 || _channel == CHANNEL_7) {
 		writeValueToBytes(fspllcfg, 0x0800041DL, LEN_FS_PLLCFG);
-		writeValueToBytes(fsplltune, 0xA6, LEN_FS_PLLTUNE);
+		writeValueToBytes(fsplltune, 0xBE, LEN_FS_PLLTUNE);
 	} else {
 		// TODO proper error/warning handling
 	}
