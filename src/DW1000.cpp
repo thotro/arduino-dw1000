@@ -311,7 +311,7 @@ void DW1000Class::tune() {
 	byte tcpgdelay[LEN_TC_PGDELAY];
 	byte fspllcfg[LEN_FS_PLLCFG];
 	byte fsplltune[LEN_FS_PLLTUNE];
-    byte fsxtalt[LEN_FS_XTALT];
+	byte fsxtalt[LEN_FS_XTALT];
 	// AGC_TUNE1
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
 		writeValueToBytes(agctune1, 0x8870, LEN_AGC_TUNE1);
@@ -629,15 +629,15 @@ void DW1000Class::tune() {
 	} else {
 		// TODO proper error/warning handling
 	}
-    // Crystal calibration from OTP (if available)
-    byte buf_otp[4];
-    readBytesOTP(0x01E, buf_otp);
-    if (buf_otp[0] == 0) {
-        // No trim value available from OTP, use midrange value of 0x10
-        writeValueToBytes(fsxtalt, ((0x10 & 0x1F) | 0x60), LEN_FS_XTALT);
-    } else {
-        writeValueToBytes(fsxtalt, ((buf_otp[0] & 0x1F) | 0x60), LEN_FS_XTALT);
-    }
+	// Crystal calibration from OTP (if available)
+	byte buf_otp[4];
+	readBytesOTP(0x01E, buf_otp);
+	if (buf_otp[0] == 0) {
+		// No trim value available from OTP, use midrange value of 0x10
+		writeValueToBytes(fsxtalt, ((0x10 & 0x1F) | 0x60), LEN_FS_XTALT);
+	} else {
+		writeValueToBytes(fsxtalt, ((buf_otp[0] & 0x1F) | 0x60), LEN_FS_XTALT);
+	}
 	// write configuration back to chip
 	writeBytes(AGC_TUNE, AGC_TUNE1_SUB, agctune1, LEN_AGC_TUNE1);
 	writeBytes(AGC_TUNE, AGC_TUNE2_SUB, agctune2, LEN_AGC_TUNE2);
@@ -656,7 +656,7 @@ void DW1000Class::tune() {
 	writeBytes(TX_CAL, TC_PGDELAY_SUB, tcpgdelay, LEN_TC_PGDELAY);
 	writeBytes(FS_CTRL, FS_PLLTUNE_SUB, fsplltune, LEN_FS_PLLTUNE);
 	writeBytes(FS_CTRL, FS_PLLCFG_SUB, fspllcfg, LEN_FS_PLLCFG);
-    writeBytes(FS_CTRL, FS_XTALT_SUB, fsxtalt, LEN_FS_XTALT);
+	writeBytes(FS_CTRL, FS_XTALT_SUB, fsxtalt, LEN_FS_XTALT);
 }
 
 /* ###########################################################################
