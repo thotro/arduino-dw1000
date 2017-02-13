@@ -195,7 +195,7 @@ void DW1000Class::manageLDE() {
 	writeBytes(OTP_IF, OTP_CTRL_SUB, otpctrl, 2);
 	delay(5);
 	pmscctrl0[0] = 0x00;
-	pmscctrl0[1] = 0x02;
+	pmscctrl0[1] &= 0x02;
 	writeBytes(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 2);
 }
 
