@@ -53,7 +53,7 @@ public:
 	void setFPPower(float power);
 	void setQuality(float quality);
 	
-	void setReplyDelayTime(int16_t time) { _replyDelayTimeUS = time; }
+	void setReplyDelayTime(uint16_t time) { _replyDelayTimeUS = time; }
 	
 	void setIndex(int8_t index) { _index = index; }
 	
