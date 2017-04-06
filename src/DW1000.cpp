@@ -1392,7 +1392,8 @@ boolean DW1000Class::isClockProblem() {
 }
 
 void DW1000Class::clearAllStatus() {
-	memset(_sysstatus, 0, LEN_SYS_STATUS);
+	//Latched bits in status register are reset by writing 1 to them
+	memset(_sysstatus, 0xff, LEN_SYS_STATUS);
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
