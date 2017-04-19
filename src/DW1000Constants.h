@@ -92,6 +92,8 @@
 #define RXFCE_BIT 15
 #define RXRFSL_BIT 16
 #define RXRFTO_BIT 17
+#define RXPTO_BIT 21
+#define RXSFDTO_BIT 26
 #define LDEERR_BIT 18
 #define RFPLL_LL_BIT 24
 #define CLKPLL_LL_BIT 25
