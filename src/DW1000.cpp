@@ -1378,7 +1378,7 @@ boolean DW1000Class::isReceiveFailed() {
 }
 
 boolean DW1000Class::isReceiveTimeout() {
-	return (getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXPTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXSFDTO_BIT))
+	return (getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXPTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXSFDTO_BIT));
 }
 
 boolean DW1000Class::isClockProblem() {
