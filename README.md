@@ -5,13 +5,24 @@ A library that offers functionality to use Decawave's DW1000 chips/modules with 
 Project state
 -------------
 
-**Progress:** 90% (requires some minor optimizations and a lot more testing towards a v1.0 release)
+**Development:**
+There is no active development by the owner thotro. Anyway this library is still maintained, so make pull requests if you found a bug or developed a new feature!
 
-**Current milestone:** MAC and frame filtering, error handling
+**TODOs:**
+* Fill wiki: https://github.com/thotro/arduino-dw1000/wiki
+* MAC and frame filtering, error handling
+* Sleep/power optimizations
+* Refactor `DW1000Mac`
+* Refactor `DW1000Ranging`
+* Refactor `DW1000Device`
+* Update examples (complete todos in header notice)
 
-**Subsequent milestone:** Sleep/power optimizations
+**What can I do with this lib?:**
+Stable transmission of messages between two modules is possible. The code for device tuning is working as well, hence different modes of operation can be chosen. As frame filtering (i.e. via MAC conforming messages) is partially implemented yet, internal features of the chip for node addressing and auto-acknowledgement of messages can not be used. This is part of a future milestone. For now, if acknowledgements are required, they have to be sent manually and node addresses have to be encoded in the message payload and processed by the host controller.
 
-**General notice:** Stable transmission of messages between two modules is possible. The code for device tuning is working as well, hence different modes of operation can be chosen. As frame filtering (i.e. via MAC conforming messages) is not implemented yet, internal features of the chip for node addressing and auto-acknowledgement of messages can not be used. This is part of a future milestone. For now, if acknowledgements are required, they have to be sent manually and node addresses have to be encoded in the message payload and processed by the host controller.
+**General notice:**
+* The documentation https://github.com/thotro/arduino-dw1000/tree/master/extras/doc is manually generated and maybe out of date.
+* Datasheet and application notices are available at http://www.decawave.com/ (require free registration).
 
 Installation
 ------------
