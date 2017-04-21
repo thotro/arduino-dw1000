@@ -1377,8 +1377,9 @@ boolean DW1000Class::isReceiveFailed() {
 	return false;
 }
 
+//Checks to see any of the three timeout bits in sysstatus are high (RXRFTO (Frame Wait timeout), RXPTO (Preamble timeout), RXSFDTO (Start frame delimiter(?) timeout).
 boolean DW1000Class::isReceiveTimeout() {
-	return getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT);
+	return (getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXPTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXSFDTO_BIT));
 }
 
 boolean DW1000Class::isClockProblem() {
