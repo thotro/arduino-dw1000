@@ -54,15 +54,25 @@ Usage
 General usage of the DW1000 library is depicted below. Please see the Arduino test example codes (described in the [project structure](../../wiki/Project-structure)) for more up-to-date and operational reference usage. 
 
 At the moment the library contains two types:
- * **DW1000:** The statically accessible entity to work with your modules. Offers a variety of configuration options and manages module states and actions. 
+ * **DW1000:**
+ State: stable.
+ The statically accessible entity to work with your modules. Offers a variety of configuration options and manages module states and actions. 
  
- * **DW1000Time:** Container entities that handle DW1000 specific timing values. These are required to allow accurate timestamps and time based computations; they aid in avoiding potential precision and capacity problems of standard number formats in Arduino and basically are wrapper objects for 64-bit signed integer data types; most importantly they take care of all bit-to-time-and-distance (and vice versa) conversions.
+ * **DW1000Time:**
+ State: stable.
+ Container entities that handle DW1000 specific timing values. These are required to allow accurate timestamps and time based computations; they aid in avoiding potential precision and capacity problems of standard number formats in Arduino and basically are wrapper objects for 64-bit signed integer data types; most importantly they take care of all bit-to-time-and-distance (and vice versa) conversions.
  
- * **DW1000Ranging:** Contain all functions which allow to make the ranging protocole. 
+ * **DW1000Ranging:**
+ State: prototype.
+ Contain all functions which allow to make the ranging protocole. 
  
- * **DW1000Device:** Contain all informations (long address, short ephemeral address, DW1000Time of transition)  about a distant device (anchor or tag) on the same network.
+ * **DW1000Device:**
+ State: prototype.
+ Contain all informations (long address, short ephemeral address, DW1000Time of transition)  about a distant device (anchor or tag) on the same network.
  
- * **DW1000Mac:** This class is a child of the DW1000Device class and allow to generate the MAC frame for his DW1000Device parent.
+ * **DW1000Mac:**
+ State: prototype.
+ This class is a child of the DW1000Device class and allow to generate the MAC frame for his DW1000Device parent.
  
 
 ```Arduino
