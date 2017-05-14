@@ -157,6 +157,8 @@ void DW1000Class::reselect(uint8_t ss) {
 void DW1000Class::begin(uint8_t irq, uint8_t rst) {
 	// generous initial init/wake-up-idle delay
 	delay(5);
+	// Configure the IRQ pin as INPUT
+    	pinMode(irq, INPUT);
 	// start SPI
 	SPI.begin();
 #ifndef ESP8266
