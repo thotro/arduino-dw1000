@@ -90,6 +90,16 @@ public:
 	*/
 	static void setGPIOMode(uint8_t msgp, uint8_t mode);
 
+        /**
+        Enable deep sleep mode
+        */
+        static void deepSleep();
+
+        /**
+        Wake-up from deep sleep by toggle chip select pin
+        */
+        static void spiWakeup();
+
 	/**
 	Resets all connected or the currently selected DW1000 chip. A hard reset of all chips
 	is preferred, although a soft reset of the currently selected one is executed if no 
@@ -448,7 +458,10 @@ public:
 	
 	// whether RX or TX is active
 	static uint8_t _deviceMode;
-	
+
+	// whether debounce clock is active
+	static boolean _debounceClockEnabled;
+
 	/* Arduino interrupt handler */
 	static void handleInterrupt();
 	
