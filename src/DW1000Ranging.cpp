@@ -38,7 +38,7 @@ DW1000Device DW1000RangingClass::_networkDevices[MAX_DEVICES];
 byte         DW1000RangingClass::_currentAddress[8];
 byte         DW1000RangingClass::_currentShortAddress[2];
 byte         DW1000RangingClass::_lastSentToShortAddress[2];
-uint8_t      DW1000RangingClass::_networkDevicesNumber = 0; // TODO short, 8bit?
+volatile uint8_t DW1000RangingClass::_networkDevicesNumber = 0; // TODO short, 8bit?
 int16_t      DW1000RangingClass::_lastDistantDevice    = 0; // TODO short, 8bit?
 DW1000Mac    DW1000RangingClass::_globalMac;
 
@@ -476,7 +476,7 @@ void DW1000RangingClass::loop() {
 			DW1000Device* myDistantDevice = searchDistantDevice(address);
 			
 			
-			if(myDistantDevice == NULL) {
+			if((_networkDevicesNumber != 0) && (myDistantDevice == NULL)) {
 				Serial.println("Not found");
 				//we don't have the short address of the device in memory
 				/*
