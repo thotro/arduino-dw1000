@@ -1336,10 +1336,10 @@ void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
 	float rxPowerBase     = -(getReceivePower()+61.0f)*0.5f;
 	int16_t   rxPowerBaseLow  = (int16_t)rxPowerBase; // TODO check type
 	int16_t   rxPowerBaseHigh = rxPowerBaseLow+1; // TODO check type
-	if(rxPowerBaseLow < 0) {
+	if(rxPowerBaseLow <= 0) {
 		rxPowerBaseLow  = 0;
 		rxPowerBaseHigh = 0;
-	} else if(rxPowerBaseHigh > 17) {
+	} else if(rxPowerBaseHigh >= 17) {
 		rxPowerBaseLow  = 17;
 		rxPowerBaseHigh = 17;
 	}
@@ -1381,7 +1381,7 @@ void DW1000Class::correctTimestamp(DW1000Time& timestamp) {
 	DW1000Time adjustmentTime;
 	adjustmentTime.setTimestamp((int16_t)(rangeBias*DW1000Time::DISTANCE_OF_RADIO_INV*0.001f));
 	// apply correction
-	timestamp += adjustmentTime;
+	timestamp -= adjustmentTime;
 }
 
 void DW1000Class::getSystemTimestamp(DW1000Time& time) {
@@ -1503,7 +1503,7 @@ float DW1000Class::getFirstPathPower() {
 	f3 = (uint16_t)fpAmpl3Bytes[0] | ((uint16_t)fpAmpl3Bytes[1] << 8);
 	N  = (((uint16_t)rxFrameInfo[2] >> 4) & 0xFF) | ((uint16_t)rxFrameInfo[3] << 4);
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
-		A       = 115.72;
+		A       = 113.77;
 		corrFac = 2.3334;
 	} else {
 		A       = 121.74;
@@ -1530,7 +1530,7 @@ float DW1000Class::getReceivePower() {
 	C = (uint16_t)cirPwrBytes[0] | ((uint16_t)cirPwrBytes[1] << 8);
 	N = (((uint16_t)rxFrameInfo[2] >> 4) & 0xFF) | ((uint16_t)rxFrameInfo[3] << 4);
 	if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
-		A       = 115.72;
+		A       = 113.77;
 		corrFac = 2.3334;
 	} else {
 		A       = 121.74;
