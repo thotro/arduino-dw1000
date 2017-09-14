@@ -1,9 +1,14 @@
+<!-- BEGIN - This is a comment just for you visible
 ### Step 0: Are you in the right place?
 
 Did you looked into the Wiki or searched for issues? Also check out the project status (TODOs...). Please avoid duplicates!
 
-### Step 1: What do you want?
+Please use the following template to give us as mutch information as you can. If you do not use the template and the issue is not clear, it might be closed without any comment. 
 
+END - This is a comment just for you visible -->
+
+### Step 1: What do you want?
+<!-- Remove	not applicable points -->
 * Report an issue.
 * Improve code (and need help).
 * Suggest a new feature.
