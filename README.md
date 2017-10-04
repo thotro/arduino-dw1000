@@ -119,4 +119,6 @@ DW1000.startReceive();
 ...
 ```
 
-
+License
+-------
+Apache License 2.0 (see [LICENSE.md](https://github.com/thotro/arduino-dw1000/blob/master/LICENSE.md))
