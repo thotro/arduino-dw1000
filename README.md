@@ -1,12 +1,20 @@
 # arduino-dw1000
-A library that offers functionality to use Decawave's DW1000 chips/modules with Arduino
+
+![Required know-how](https://img.shields.io/badge/Required%20know--how-professional-red.svg)
+![Additional hardware required](https://img.shields.io/badge/Additional%20hardware-required-orange.svg)
+![c++11](https://img.shields.io/badge/C%2B%2B-11-brightgreen.svg)
+[![releases](https://img.shields.io/github/release/thotro/arduino-dw1000.svg?colorB=00aa00)](https://github.com/thotro/arduino-dw1000/releases)
+![min arduino ide](https://img.shields.io/badge/ArduinoIDE-%3E%3D1.6.10-lightgrey.svg)
+[![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/thotro/arduino-dw1000/master/LICENSE.md)
+
+A library that offers basic functionality to use Decawave's DW1000 chips/modules with Arduino
 (see http://www.decawave.com/products/dwm1000-module).
 
 Project state
 -------------
 
 **Development:**
-There is no active development by the owner thotro. Anyway this library is still maintained, so make pull requests if you found a bug or developed a new feature!
+There is no active development by the owner *thotro*. Anyway this library is still maintained, so make pull requests if you found a bug or developed a new feature!
 
 **TODOs:**
 * Fill wiki: https://github.com/thotro/arduino-dw1000/wiki
