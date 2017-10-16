@@ -411,7 +411,9 @@ void DW1000RangingClass::loop() {
 					//we search the device associated with the last send address
 					DW1000Device* myDistantDevice = searchDistantDevice(_lastSentToShortAddress);
 					//we save the value just for one device
-					myDistantDevice->timePollSent = timePollSent;
+					if(myDistantDevice) {
+						myDistantDevice->timePollSent = timePollSent;
+					}
 				}
 			}
 			else if(messageType == RANGE) {
@@ -428,7 +430,9 @@ void DW1000RangingClass::loop() {
 					//we search the device associated with the last send address
 					DW1000Device* myDistantDevice = searchDistantDevice(_lastSentToShortAddress);
 					//we save the value just for one device
-					myDistantDevice->timeRangeSent = timeRangeSent;
+					if(myDistantDevice) {
+						myDistantDevice->timeRangeSent = timeRangeSent;
+					}
 				}
 				
 			}
@@ -490,7 +494,7 @@ void DW1000RangingClass::loop() {
 			DW1000Device* myDistantDevice = searchDistantDevice(address);
 			
 			
-			if((_networkDevicesNumber != 0) && (myDistantDevice == NULL)) {
+			if((_networkDevicesNumber == 0) || (myDistantDevice == NULL)) {
 				Serial.println("Not found");
 				//we don't have the short address of the device in memory
 				/*
