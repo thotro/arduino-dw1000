@@ -259,6 +259,10 @@ public:
 	static float getReceivePower();
 	static float getFirstPathPower();
 	static float getReceiveQuality();
+
+	/* antenna delay configguration */
+	static void setAntennaDelay(const uint16_t value);
+	static uint16_t getAntennaDelay();
 	
 	/* interrupt management. */
 	static void interruptOnSent(boolean val);
