@@ -393,7 +393,9 @@ void DW1000RangingClass::loop() {
 			if(messageType == POLL_ACK) {
 				DW1000Device* myDistantDevice = searchDistantDevice(_lastSentToShortAddress);
 				
-				DW1000.getTransmitTimestamp(myDistantDevice->timePollAckSent);
+				if (myDistantDevice) {
+					DW1000.getTransmitTimestamp(myDistantDevice->timePollAckSent);
+				}
 			}
 		}
 		else if(_type == TAG) {
@@ -411,7 +413,9 @@ void DW1000RangingClass::loop() {
 					//we search the device associated with the last send address
 					DW1000Device* myDistantDevice = searchDistantDevice(_lastSentToShortAddress);
 					//we save the value just for one device
-					myDistantDevice->timePollSent = timePollSent;
+					if (myDistantDevice) {
+						myDistantDevice->timePollSent = timePollSent;
+					}
 				}
 			}
 			else if(messageType == RANGE) {
@@ -428,7 +432,9 @@ void DW1000RangingClass::loop() {
 					//we search the device associated with the last send address
 					DW1000Device* myDistantDevice = searchDistantDevice(_lastSentToShortAddress);
 					//we save the value just for one device
-					myDistantDevice->timeRangeSent = timeRangeSent;
+					if (myDistantDevice) {
+						myDistantDevice->timeRangeSent = timeRangeSent;
+					}
 				}
 				
 			}
@@ -490,15 +496,17 @@ void DW1000RangingClass::loop() {
 			DW1000Device* myDistantDevice = searchDistantDevice(address);
 			
 			
-			if((_networkDevicesNumber != 0) && (myDistantDevice == NULL)) {
-				Serial.println("Not found");
+			if((_networkDevicesNumber == 0) || (myDistantDevice == NULL)) {
 				//we don't have the short address of the device in memory
-				/*
-				Serial.print("unknown: ");
-				Serial.print(address[0], HEX);
-				Serial.print(":");
-				Serial.println(address[1], HEX);
-				*/
+				if (DEBUG) {
+					Serial.println("Not found");
+					/*
+					Serial.print("unknown: ");
+					Serial.print(address[0], HEX);
+					Serial.print(":");
+					Serial.println(address[1], HEX);
+					*/
+				}
 				return;
 			}
 			
