@@ -316,7 +316,7 @@ DW1000Device* DW1000RangingClass::searchDistantDevice(byte shortAddress[]) {
 		}
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 DW1000Device* DW1000RangingClass::getDistantDevice() {
@@ -496,7 +496,7 @@ void DW1000RangingClass::loop() {
 			DW1000Device* myDistantDevice = searchDistantDevice(address);
 			
 			
-			if((_networkDevicesNumber == 0) || (myDistantDevice == NULL)) {
+			if((_networkDevicesNumber == 0) || (myDistantDevice == nullptr)) {
 				//we don't have the short address of the device in memory
 				if (DEBUG) {
 					Serial.println("Not found");
@@ -641,7 +641,7 @@ void DW1000RangingClass::loop() {
 					if(myDistantDevice->getIndex() == _networkDevicesNumber-1) {
 						_expectedMsgId = RANGE_REPORT;
 						//and transmit the next message (range) of the ranging protocole (in broadcast)
-						transmitRange(NULL);
+						transmitRange(nullptr);
 					}
 				}
 				else if(messageType == RANGE_REPORT) {
@@ -729,7 +729,7 @@ void DW1000RangingClass::timerTick() {
 		if(_type == TAG) {
 			_expectedMsgId = POLL_ACK;
 			//send a prodcast poll
-			transmitPoll(NULL);
+			transmitPoll(nullptr);
 		}
 	}
 	else if(counterForBlink == 0) {
@@ -795,7 +795,7 @@ void DW1000RangingClass::transmitPoll(DW1000Device* myDistantDevice) {
 	
 	transmitInit();
 	
-	if(myDistantDevice == NULL) {
+	if(myDistantDevice == nullptr) {
 		//we need to set our timerDelay:
 		_timerDelay = DEFAULT_TIMER_DELAY+(uint16_t)(_networkDevicesNumber*3*DEFAULT_REPLY_DELAY_TIME/1000);
 		
@@ -853,7 +853,7 @@ void DW1000RangingClass::transmitRange(DW1000Device* myDistantDevice) {
 	transmitInit();
 	
 	
-	if(myDistantDevice == NULL) {
+	if(myDistantDevice == nullptr) {
 		//we need to set our timerDelay:
 		_timerDelay = DEFAULT_TIMER_DELAY+(uint16_t)(_networkDevicesNumber*3*DEFAULT_REPLY_DELAY_TIME/1000);
 		
