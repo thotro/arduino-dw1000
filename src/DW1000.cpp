@@ -1015,6 +1015,14 @@ void DW1000Class::interruptOnAutomaticAcknowledgeTrigger(boolean val) {
 	setBit(_sysmask, LEN_SYS_MASK, AAT_BIT, val);
 }
 
+void DW1000Class::setAntennaDelay(const uint16_t value) {
+	_antennaDelay.setTimestamp(value);
+}
+
+uint16_t DW1000Class::getAntennaDelay() {
+	return static_cast<uint16_t>(_antennaDelay.getTimestamp());
+}
+
 void DW1000Class::clearInterrupts() {
 	memset(_sysmask, 0, LEN_SYS_MASK);
 }
