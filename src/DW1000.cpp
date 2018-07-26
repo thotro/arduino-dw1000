@@ -1086,11 +1086,9 @@ void DW1000Class::commitConfiguration() {
 	writeSystemEventMaskRegister();
 	// tune according to configuration
 	tune();
-	// TODO clean up code + antenna delay/calibration API
-	// TODO setter + check not larger two bytes integer
-	byte antennaDelayBytes[LEN_STAMP];
-	writeValueToBytes(antennaDelayBytes, 16384, LEN_STAMP);
-	_antennaDelay.setTimestamp(antennaDelayBytes);
+	// TODO check not larger two bytes integer
+	byte antennaDelayBytes[DW1000Time::LENGTH_TIMESTAMP];
+	_antennaDelay.getTimestamp(antennaDelayBytes);
 	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
 	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD);
 }
