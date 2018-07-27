@@ -72,12 +72,37 @@ boolean    DW1000Class::_debounceClockEnabled = false;
 // modes of operation
 // TODO use enum external, not config array
 // this declaration is needed to make variables accessible while runtime from external code
+
+/* Based on chapter 9.3 of DW1000 Manual */
+constexpr byte DW1000Class::MODE_SHORTRANGE_LOWPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_HIGHPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_LOWPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_HIGHPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_LOWPRF_LONGPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_HIGHPRF_LONGPREAMBLE[];
+
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_LOWPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_HIGHPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_LOWPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_HIGHPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_LOWPRF_LONGPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_HIGHPRF_LONGPREAMBLE[];
+
+constexpr byte DW1000Class::MODE_LONGRANGE_LOWPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_LONGRANGE_HIGHPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_LONGRANGE_LOWPRF_LONGPREAMBLE[];
+constexpr byte DW1000Class::MODE_LONGRANGE_HIGHPRF_LONGPREAMBLE[];
+
+
+/* Pre-defined by author */
 constexpr byte DW1000Class::MODE_LONGDATA_RANGE_LOWPOWER[];
 constexpr byte DW1000Class::MODE_SHORTDATA_FAST_LOWPOWER[];
-constexpr byte DW1000Class::MODE_LONGDATA_FAST_LOWPOWER[];
 constexpr byte DW1000Class::MODE_SHORTDATA_FAST_ACCURACY[];
-constexpr byte DW1000Class::MODE_LONGDATA_FAST_ACCURACY[];
 constexpr byte DW1000Class::MODE_LONGDATA_RANGE_ACCURACY[];
+// Not recommended
+constexpr byte DW1000Class::MODE_LONGDATA_FAST_LOWPOWER[];
+constexpr byte DW1000Class::MODE_LONGDATA_FAST_ACCURACY[];
+
 /*
 const byte DW1000Class::MODE_LONGDATA_RANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_2048};
 const byte DW1000Class::MODE_SHORTDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
