@@ -267,7 +267,11 @@ public:
 	static void interruptOnReceiveTimeout(boolean val);
 	static void interruptOnReceiveTimestampAvailable(boolean val);
 	static void interruptOnAutomaticAcknowledgeTrigger(boolean val);
-	
+
+	/* Antenna delay calibration */
+	static void setAntennaDelay(const uint16_t value);
+	static uint16_t getAntennaDelay();
+
 	/* callback handler management. */
 	static void attachErrorHandler(void (* handleError)(void)) {
 		_handleError = handleError;
