@@ -1088,7 +1088,7 @@ void DW1000Class::commitConfiguration() {
 	tune();
 	// TODO check not larger two bytes integer
 	byte antennaDelayBytes[DW1000Time::LENGTH_TIMESTAMP];
-	if( _antennaDelay.getTimestamp() == 0) { _antennaDelay.setTimestamp(16384); } // Compatibily with old versions.
+	if( _antennaDelay.getTimestamp() == 0) { _antennaDelay.setTimestamp(16384); } // Compatibility with old versions.
 	_antennaDelay.getTimestamp(antennaDelayBytes);
 	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
 	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD);
