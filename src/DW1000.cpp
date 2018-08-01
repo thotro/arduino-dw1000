@@ -334,14 +334,6 @@ void DW1000Class::enableMode(const byte mode[]) {
 	setDataRate(mode[0]);
 	setPulseFrequency(mode[1]);
 	setPreambleLength(mode[2]);
-	// TODO add channel and code to mode tuples
-	// TODO add channel and code settings with checks (see Table 58)
-	setChannel(CHANNEL_5);
-	if(mode[1] == TX_PULSE_FREQ_16MHZ) {
-		setPreambleCode(PREAMBLE_CODE_16MHZ_4);
-	} else {
-		setPreambleCode(PREAMBLE_CODE_64MHZ_10);
-	}
 }
 
 void DW1000Class::tune() {
@@ -1245,6 +1237,15 @@ void DW1000Class::setDefaults() {
 		// default mode when powering up the chip
 		// still explicitly selected for later tuning
 		enableMode(MODE_LONGDATA_RANGE_LOWPOWER);
+		
+		// TODO add channel and code to mode tuples
+	    // TODO add channel and code settings with checks (see DW1000 user manual 10.5 table 61)/
+	    setChannel(CHANNEL_5);
+		if(getPulseFrequency() == TX_PULSE_FREQ_16MHZ) {
+			setPreambleCode(PREAMBLE_CODE_16MHZ_4);
+		} else {
+			setPreambleCode(PREAMBLE_CODE_64MHZ_10);
+		}
 	}
 }
 
