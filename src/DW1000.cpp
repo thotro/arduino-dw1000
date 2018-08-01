@@ -90,8 +90,10 @@ constexpr byte DW1000Class::MODE_MEDIUMRANGE_HIGHPRF_LONGPREAMBLE[];
 
 constexpr byte DW1000Class::MODE_LONGRANGE_LOWPRF_SHORTPREAMBLE[];
 constexpr byte DW1000Class::MODE_LONGRANGE_HIGHPRF_SHORTPREAMBLE[];
-constexpr byte DW1000Class::MODE_LONGRANGE_LOWPRF_LONGPREAMBLE[];
-constexpr byte DW1000Class::MODE_LONGRANGE_HIGHPRF_LONGPREAMBLE[];
+
+/* WARNING: They do not work on some tests */
+//constexpr byte DW1000Class::MODE_LONGRANGE_LOWPRF_LONGPREAMBLE[];
+//constexpr byte DW1000Class::MODE_LONGRANGE_HIGHPRF_LONGPREAMBLE[];
 
 
 /* Pre-defined by author */
