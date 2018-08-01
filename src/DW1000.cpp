@@ -1216,11 +1216,7 @@ void DW1000Class::setPreambleCode(byte preacode) {
 }
 
 void DW1000Class::setDefaults() {
-	if(_deviceMode == TX_MODE) {
-		
-	} else if(_deviceMode == RX_MODE) {
-		
-	} else if(_deviceMode == IDLE_MODE) {
+	 if(_deviceMode == IDLE_MODE) {
 		useExtendedFrameLength(false);
 		useSmartPower(false);
 		suppressFrameCheck(false);
