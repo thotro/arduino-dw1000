@@ -1198,15 +1198,27 @@ void DW1000Class::setPreambleLength(byte prealen) {
 	prealen &= 0x0F;
 	_txfctrl[2] &= 0xC3;
 	_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
-	if(prealen == TX_PREAMBLE_LEN_64 || prealen == TX_PREAMBLE_LEN_128) {
-		_pacSize = PAC_SIZE_8;
-	} else if(prealen == TX_PREAMBLE_LEN_256 || prealen == TX_PREAMBLE_LEN_512) {
-		_pacSize = PAC_SIZE_16;
-	} else if(prealen == TX_PREAMBLE_LEN_1024) {
-		_pacSize = PAC_SIZE_32;
-	} else {
-		_pacSize = PAC_SIZE_64;
+	
+	switch(prealen) {
+		case TX_PREAMBLE_LEN_64:
+			_pacSize = PAC_SIZE_8;
+			break;
+		case TX_PREAMBLE_LEN_128:
+			_pacSize = PAC_SIZE_8;
+			break;
+		case TX_PREAMBLE_LEN_256:
+			_pacSize = PAC_SIZE_16;
+			break;
+		case TX_PREAMBLE_LEN_512:
+			_pacSize = PAC_SIZE_16;
+			break;
+		case TX_PREAMBLE_LEN_1024:
+			_pacSize = PAC_SIZE_32;
+			break;
+		default:
+			_pacSize = PAC_SIZE_64; // In case of 1536, 2048 or 4096 preamble length.
 	}
+	
 	_preambleLength = prealen;
 }
 
