@@ -1196,6 +1196,30 @@ void DW1000Class::setChannel(byte channel) {
 	channel &= 0xF;
 	_chanctrl[0] = ((channel | (channel << 4)) & 0xFF);
 	_channel = channel;
+	// Set preambleCode in based of CHANNEL. see chapter 10.5, table 61, dw1000 user manual
+	if(_channel == CHANNEL_1) {
+		if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			setPreambleCode(PREAMBLE_CODE_16MHZ_2);
+		} else {
+			setPreambleCode(PREAMBLE_CODE_64MHZ_10);
+		}
+	} else if(_channel == CHANNEL_3) {
+		if (_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			setPreambleCode(PREAMBLE_CODE_16MHZ_6);
+		} else {
+			setPreambleCode(PREAMBLE_CODE_64MHZ_10);
+		}
+	} else if(_channel == CHANNEL_4 || _channel == CHANNEL_7) {
+		if (_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+			setPreambleCode(PREAMBLE_CODE_16MHZ_8);
+		} else {
+			setPreambleCode(PREAMBLE_CODE_64MHZ_18);
+		}
+	} else if(_pulseFrequency == TX_PULSE_FREQ_16MHZ) {
+		setPreambleCode(PREAMBLE_CODE_16MHZ_4);
+	} else {
+		setPreambleCode(PREAMBLE_CODE_64MHZ_10);
+	}
 }
 
 void DW1000Class::setPreambleCode(byte preacode) {
