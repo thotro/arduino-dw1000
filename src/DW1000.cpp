@@ -1139,10 +1139,14 @@ void DW1000Class::setDataRate(byte rate) {
 		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, false);
 		setBit(_chanctrl, LEN_CHAN_CTRL, TNSSFD_BIT, false);
 		setBit(_chanctrl, LEN_CHAN_CTRL, RNSSFD_BIT, false);
-	} else {
+	} else if (rate == TRX_RATE_850KBPS) {
 		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
 		setBit(_chanctrl, LEN_CHAN_CTRL, TNSSFD_BIT, true);
 		setBit(_chanctrl, LEN_CHAN_CTRL, RNSSFD_BIT, true);
+	} else {
+		setBit(_chanctrl, LEN_CHAN_CTRL, DWSFD_BIT, true);
+		setBit(_chanctrl, LEN_CHAN_CTRL, TNSSFD_BIT, false);
+		setBit(_chanctrl, LEN_CHAN_CTRL, RNSSFD_BIT, false);
 	}
 	byte sfdLength;
 	if(rate == TRX_RATE_6800KBPS) {
