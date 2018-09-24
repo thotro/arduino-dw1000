@@ -8,7 +8,7 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/thotro/arduino-dw1000/master/LICENSE.md)
 
 A library that offers basic functionality to use Decawave's DW1000 chips/modules with Arduino
-(see http://www.decawave.com/products/dwm1000-module).
+(see https://www.decawave.com/products/dwm1000-module).
 
 Project state
 -------------
@@ -30,7 +30,7 @@ Stable transmission of messages between two modules is possible. The code for de
 
 **General notice:**
 * The documentation https://github.com/thotro/arduino-dw1000/tree/master/extras/doc is manually generated and maybe out of date.
-* Datasheet and application notices are available at http://www.decawave.com/ (require free registration).
+* Datasheet and application notices are available at https://www.decawave.com/ (require free registration).
 
 Installation
 ------------
