@@ -153,12 +153,12 @@ This is maybe a incomplete list. Please notice that some dependency libraries ma
   * From: Arduino IDE / Compiler and target specific
   * License: different
   
- * **stdlib.h**
+* **stdlib.h**
 
   * From: Arduino IDE / Compiler and target specific
   * License: different
   
- * **string.h**
+* **string.h**
 
   * From: Arduino IDE / Compiler and target specific
   * License: different
