@@ -127,6 +127,43 @@ DW1000.startReceive();
 ...
 ```
 
+Dependency
+----------
+
+Disclaimer:
+This is maybe a incomplete list. Please notice that some dependency libraries may **require** a **reproduction** of copyright and license, **even if they are shipped as binary!!**
+
+* **Arduino.h**
+
+  * From: Arduino IDE / target specific
+  * License: (target: Arduino) GNU Lesser General Public License 2.1
+  
+* **SPI.h**
+
+  * From: Arduino IDE / target specific
+  * License: (target: Arduino) GNU Lesser General Public License 2.1
+  
+* **stdint.h**
+
+  * From: Arduino IDE / Compiler and target specific
+  * License: different
+
+* **stdio.h**
+
+  * From: Arduino IDE / Compiler and target specific
+  * License: different
+  
+ * **stdlib.h**
+
+  * From: Arduino IDE / Compiler and target specific
+  * License: different
+  
+ * **string.h**
+
+  * From: Arduino IDE / Compiler and target specific
+  * License: different
+
+
 License
 -------
 Apache License 2.0 (see [LICENSE.md](https://github.com/thotro/arduino-dw1000/blob/master/LICENSE.md))
