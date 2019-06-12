@@ -1072,9 +1072,8 @@ void DW1000Class::commitConfiguration() {
 	tune();
 	// TODO clean up code + antenna delay/calibration API
 	// TODO setter + check not larger two bytes integer
-	byte antennaDelayBytes[LEN_STAMP];
-	writeValueToBytes(antennaDelayBytes, 16384, LEN_STAMP);
-	_antennaDelay.setTimestamp(antennaDelayBytes);
+	byte antennaDelayBytes[DW1000Time::LENGTH_TIMESTAMP];
+	_antennaDelay.getTimestamp(antennaDelayBytes);
 	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
 	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD);
 }
@@ -1573,6 +1572,16 @@ float DW1000Class::getReceivePower() {
 		estRxPwr += (estRxPwr+88)*corrFac;
 	}
 	return estRxPwr;
+}
+
+void DW1000Class::setAntennaDelay(const uint16_t value) {
+	_antennaDelay.setTimestamp(value);
+}
+
+uint16_t DW1000Class::getAntennaDelay() {
+	uint16_t antennaDelay;
+	antennaDelay = static_cast<uint16_t>(_antennaDelay.getTimestamp());
+	return antennaDelay;
 }
 
 /* ###########################################################################
