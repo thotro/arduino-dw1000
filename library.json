@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/thotro/arduino-dw1000.git"
   },
-  "version": "0.8",
+  "version": "0.9",
   "exclude": [
     "adapterBoard",
     "extras"
