@@ -61,6 +61,7 @@ byte       DW1000Class::_preambleLength      = TX_PREAMBLE_LEN_128;
 byte       DW1000Class::_preambleCode        = PREAMBLE_CODE_16MHZ_4;
 byte       DW1000Class::_channel             = CHANNEL_5;
 DW1000Time DW1000Class::_antennaDelay;
+boolean	   DW1000Class::_antennaCalibrated	 = false;
 boolean    DW1000Class::_smartPower          = false;
 
 boolean    DW1000Class::_frameCheck          = true;
@@ -1007,6 +1008,15 @@ void DW1000Class::interruptOnAutomaticAcknowledgeTrigger(boolean val) {
 	setBit(_sysmask, LEN_SYS_MASK, AAT_BIT, val);
 }
 
+void DW1000Class::setAntennaDelay(const uint16_t value) {
+	_antennaDelay.setTimestamp(value);
+	_antennaCalibrated = true;
+}
+
+uint16_t DW1000Class::getAntennaDelay() {
+	return static_cast<uint16_t>(_antennaDelay.getTimestamp());
+}
+
 void DW1000Class::clearInterrupts() {
 	memset(_sysmask, 0, LEN_SYS_MASK);
 }
@@ -1070,11 +1080,14 @@ void DW1000Class::commitConfiguration() {
 	writeSystemEventMaskRegister();
 	// tune according to configuration
 	tune();
-	// TODO clean up code + antenna delay/calibration API
-	// TODO setter + check not larger two bytes integer
-	byte antennaDelayBytes[LEN_STAMP];
-	writeValueToBytes(antennaDelayBytes, 16384, LEN_STAMP);
-	_antennaDelay.setTimestamp(antennaDelayBytes);
+	// TODO check not larger two bytes integer
+	byte antennaDelayBytes[DW1000Time::LENGTH_TIMESTAMP];
+	if( _antennaDelay.getTimestamp() == 0 && _antennaCalibrated == false) {
+		_antennaDelay.setTimestamp(16384);
+		_antennaCalibrated = true;
+	} // Compatibility with old versions.
+	_antennaDelay.getTimestamp(antennaDelayBytes);
+
 	writeBytes(TX_ANTD, NO_SUB, antennaDelayBytes, LEN_TX_ANTD);
 	writeBytes(LDE_IF, LDE_RXANTD_SUB, antennaDelayBytes, LEN_LDE_RXANTD);
 }
