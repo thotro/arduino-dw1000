@@ -917,8 +917,8 @@ void DW1000Class::getTempAndVbat(float& temp, float& vbat) {
 	byte sar_ltemp = 0; readBytes(TX_CAL, 0x04, &sar_ltemp, 1);
 	
 	// calculate voltage and temperature
-	vbat = (sar_lvbat - _vmeas3v3) / 173.0f + 3.3f;
-	temp = (sar_ltemp - _tmeas23C) * 1.14f + 23.0f;
+	vbat = ((float)sar_lvbat - (float)_vmeas3v3) / 173.0f + 3.3f;
+	temp = ((float)sar_ltemp - (float)_tmeas23C) * 1.14f + 23.0f;
 }
 
 void DW1000Class::setEUI(char eui[]) {
