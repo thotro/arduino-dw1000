@@ -105,13 +105,14 @@ void DW1000RangingClass::initCommunication(uint8_t myRST, uint8_t mySS, uint8_t 
 }
 
 
-void DW1000RangingClass::configureNetwork(uint16_t deviceAddress, uint16_t networkId, const byte mode[]) {
+void DW1000RangingClass::configureNetwork(uint16_t deviceAddress, uint16_t networkId, const byte mode[], const byte channel) {
 	// general configuration
 	DW1000.newConfiguration();
 	DW1000.setDefaults();
 	DW1000.setDeviceAddress(deviceAddress);
 	DW1000.setNetworkId(networkId);
 	DW1000.enableMode(mode);
+	DW1000.setChannel(channel);
 	DW1000.commitConfiguration();
 	
 }
@@ -159,7 +160,7 @@ void DW1000RangingClass::generalStart() {
 }
 
 
-void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], const bool randomShortAddress) {
+void DW1000RangingClass::startAsAnchor(char address[], const byte mode[],const byte channel, const bool randomShortAddress) {
 	//save the address
 	DW1000.convertToByte(address, _currentAddress);
 	//write the address on the DW1000 chip
@@ -180,7 +181,7 @@ void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], const 
 	
 	//we configur the network for mac filtering
 	//(device Address, network ID, frequency)
-	DW1000Ranging.configureNetwork(_currentShortAddress[0]*256+_currentShortAddress[1], 0xDECA, mode);
+	DW1000Ranging.configureNetwork(_currentShortAddress[0]*256+_currentShortAddress[1], 0xDECA, mode, channel);
 	
 	//general start:
 	generalStart();
@@ -192,7 +193,7 @@ void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], const 
 	
 }
 
-void DW1000RangingClass::startAsTag(char address[], const byte mode[], const bool randomShortAddress) {
+void DW1000RangingClass::startAsTag(char address[], const byte mode[],const byte channel, const bool randomShortAddress) {
 	//save the address
 	DW1000.convertToByte(address, _currentAddress);
 	//write the address on the DW1000 chip
@@ -213,7 +214,7 @@ void DW1000RangingClass::startAsTag(char address[], const byte mode[], const boo
 	
 	//we configur the network for mac filtering
 	//(device Address, network ID, frequency)
-	DW1000Ranging.configureNetwork(_currentShortAddress[0]*256+_currentShortAddress[1], 0xDECA, mode);
+	DW1000Ranging.configureNetwork(_currentShortAddress[0]*256+_currentShortAddress[1], 0xDECA, mode, channel);
 	
 	generalStart();
 	//defined type as tag
