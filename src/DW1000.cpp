@@ -73,12 +73,39 @@ boolean    DW1000Class::_debounceClockEnabled = false;
 // modes of operation
 // TODO use enum external, not config array
 // this declaration is needed to make variables accessible while runtime from external code
+
+/* Based on chapter 9.3 of DW1000 Manual */
+constexpr byte DW1000Class::MODE_SHORTRANGE_LOWPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_HIGHPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_LOWPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_HIGHPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_LOWPRF_LONGPREAMBLE[];
+constexpr byte DW1000Class::MODE_SHORTRANGE_HIGHPRF_LONGPREAMBLE[];
+
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_LOWPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_HIGHPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_LOWPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_HIGHPRF_MEDIUMPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_LOWPRF_LONGPREAMBLE[];
+constexpr byte DW1000Class::MODE_MEDIUMRANGE_HIGHPRF_LONGPREAMBLE[];
+
+constexpr byte DW1000Class::MODE_LONGRANGE_LOWPRF_SHORTPREAMBLE[];
+constexpr byte DW1000Class::MODE_LONGRANGE_HIGHPRF_SHORTPREAMBLE[];
+
+/* WARNING: They do not work on some tests */
+//constexpr byte DW1000Class::MODE_LONGRANGE_LOWPRF_LONGPREAMBLE[];
+//constexpr byte DW1000Class::MODE_LONGRANGE_HIGHPRF_LONGPREAMBLE[];
+
+
+/* Pre-defined by author */
 constexpr byte DW1000Class::MODE_LONGDATA_RANGE_LOWPOWER[];
 constexpr byte DW1000Class::MODE_SHORTDATA_FAST_LOWPOWER[];
-constexpr byte DW1000Class::MODE_LONGDATA_FAST_LOWPOWER[];
 constexpr byte DW1000Class::MODE_SHORTDATA_FAST_ACCURACY[];
-constexpr byte DW1000Class::MODE_LONGDATA_FAST_ACCURACY[];
 constexpr byte DW1000Class::MODE_LONGDATA_RANGE_ACCURACY[];
+// Not recommended
+constexpr byte DW1000Class::MODE_LONGDATA_FAST_LOWPOWER[];
+constexpr byte DW1000Class::MODE_LONGDATA_FAST_ACCURACY[];
+
 /*
 const byte DW1000Class::MODE_LONGDATA_RANGE_LOWPOWER[] = {TRX_RATE_110KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_2048};
 const byte DW1000Class::MODE_SHORTDATA_FAST_LOWPOWER[] = {TRX_RATE_6800KBPS, TX_PULSE_FREQ_16MHZ, TX_PREAMBLE_LEN_128};
@@ -1182,15 +1209,27 @@ void DW1000Class::setPreambleLength(byte prealen) {
 	prealen &= 0x0F;
 	_txfctrl[2] &= 0xC3;
 	_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
-	if(prealen == TX_PREAMBLE_LEN_64 || prealen == TX_PREAMBLE_LEN_128) {
-		_pacSize = PAC_SIZE_8;
-	} else if(prealen == TX_PREAMBLE_LEN_256 || prealen == TX_PREAMBLE_LEN_512) {
-		_pacSize = PAC_SIZE_16;
-	} else if(prealen == TX_PREAMBLE_LEN_1024) {
-		_pacSize = PAC_SIZE_32;
-	} else {
-		_pacSize = PAC_SIZE_64;
+	
+	switch(prealen) {
+		case TX_PREAMBLE_LEN_64:
+			_pacSize = PAC_SIZE_8;
+			break;
+		case TX_PREAMBLE_LEN_128:
+			_pacSize = PAC_SIZE_8;
+			break;
+		case TX_PREAMBLE_LEN_256:
+			_pacSize = PAC_SIZE_16;
+			break;
+		case TX_PREAMBLE_LEN_512:
+			_pacSize = PAC_SIZE_16;
+			break;
+		case TX_PREAMBLE_LEN_1024:
+			_pacSize = PAC_SIZE_32;
+			break;
+		default:
+			_pacSize = PAC_SIZE_64; // In case of 1536, 2048 or 4096 preamble length.
 	}
+	
 	_preambleLength = prealen;
 }
 
