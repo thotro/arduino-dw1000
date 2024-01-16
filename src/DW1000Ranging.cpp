@@ -368,6 +368,7 @@ int16_t DW1000RangingClass::detectMessageType(byte datas[]) {
 		//we have a short mac frame message (poll, range, range report, etc..)
 		return datas[SHORT_MAC_LEN];
 	}
+	return INT16_MAX;
 }
 
 void DW1000RangingClass::loop() {
