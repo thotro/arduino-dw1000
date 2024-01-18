@@ -368,6 +368,7 @@ int16_t DW1000RangingClass::detectMessageType(byte datas[]) {
 		//we have a short mac frame message (poll, range, range report, etc..)
 		return datas[SHORT_MAC_LEN];
 	}
+	return INT16_MAX;
 }
 
 void DW1000RangingClass::loop() {
@@ -520,7 +521,7 @@ void DW1000RangingClass::loop() {
 				if(messageType == POLL) {
 					//we receive a POLL which is a broacast message
 					//we need to grab info about it
-					int16_t numberDevices = 0;
+					uint16_t numberDevices = 0;
 					memcpy(&numberDevices, data+SHORT_MAC_LEN+1, 1);
 					
 					for(uint16_t i = 0; i < numberDevices; i++) {
