@@ -169,8 +169,8 @@ void DW1000Class::begin(uint8_t irq, uint8_t rst) {
     	pinMode(irq, INPUT);
 	// start SPI
 	SPI.begin();
-#ifndef ESP8266
-	SPI.usingInterrupt(digitalPinToInterrupt(irq)); // not every board support this, e.g. ESP8266
+#if !defined(ESP8266) && !defined(ESP32)
+	SPI.usingInterrupt(digitalPinToInterrupt(irq)); // not every board support this, e.g. ESP8266, ESP32
 #endif
 	// pin and basic member setup
 	_rst        = rst;
@@ -708,7 +708,7 @@ void DW1000Class::tune() {
  * #### Interrupt handling ###################################################
  * ######################################################################### */
 
-void DW1000Class::handleInterrupt() {
+void IRAM_ATTR DW1000Class::handleInterrupt() {
 	// read current status and handle via callbacks
 	readSystemEventStatusRegister();
 	if(isClockProblem() /* TODO and others */ && _handleError != 0) {
@@ -834,7 +834,7 @@ void DW1000Class::writeSystemConfigurationRegister() {
 	writeBytes(SYS_CFG, NO_SUB, _syscfg, LEN_SYS_CFG);
 }
 
-void DW1000Class::readSystemEventStatusRegister() {
+void IRAM_ATTR DW1000Class::readSystemEventStatusRegister() {
 	readBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
@@ -1028,14 +1028,14 @@ void DW1000Class::idle() {
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
 }
 
-void DW1000Class::newReceive() {
+void IRAM_ATTR DW1000Class::newReceive() {
 	idle();
 	memset(_sysctrl, 0, LEN_SYS_CTRL);
 	clearReceiveStatus();
 	_deviceMode = RX_MODE;
 }
 
-void DW1000Class::startReceive() {
+void IRAM_ATTR DW1000Class::startReceive() {
 	setBit(_sysctrl, LEN_SYS_CTRL, SFCST_BIT, !_frameCheck);
 	setBit(_sysctrl, LEN_SYS_CTRL, RXENAB_BIT, true);
 	writeBytes(SYS_CTRL, NO_SUB, _sysctrl, LEN_SYS_CTRL);
@@ -1444,22 +1444,22 @@ void DW1000Class::getSystemTimestamp(byte data[]) {
 	readBytes(SYS_TIME, NO_SUB, data, LEN_SYS_TIME);
 }
 
-boolean DW1000Class::isTransmitDone() {
+boolean IRAM_ATTR DW1000Class::isTransmitDone() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, TXFRS_BIT);
 }
 
-boolean DW1000Class::isReceiveTimestampAvailable() {
+boolean IRAM_ATTR DW1000Class::isReceiveTimestampAvailable() {
 	return getBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT);
 }
 
-boolean DW1000Class::isReceiveDone() {
+boolean IRAM_ATTR DW1000Class::isReceiveDone() {
 	if(_frameCheck) {
 		return getBit(_sysstatus, LEN_SYS_STATUS, RXFCG_BIT);
 	}
 	return getBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT);
 }
 
-boolean DW1000Class::isReceiveFailed() {
+boolean IRAM_ATTR DW1000Class::isReceiveFailed() {
 	boolean ldeErr, rxCRCErr, rxHeaderErr, rxDecodeErr;
 	ldeErr      = getBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT);
 	rxCRCErr    = getBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT);
@@ -1472,11 +1472,11 @@ boolean DW1000Class::isReceiveFailed() {
 }
 
 //Checks to see any of the three timeout bits in sysstatus are high (RXRFTO (Frame Wait timeout), RXPTO (Preamble timeout), RXSFDTO (Start frame delimiter(?) timeout).
-boolean DW1000Class::isReceiveTimeout() {
+boolean IRAM_ATTR DW1000Class::isReceiveTimeout() {
 	return (getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXPTO_BIT) | getBit(_sysstatus, LEN_SYS_STATUS, RXSFDTO_BIT));
 }
 
-boolean DW1000Class::isClockProblem() {
+boolean IRAM_ATTR DW1000Class::isClockProblem() {
 	boolean clkllErr, rfllErr;
 	clkllErr = getBit(_sysstatus, LEN_SYS_STATUS, CLKPLL_LL_BIT);
 	rfllErr  = getBit(_sysstatus, LEN_SYS_STATUS, RFPLL_LL_BIT);
@@ -1486,18 +1486,18 @@ boolean DW1000Class::isClockProblem() {
 	return false;
 }
 
-void DW1000Class::clearAllStatus() {
+void IRAM_ATTR DW1000Class::clearAllStatus() {
 	//Latched bits in status register are reset by writing 1 to them
 	memset(_sysstatus, 0xff, LEN_SYS_STATUS);
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
-void DW1000Class::clearReceiveTimestampAvailableStatus() {
+void IRAM_ATTR DW1000Class::clearReceiveTimestampAvailableStatus() {
 	setBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT, true);
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
-void DW1000Class::clearReceiveStatus() {
+void IRAM_ATTR DW1000Class::clearReceiveStatus() {
 	// clear latched RX bits (i.e. write 1 to clear)
 	setBit(_sysstatus, LEN_SYS_STATUS, RXDFR_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, LDEDONE_BIT, true);
@@ -1509,7 +1509,7 @@ void DW1000Class::clearReceiveStatus() {
 	writeBytes(SYS_STATUS, NO_SUB, _sysstatus, LEN_SYS_STATUS);
 }
 
-void DW1000Class::clearTransmitStatus() {
+void IRAM_ATTR DW1000Class::clearTransmitStatus() {
 	// clear latched TX bits
 	setBit(_sysstatus, LEN_SYS_STATUS, TXFRB_BIT, true);
 	setBit(_sysstatus, LEN_SYS_STATUS, TXPRS_BIT, true);
@@ -1662,7 +1662,7 @@ void DW1000Class::writeValueToBytes(byte data[], int32_t val, uint16_t n) {
  *		The number of bytes expected to be received.
  */
 // TODO incomplete doc
-void DW1000Class::readBytes(byte cmd, uint16_t offset, byte data[], uint16_t n) {
+void IRAM_ATTR DW1000Class::readBytes(byte cmd, uint16_t offset, byte data[], uint16_t n) {
 	byte header[3];
 	uint8_t headerLen = 1;
 	uint16_t i = 0;
@@ -1733,7 +1733,7 @@ void DW1000Class::writeByte(byte cmd, uint16_t offset, byte data) {
  * 		the register).
  */
 // TODO offset really bigger than byte?
-void DW1000Class::writeBytes(byte cmd, uint16_t offset, byte data[], uint16_t data_size) {
+void IRAM_ATTR DW1000Class::writeBytes(byte cmd, uint16_t offset, byte data[], uint16_t data_size) {
 	byte header[3];
 	uint8_t  headerLen = 1;
 	uint16_t  i = 0;

@@ -33,6 +33,12 @@
 #include <string.h>
 #include <Arduino.h>
 #include <SPI.h>
+
+// IRAM_ATTR is defined by the ESP8266/ESP32 Arduino cores; provide a no-op
+// fallback so the library compiles on other platforms (AVR, ARM, ...).
+#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif
 #include "DW1000Constants.h"
 #include "DW1000Time.h"
 
@@ -306,8 +312,8 @@ public:
 	static void commitConfiguration();
 	
 	// reception state
-	static void newReceive();
-	static void startReceive();
+	static void IRAM_ATTR newReceive();
+	static void IRAM_ATTR startReceive();
 	
 	// transmission state
 	static void newTransmit();
@@ -468,7 +474,7 @@ public:
 	static boolean _debounceClockEnabled;
 
 	/* Arduino interrupt handler */
-	static void handleInterrupt();
+	static void IRAM_ATTR handleInterrupt();
 	
 	/* Allow MAC frame filtering . */
 	// TODO auto-acknowledge
@@ -493,22 +499,22 @@ public:
 	static void tune();
 	
 	/* device status flags */
-	static boolean isReceiveTimestampAvailable();
-	static boolean isTransmitDone();
-	static boolean isReceiveDone();
-	static boolean isReceiveFailed();
-	static boolean isReceiveTimeout();
-	static boolean isClockProblem();
+	static boolean IRAM_ATTR isReceiveTimestampAvailable();
+	static boolean IRAM_ATTR isTransmitDone();
+	static boolean IRAM_ATTR isReceiveDone();
+	static boolean IRAM_ATTR isReceiveFailed();
+	static boolean IRAM_ATTR isReceiveTimeout();
+	static boolean IRAM_ATTR isClockProblem();
 	
 	/* interrupt state handling */
 	static void clearInterrupts();
-	static void clearAllStatus();
-	static void clearReceiveStatus();
-	static void clearReceiveTimestampAvailableStatus();
-	static void clearTransmitStatus();
+	static void IRAM_ATTR clearAllStatus();
+	static void IRAM_ATTR clearReceiveStatus();
+	static void IRAM_ATTR clearReceiveTimestampAvailableStatus();
+	static void IRAM_ATTR clearTransmitStatus();
 	
 	/* internal helper to read/write system registers. */
-	static void readSystemEventStatusRegister();
+	static void IRAM_ATTR readSystemEventStatusRegister();
 	static void readSystemConfigurationRegister();
 	static void writeSystemConfigurationRegister();
 	static void readNetworkIdAndDeviceAddress();
@@ -530,10 +536,10 @@ public:
 	static void correctTimestamp(DW1000Time& timestamp);
 	
 	/* reading and writing bytes from and to DW1000 module. */
-	static void readBytes(byte cmd, uint16_t offset, byte data[], uint16_t n);
+	static void IRAM_ATTR readBytes(byte cmd, uint16_t offset, byte data[], uint16_t n);
 	static void readBytesOTP(uint16_t address, byte data[]);
 	static void writeByte(byte cmd, uint16_t offset, byte data);
-	static void writeBytes(byte cmd, uint16_t offset, byte data[], uint16_t n);
+	static void IRAM_ATTR writeBytes(byte cmd, uint16_t offset, byte data[], uint16_t n);
 	
 	/* writing numeric values to bytes. */
 	static void writeValueToBytes(byte data[], int32_t val, uint16_t n);

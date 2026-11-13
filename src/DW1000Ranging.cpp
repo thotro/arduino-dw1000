@@ -699,18 +699,18 @@ void DW1000RangingClass::setRangeFilterValue(uint16_t newValue) {
  * ######################################################################### */
 
 
-void DW1000RangingClass::handleSent() {
+void IRAM_ATTR DW1000RangingClass::handleSent() {
 	// status change on sent success
 	_sentAck = true;
 }
 
-void DW1000RangingClass::handleReceived() {
+void IRAM_ATTR DW1000RangingClass::handleReceived() {
 	// status change on received success
 	_receivedAck = true;
 }
 
 
-void DW1000RangingClass::noteActivity() {
+void IRAM_ATTR DW1000RangingClass::noteActivity() {
 	// update activity timestamp, so that we do not reach "resetPeriod"
 	_lastActivity = millis();
 }
