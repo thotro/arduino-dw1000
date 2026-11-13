@@ -173,9 +173,9 @@ void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], const 
 		_currentShortAddress[1] = random(0, 256);
 	}
 	else {
-		// we use first two bytes in addess for short address
-		_currentShortAddress[0] = _currentAddress[0];
-		_currentShortAddress[1] = _currentAddress[1];
+		// use the LAST two bytes: unique fixed short address per device (no collisions)
+		_currentShortAddress[0] = _currentAddress[6];
+		_currentShortAddress[1] = _currentAddress[7];
 	}
 	
 	//we configur the network for mac filtering
@@ -206,9 +206,9 @@ void DW1000RangingClass::startAsTag(char address[], const byte mode[], const boo
 		_currentShortAddress[1] = random(0, 256);
 	}
 	else {
-		// we use first two bytes in addess for short address
-		_currentShortAddress[0] = _currentAddress[0];
-		_currentShortAddress[1] = _currentAddress[1];
+		// use the LAST two bytes: unique fixed short address per device (no collisions)
+		_currentShortAddress[0] = _currentAddress[6];
+		_currentShortAddress[1] = _currentAddress[7];
 	}
 	
 	//we configur the network for mac filtering
@@ -465,6 +465,7 @@ void DW1000RangingClass::loop() {
 					(*_handleBlinkDevice)(&myTag);
 				}
 				//we reply by the transmit ranging init message
+				delay(random(0, 50));  // random backoff
 				transmitRangingInit(&myTag);
 				noteActivity();
 			}
