@@ -33,6 +33,12 @@
 #include <string.h>
 #include <Arduino.h>
 #include <SPI.h>
+
+// IRAM_ATTR is defined by the ESP8266/ESP32 Arduino cores; provide a no-op
+// fallback so the library compiles on other platforms (AVR, ARM, ...).
+#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif
 #include "DW1000Constants.h"
 #include "DW1000Time.h"
 
@@ -468,7 +474,7 @@ public:
 	static boolean _debounceClockEnabled;
 
 	/* Arduino interrupt handler */
-	static void handleInterrupt();
+	static void IRAM_ATTR handleInterrupt();
 	
 	/* Allow MAC frame filtering . */
 	// TODO auto-acknowledge

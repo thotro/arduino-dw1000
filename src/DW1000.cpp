@@ -176,6 +176,14 @@ void DW1000Class::begin(uint8_t irq, uint8_t rst) {
 	_rst        = rst;
 	_irq        = irq;
 	_deviceMode = IDLE_MODE;
+	// Hard-reset the chip before attaching the interrupt so its IRQ line is de-asserted.
+	if(_rst != 0xff) {
+		pinMode(_rst, OUTPUT);
+		digitalWrite(_rst, LOW);
+		delay(2);
+		pinMode(_rst, INPUT);
+		delay(10);
+	}
 	// attach interrupt
 	//attachInterrupt(_irq, DW1000Class::handleInterrupt, CHANGE); // todo interrupt for ESP8266
 	// TODO throw error if pin is not a interrupt pin
@@ -708,7 +716,7 @@ void DW1000Class::tune() {
  * #### Interrupt handling ###################################################
  * ######################################################################### */
 
-void DW1000Class::handleInterrupt() {
+void IRAM_ATTR DW1000Class::handleInterrupt() {
 	// read current status and handle via callbacks
 	readSystemEventStatusRegister();
 	if(isClockProblem() /* TODO and others */ && _handleError != 0) {
